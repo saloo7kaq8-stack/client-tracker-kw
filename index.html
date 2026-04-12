@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- saved from url=(0061)file:///C:/Users/Lenovo/Downloads/client_tracker_live_10.html -->
+<!-- saved from url=(0061)file:///C:/Users/Lenovo/Downloads/client_tracker_live_11.html -->
 <html lang="ar" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام إدارة العملاء — الكويت</title>
-<link href="./اخر شي_files/css2" rel="stylesheet">
+<link href="./هذا اخر واحد_files/css2" rel="stylesheet">
 <style>
 :root{
   --bg:#d0e8ff;
@@ -53,7 +53,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .app{display:flex;min-height:100vh;position:relative;z-index:1}
 
 /* ── SIDEBAR ── */
-.sidebar{
+.sidebar{z-index:100 !important;
   width:245px;background:rgba(255,255,255,.66);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   border-left:1px solid rgba(130,185,255,.42);
@@ -166,8 +166,9 @@ tbody tr:hover .ab{opacity:1}
 .abt:hover.mp{border-color:var(--tebd);color:var(--te);background:var(--tebg)}
 
 /* ── MODAL ── */
-.ov{position:fixed;inset:0;background:rgba(60,120,200,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:14px;opacity:0;pointer-events:none;transition:opacity .2s}
+.ov{position:fixed;inset:0;background:rgba(60,120,200,.22);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:9000;display:flex;align-items:center;justify-content:center;padding:14px;opacity:0;pointer-events:none;transition:opacity .2s}
 .ov.open{opacity:1;pointer-events:all}
+.modal{position:relative;z-index:9001}
 .modal{background:rgba(255,255,255,.9);backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);border:1px solid rgba(130,185,255,.5);border-radius:16px;width:100%;max-width:720px;max-height:93vh;overflow-y:auto;transform:translateY(14px) scale(.98);transition:transform .22s,opacity .22s;opacity:0;box-shadow:0 24px 70px rgba(40,100,190,.22)}
 .ov.open .modal{transform:translateY(0) scale(1);opacity:1}
 .m-hdr{padding:18px 22px 14px;border-bottom:1px solid rgba(130,185,255,.28);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:16px 16px 0 0;z-index:1}
@@ -286,7 +287,7 @@ tbody tr:hover .ab{opacity:1}
 .kit-box-val{font-size:12px;font-weight:500}
 
 @media(max-width:900px){
-  .sidebar{width:195px}
+  .sidebar{z-index:100 !important;width:195px}
   .main{margin-right:195px;padding:14px}
   .kgrid,.team-grid{grid-template-columns:repeat(2,1fr)}
   .dg,.rg{grid-template-columns:1fr}
@@ -626,7 +627,7 @@ tbody tr:hover .ab{opacity:1}
   </div>
   <div class="m-body">
     <div id="map-info" style="margin-bottom:12px;font-size:13px;color:var(--mt)"></div>
-    <iframe id="map-frame" src="./اخر شي_files/saved_resource.html" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <iframe id="map-frame" src="./هذا اخر واحد_files/saved_resource.html" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     <div style="margin-top:10px;display:flex;gap:8px">
       <button class="btn-p btn-sm" id="btn-open-maps">🔗 فتح في خرائط جوجل</button>
       <button class="btn-ghost btn-sm" id="btn-open-waze">🚗 فتح في Waze</button>
@@ -659,7 +660,7 @@ tbody tr:hover .ab{opacity:1}
 
 <div class="toast" id="toast"></div>
 
-<script src="./اخر شي_files/supabase.min.js.download"></script>
+<script src="./هذا اخر واحد_files/supabase.min.js.download"></script>
 <script>
 // ══════════════════════════════
 // SUPABASE CONFIG
@@ -1158,6 +1159,8 @@ function closeProfile(e){if(e&&e.target!==document.getElementById('ov-profile'))
 function openForm(id){
   editId=id||null;
   const c=id?clients.find(x=>x.id===id):null;
+  const ov=document.getElementById('ov-form');
+  if(!ov){console.error('Modal not found');return;}
   document.getElementById('form-title').innerHTML=id?'✏️ تعديل بيانات العميل':'➕ إضافة عميل جديد';
   const s=(el,v)=>{const e=document.getElementById(el);if(e)e.value=v||''};
   s('f-name',c?.name);s('f-phone',c?.phone);s('f-phone2',c?.phone2);
@@ -1269,6 +1272,8 @@ function renderTeam(){
 function openTeamForm(id){
   editTeamId=id||null;
   const m=id?team.find(x=>x.id===id):null;
+  const ov=document.getElementById('ov-team');
+  if(!ov){console.error('Team modal not found');return;}
   document.getElementById('team-form-title').innerHTML=id?'✏️ تعديل المسؤول':'➕ إضافة مسؤول';
   document.getElementById('tf-name').value=m?.name||'';
   document.getElementById('tf-role').value=m?.role||'';
