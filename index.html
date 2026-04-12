@@ -1,10 +1,11 @@
-<!DOCTYPE html>
-<!-- saved from url=(0061)file:///C:/Users/Lenovo/Downloads/client_tracker_live_11.html -->
-<html lang="ar" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام إدارة العملاء — الكويت</title>
-<link href="./هذا اخر واحد_files/css2" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#d0e8ff;
@@ -380,85 +381,24 @@ tbody tr:hover .ab{opacity:1}
   </div>
   <nav class="nav">
     <div class="nav-sec">الرئيسية</div>
-    <div class="ni on" id="nav-dashboard" onclick="go(&#39;dashboard&#39;)"><span class="ni-ico">📊</span> لوحة التحكم</div>
-    <div class="ni" id="nav-clients" onclick="go(&#39;clients&#39;)"><span class="ni-ico">👥</span> العملاء</div>
+    <div class="ni on" id="nav-dashboard" onclick="go('dashboard')"><span class="ni-ico">📊</span> لوحة التحكم</div>
+    <div class="ni" id="nav-clients" onclick="go('clients')"><span class="ni-ico">👥</span> العملاء</div>
     <div class="nav-sec">المتابعة</div>
-    <div class="ni" id="nav-alerts" onclick="go(&#39;alerts&#39;)"><span class="ni-ico">🔔</span> الإشعارات <span id="alert-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto"></span></div>
-    <div class="ni" id="nav-calendar" onclick="go(&#39;calendar&#39;)"><span class="ni-ico">📆</span> الكالندر</div>
-    <div class="ni" id="nav-daily" onclick="go(&#39;daily&#39;)"><span class="ni-ico">⚡</span> المتابعة اليومية</div>
+    <div class="ni" id="nav-alerts" onclick="go('alerts')"><span class="ni-ico">🔔</span> الإشعارات <span id="alert-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto"></span></div>
+    <div class="ni" id="nav-calendar" onclick="go('calendar')"><span class="ni-ico">📆</span> الكالندر</div>
+    <div class="ni" id="nav-daily" onclick="go('daily')"><span class="ni-ico">⚡</span> المتابعة اليومية</div>
     <div class="nav-sec">الإدارة</div>
-    <div class="ni" id="nav-kitchens" onclick="go(&#39;kitchens&#39;)"><span class="ni-ico">🍳</span> إدارة المطابخ</div>
-    <div class="ni" id="nav-reports" onclick="go(&#39;reports&#39;)"><span class="ni-ico">📈</span> التقارير</div>
-    <div class="ni" id="nav-ai" onclick="go(&#39;ai&#39;)"><span class="ni-ico">🤖</span> مركز الأوامر AI</div>
-    <div class="ni" id="nav-team" onclick="go(&#39;team&#39;)"><span class="ni-ico">👤</span> إدارة المسؤولين</div>
+    <div class="ni" id="nav-kitchens" onclick="go('kitchens')"><span class="ni-ico">🍳</span> إدارة المطابخ</div>
+    <div class="ni" id="nav-reports" onclick="go('reports')"><span class="ni-ico">📈</span> التقارير</div>
+    <div class="ni" id="nav-ai" onclick="go('ai')"><span class="ni-ico">🤖</span> مركز الأوامر AI</div>
+    <div class="ni" id="nav-team" onclick="go('team')"><span class="ni-ico">👤</span> إدارة المسؤولين</div>
   </nav>
-  <div class="sf" id="sf">
-    <div class="ss"><span class="ss-l">إجمالي العملاء</span><span class="ss-v">0</span></div>
-    <div class="ss"><span class="ss-l">جاهز للتنفيذ</span><span class="ss-v" style="color:var(--g)">0</span></div>
-    <div class="ss"><span class="ss-l">متأخرون</span><span class="ss-v" style="color:var(--re)">0</span></div>
-    <div class="ss"><span class="ss-l">المحصّل</span><span class="ss-v" style="color:var(--accent)">0.000 د.ك</span></div>
-  </div>
+  <div class="sf" id="sf"></div>
 </aside>
 
 <!-- PAGES -->
 <main class="main">
-  <div id="pg-dashboard" style="display: block;">
-  <div class="ph">
-    <div><div class="ph-t">لوحة التحكم 🇰🇼</div><div class="ph-s">الأحد، ١٢ أبريل ٢٠٢٦</div></div>
-    <button class="btn-p" onclick="openForm()">＋ عميل جديد</button>
-  </div>
-  <div class="kgrid">
-    <div class="kpi" onclick="filterGo(&#39;جاهز للتنفيذ&#39;)">
-      <div class="kpi-bar" style="background:var(--g)"></div>
-      <div class="kpi-l">جاهز للتنفيذ</div>
-      <div class="kpi-n" style="color:var(--g)">0</div>
-      <div class="kpi-f">🔥 0 جاهز + مدفوع</div>
-    </div>
-    <div class="kpi" onclick="filterGo(&#39;قيد التجهيز&#39;)">
-      <div class="kpi-bar" style="background:var(--b)"></div>
-      <div class="kpi-l">قيد التجهيز</div>
-      <div class="kpi-n" style="color:var(--b)">0</div>
-      <div class="kpi-f">يحتاجون متابعة</div>
-    </div>
-    <div class="kpi" onclick="filterGo(&#39;متأخر&#39;)">
-      <div class="kpi-bar" style="background:var(--re)"></div>
-      <div class="kpi-l">متأخر — خطر</div>
-      <div class="kpi-n" style="color:var(--re)">0</div>
-      <div class="kpi-f">⚠️ 0 عاجل</div>
-    </div>
-    <div class="kpi" onclick="filterGo(&#39;منتهي&#39;)">
-      <div class="kpi-bar" style="background:var(--gr)"></div>
-      <div class="kpi-l">منتهي</div>
-      <div class="kpi-n" style="color:var(--gr)">0</div>
-      <div class="kpi-f">تم التسليم</div>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:2fr 1fr;gap:13px;margin-bottom:14px">
-    <div class="gc" style="padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:13px">💰 النظرة المالية — الدينار الكويتي</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:13px">
-        <div><div style="font-size:9.5px;color:var(--mt);margin-bottom:3px">إجمالي العقود</div><div style="font-size:15px;font-weight:700">0.000 د.ك</div></div>
-        <div><div style="font-size:9.5px;color:var(--mt);margin-bottom:3px">المحصّل</div><div style="font-size:15px;font-weight:700;color:var(--g)">0.000 د.ك</div></div>
-        <div><div style="font-size:9.5px;color:var(--mt);margin-bottom:3px">المتبقي</div><div style="font-size:15px;font-weight:700;color:var(--re)">0.000 د.ك</div></div>
-      </div>
-      <div class="pw"><div class="pb"><div class="pf" style="width:0%;background:var(--g)"></div></div><span class="pl">0%</span></div>
-      <div style="margin-top:10px;font-size:11px;color:var(--re)">⚠️ غير مدفوع: 0.000 د.ك</div>
-    </div>
-    <div class="gc" style="padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:11px">🏗️ المراحل</div>
-      <div class="br"><span class="br-l">تصميم</span><div class="br-t"><div class="br-f" style="width:0%;background:var(--accent)"></div></div><span class="br-c">0</span></div><div class="br"><span class="br-l">مصنع</span><div class="br-t"><div class="br-f" style="width:0%;background:var(--accent)"></div></div><span class="br-c">0</span></div><div class="br"><span class="br-l">دهان</span><div class="br-t"><div class="br-f" style="width:0%;background:var(--accent)"></div></div><span class="br-c">0</span></div><div class="br"><span class="br-l">تركيب</span><div class="br-t"><div class="br-f" style="width:0%;background:var(--accent)"></div></div><span class="br-c">0</span></div><div class="br"><span class="br-l">تسليم</span><div class="br-t"><div class="br-f" style="width:0%;background:var(--accent)"></div></div><span class="br-c">0</span></div>
-    </div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:13px">
-    <div class="gc" style="padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:var(--tx2);margin-bottom:11px">🔥 أولويات اليوم — جاهز + مدفوع</div>
-      <div style="color:var(--mt);font-size:12px;text-align:center;padding:10px">لا يوجد حالياً</div>
-    </div>
-    <div class="gc" style="padding:16px 18px">
-      <div style="font-size:11px;font-weight:700;color:var(--re);margin-bottom:11px">🚨 متأخرون — تدخل فوري</div>
-      <div style="color:var(--mt);font-size:12px;text-align:center;padding:10px">لا يوجد ✓</div>
-    </div>
-  </div></div>
+  <div id="pg-dashboard"></div>
   <div id="pg-clients" style="display:none"></div>
   <div id="pg-daily" style="display:none"></div>
   <div id="pg-reports" style="display:none"></div>
@@ -619,15 +559,15 @@ tbody tr:hover .ab{opacity:1}
 </div>
 
 <!-- MAP MODAL -->
-<div class="ov" id="ov-map" onclick="e=&gt;{if(e.target===document.getElementById(&#39;ov-map&#39;))document.getElementById(&#39;ov-map&#39;).classList.remove(&#39;open&#39;)}">
+<div class="ov" id="ov-map" onclick="e=>{if(e.target===document.getElementById('ov-map'))document.getElementById('ov-map').classList.remove('open')}">
 <div class="modal" style="max-width:700px">
   <div class="m-hdr">
     <div class="m-title">🗺️ موقع العميل</div>
-    <button class="m-close" onclick="document.getElementById(&#39;ov-map&#39;).classList.remove(&#39;open&#39;)">✕</button>
+    <button class="m-close" onclick="document.getElementById('ov-map').classList.remove('open')">✕</button>
   </div>
   <div class="m-body">
     <div id="map-info" style="margin-bottom:12px;font-size:13px;color:var(--mt)"></div>
-    <iframe id="map-frame" src="./هذا اخر واحد_files/saved_resource.html" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    <iframe id="map-frame" src="" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     <div style="margin-top:10px;display:flex;gap:8px">
       <button class="btn-p btn-sm" id="btn-open-maps">🔗 فتح في خرائط جوجل</button>
       <button class="btn-ghost btn-sm" id="btn-open-waze">🚗 فتح في Waze</button>
@@ -660,7 +600,7 @@ tbody tr:hover .ab{opacity:1}
 
 <div class="toast" id="toast"></div>
 
-<script src="./هذا اخر واحد_files/supabase.min.js.download"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 // ══════════════════════════════
 // SUPABASE CONFIG
@@ -2065,6 +2005,5 @@ function kitFilterView(key){
 // ── START ──
 initApp();
 </script>
-
-
-<div id="notif-ring" class="notif-ring"><div class="notif-ring-ico">🔔</div><div class="notif-ring-body"><div class="notif-ring-title"></div><div class="notif-ring-sub"></div></div><button class="notif-close" onclick="this.parentElement.classList.remove(&#39;show&#39;)">✕</button></div></body></html>
+</body>
+</html>
