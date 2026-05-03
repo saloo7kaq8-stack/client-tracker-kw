@@ -470,6 +470,88 @@ body.dark .pgb{background:rgba(30,50,85,.6);border-color:rgba(120,180,255,.2);co
 .fine-display{background:rgba(192,57,43,.07);border:1px solid var(--rebd);border-radius:10px;padding:14px;margin-bottom:14px}
 .fine-amount{font-size:24px;font-weight:700;color:var(--re);margin-bottom:4px}
 .fine-days{font-size:12px;color:var(--mt)}
+
+/* ═══ FULL-PAGE PROFILE ═══ */
+.prof-page{animation:fadeInUp .35s ease-out}
+.prof-back{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;border:1px solid var(--bd);background:rgba(255,255,255,.5);color:var(--mt);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.18s;margin-bottom:18px}
+.prof-back:hover{background:rgba(200,228,255,.6);color:var(--tx);border-color:var(--bd2)}
+body.dark .prof-back{background:rgba(30,50,85,.5)}
+
+.prof-hero-card{background:var(--sf);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(130,185,255,.3);border-radius:var(--r2);padding:28px;box-shadow:var(--sh);margin-bottom:22px;position:relative;overflow:hidden}
+.prof-hero-card::before{content:'';position:absolute;top:-60px;left:-60px;width:240px;height:240px;background:radial-gradient(circle,var(--accent-glow) 0%,transparent 70%);pointer-events:none}
+.prof-hero-top{display:flex;align-items:flex-start;gap:18px;position:relative;z-index:1}
+.prof-hero-av{width:72px;height:72px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex-shrink:0;box-shadow:0 6px 20px rgba(0,0,0,.12)}
+.prof-hero-info{flex:1}
+.prof-hero-name{font-family:var(--font-display);font-size:24px;font-weight:900;color:var(--tx);letter-spacing:-.5px;margin-bottom:6px}
+.prof-hero-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.prof-hero-actions{display:flex;gap:8px;flex-wrap:wrap}
+.prof-hero-actions .btn-ghost{padding:8px 14px;font-size:12px}
+.prof-hero-quick{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:20px;position:relative;z-index:1}
+.prof-qk{padding:12px 14px;background:rgba(200,228,255,.25);border-radius:10px;text-align:center}
+body.dark .prof-qk{background:rgba(50,70,100,.3)}
+.prof-qk-label{font-size:9px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.prof-qk-value{font-size:15px;font-weight:800;color:var(--tx)}
+
+/* ── PHASE TIMELINE ── */
+.phase-timeline{margin-bottom:22px}
+.phase-tl-item{position:relative;padding-right:40px;padding-bottom:0;margin-bottom:4px}
+.phase-tl-item:last-child{padding-bottom:0}
+.phase-tl-line{position:absolute;right:17px;top:38px;bottom:-4px;width:3px;border-radius:2px}
+.phase-tl-item:last-child .phase-tl-line{display:none}
+.phase-tl-dot{position:absolute;right:6px;top:14px;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;z-index:2;transition:.3s}
+.phase-tl-dot.done{background:var(--g);color:#fff;box-shadow:0 2px 8px rgba(10,143,92,.3)}
+.phase-tl-dot.current{box-shadow:0 0 0 4px rgba(18,96,204,.2),0 2px 8px rgba(18,96,204,.3)}
+.phase-tl-dot.upcoming{background:rgba(130,185,255,.18);color:var(--mt);border:2px solid rgba(130,185,255,.3)}
+
+.phase-tl-card{border-radius:var(--r);border:1px solid;padding:16px 18px;transition:all .2s;cursor:pointer}
+.phase-tl-card.done-card{background:rgba(10,143,92,.04);border-color:rgba(10,143,92,.15)}
+.phase-tl-card.done-card:hover{background:rgba(10,143,92,.08)}
+.phase-tl-card.current-card{background:linear-gradient(135deg,rgba(15,76,159,.06) 0%,rgba(15,76,159,.02) 100%);border-color:rgba(15,76,159,.25);border-right:4px solid var(--accent);box-shadow:var(--sh)}
+.phase-tl-card.upcoming-card{background:rgba(130,185,255,.04);border-color:rgba(130,185,255,.12);opacity:.65}
+.phase-tl-card.upcoming-card:hover{opacity:.85}
+body.dark .phase-tl-card.done-card{background:rgba(10,143,92,.08);border-color:rgba(10,143,92,.2)}
+body.dark .phase-tl-card.current-card{background:rgba(74,158,255,.08);border-color:rgba(74,158,255,.25)}
+body.dark .phase-tl-card.upcoming-card{background:rgba(50,70,100,.15);border-color:rgba(120,180,255,.1)}
+
+.phase-tl-header{display:flex;align-items:center;gap:10px}
+.phase-tl-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.phase-tl-title{font-family:var(--font-display);font-size:14px;font-weight:800;color:var(--tx)}
+.phase-tl-subtitle{font-size:11px;color:var(--mt);margin-top:1px}
+.phase-tl-toggle{margin-right:auto;font-size:12px;color:var(--mt);transition:transform .2s}
+.phase-tl-card.expanded .phase-tl-toggle{transform:rotate(180deg)}
+
+.phase-tl-body{display:none;margin-top:14px;padding-top:14px;border-top:1px solid rgba(130,185,255,.15)}
+.phase-tl-card.expanded .phase-tl-body{display:block}
+
+/* ── SMART QUESTIONS ── */
+.sq-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.sq-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(255,255,255,.5);border:1px solid rgba(130,185,255,.15);border-radius:9px;font-size:12.5px;transition:.15s;cursor:pointer}
+body.dark .sq-item{background:rgba(30,50,85,.3)}
+.sq-item:hover{background:rgba(200,228,255,.4);border-color:rgba(130,185,255,.3)}
+.sq-check{width:22px;height:22px;border-radius:6px;border:2px solid rgba(130,185,255,.4);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;font-size:12px;color:transparent}
+.sq-check.checked{background:var(--g);border-color:var(--g);color:#fff}
+.sq-text{flex:1;color:var(--tx2);font-weight:500}
+.sq-check.checked+.sq-text{color:var(--g);text-decoration:line-through;opacity:.7}
+
+/* ── ALERTS INSIDE PROFILE ── */
+.prof-alert{padding:10px 14px;border-radius:9px;font-size:12.5px;font-weight:600;display:flex;align-items:flex-start;gap:9px;margin-top:10px;line-height:1.7}
+.prof-alert.danger{background:var(--rebg);border:1px solid var(--rebd);color:var(--re)}
+.prof-alert.warning{background:var(--ambg);border:1px solid var(--ambd);color:var(--am)}
+.prof-alert.success{background:var(--gbg);border:1px solid var(--gbd);color:var(--g)}
+.prof-alert.info{background:var(--bbg);border:1px solid var(--bbd);color:var(--b)}
+.prof-alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.prof-alert-body{flex:1}
+.prof-alert-title{font-weight:800;margin-bottom:2px}
+.prof-alert-action{font-weight:500;font-size:11.5px;opacity:.85}
+
+/* ── PROFILE SECTIONS ── */
+.prof-section{background:var(--sf);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(130,185,255,.25);border-radius:var(--r);padding:20px;box-shadow:var(--sh);margin-bottom:16px}
+.prof-section-title{font-family:var(--font-display);font-size:13px;font-weight:800;color:var(--tx);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+body.dark .prof-section{background:rgba(22,40,68,.7);border-color:rgba(120,180,255,.15)}
+
+.prof-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.prof-grid-2{grid-template-columns:1fr}.prof-hero-quick{grid-template-columns:repeat(2,1fr)}}
+
 </style>
 </head>
 <body>
@@ -666,6 +748,7 @@ body.dark .pgb{background:rgba(30,50,85,.6);border-color:rgba(120,180,255,.2);co
   <div id="pg-import" style="display:none"></div>
   <div id="pg-appliances" style="display:none"></div>
   <div id="pg-slkr" style="display:none"></div>
+  <div id="pg-profile" style="display:none"></div>
 </main>
 </div>
 
@@ -1310,7 +1393,7 @@ async function changePhase(id,newPh){
   
   await dbUpdateClient(id,c);
   toast('✅ تم الانتقال لمرحلة: '+phaseName+' — أنت تأمر طال عمرك');
-  viewClient(id);
+  if(curPg==='profile') renderProfile(id); else viewClient(id);
   renderSF();
 }
 
@@ -1318,9 +1401,7 @@ function toggleSiteCheck(id,item,checked){
   const c=clients.find(x=>x.id===id);if(!c)return;
   if(!c._siteCheck)c._siteCheck={};
   c._siteCheck[item]=checked;
-  // Don't reload the whole profile — just update locally
-  // Save will happen on phase change
-  viewClient(id);
+  if(curPg==='profile') renderProfile(id); else viewClient(id);
 }
 
 async function setMfgPct(id,val){
@@ -1329,7 +1410,7 @@ async function setMfgPct(id,val){
   if(!c.log)c.log=[];
   c.log.push({date:today(),text:'⚙️ تحديث نسبة التصنيع: '+val+'%'});
   toast('✅ نسبة التصنيع: '+val+'%');
-  viewClient(id);
+  if(curPg==='profile') renderProfile(id); else viewClient(id);
 }
 
 // ══════════════════════════════════════
@@ -1799,7 +1880,7 @@ async function saveMeasOrder(id,phase){
   c.log.push({date:today(),text:'📐 تم إصدار أمر قياس '+(phase===2?'بداية':'نهاية')+' — الفني: '+(data.tech||'غير محدد')});
   document.getElementById('ov-meas')?.classList.remove('open');
   toast('✅ تم إصدار أمر القياس — أنت تأمر طال عمرك');
-  viewClient(id);
+  if(curPg==='profile') renderProfile(id); else viewClient(id);
 }
 
 function printMeasOrder(id,measType){
@@ -2110,7 +2191,7 @@ function getMyLocation(){if(!navigator.geolocation){toast('المتصفح لا �
 // ── NAVIGATION ──
 function go(name){
   curPg=name;
-  ['dashboard','clients','daily','reports','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr'].forEach(p=>{
+  ['dashboard','clients','daily','reports','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile'].forEach(p=>{
     const el=document.getElementById('pg-'+p);
     if(el) el.style.display=p===name?'block':'none';
     const nav=document.getElementById('nav-'+p);
@@ -2133,6 +2214,7 @@ function go(name){
     else if(name==='import')renderImport();
     else if(name==='appliances')renderAppliances();
     else if(name==='slkr')renderSlkr();
+    else if(name==='profile'){}// rendered by viewClient
   }catch(e){
     console.error('Render error on page '+name+':',e);
     const el=document.getElementById('pg-'+name);
@@ -2448,129 +2530,438 @@ function openMap(id){
 document.getElementById('ov-map').addEventListener('click',e=>{if(e.target===document.getElementById('ov-map'))document.getElementById('ov-map').classList.remove('open')});
 
 // ── PROFILE ──
+// ═══════════════════════════════════════════════
+// FULL-PAGE PROFILE — ملف العميل الكامل
+// ═══════════════════════════════════════════════
+
+// ── Smart Questions per Phase ──
+const PHASE_QUESTIONS=[
+  null, // index 0 unused
+  [ // Phase 1 — توقيع العقد
+    {id:'p1_data',text:'هل سجّلت بيانات العميل كاملة (اسم، هاتف، عنوان، رقم مدني)؟'},
+    {id:'p1_contract',text:'هل وقّع العميل على العقد؟'},
+    {id:'p1_pay50',text:'هل استلمت الدفعة الأولى (50%)؟'},
+    {id:'p1_file',text:'هل فتحت ملف المشروع بالنظام؟'}
+  ],
+  [ // Phase 2 — قياس البداية
+    {id:'p2_tech',text:'هل عيّنت الفني المسؤول عن القياس؟'},
+    {id:'p2_appt',text:'هل حددت موعد مع العميل للقياس؟'},
+    {id:'p2_order',text:'هل أصدرت أمر القياس من النظام؟'},
+    {id:'p2_visit',text:'هل زار الفني الموقع وأخذ القياسات؟'}
+  ],
+  [ // Phase 3 — تقرير القياس
+    {id:'p3_report',text:'هل استلمت تقرير القياس من الفني؟'},
+    {id:'p3_dims',text:'هل راجعت المقاسات (طول، عرض، ارتفاع)؟'},
+    {id:'p3_infra',text:'هل تأكدت من مواقع السباكة والكهرباء والغاز؟'},
+    {id:'p3_photos',text:'هل مرفقة صور الموقع؟'},
+    {id:'p3_issues',text:'هل فيه مشاكل تقنية (عمود، أنبوب بارز)؟ سجّلها'}
+  ],
+  [ // Phase 4 — جاهزية الموقع
+    {id:'p4_plumb',text:'هل السباكة جاهزة (ماء حار/بارد/صرف)؟'},
+    {id:'p4_gas',text:'هل نقاط الغاز جاهزة؟'},
+    {id:'p4_elec',text:'هل الكهرباء جاهزة (فرن/ثلاجة/غسالة/إضاءة/بريزات)؟'},
+    {id:'p4_exhaust',text:'هل مخرج الشفاط (المدخنة) جاهز؟'},
+    {id:'p4_floor',text:'هل بلاط الأرضية مركّب؟'},
+    {id:'p4_wall',text:'هل بلاط الجدار (الباك سبلاش) مركّب؟'},
+    {id:'p4_gypsum',text:'هل جبس السقف جاهز؟'},
+    {id:'p4_paint',text:'هل الدهان خلص؟'},
+    {id:'p4_doors',text:'هل الأبواب والنوافذ مركّبة؟'}
+  ],
+  [ // Phase 5 — التصميم والاعتماد
+    {id:'p5_designs',text:'هل قدّمت 2-3 خيارات تصميم 3D للعميل؟'},
+    {id:'p5_colors',text:'هل اعتمد العميل الألوان والخامات؟'},
+    {id:'p5_handles',text:'هل اختار العميل المقابض والإكسسوارات؟'},
+    {id:'p5_surface',text:'هل اختار العميل نوع السطح (رخام/كوارتز/غيره)؟'},
+    {id:'p5_sign',text:'هل وقّع العميل على نموذج الاعتماد النهائي؟'}
+  ],
+  [ // Phase 6 — قياس النهاية
+    {id:'p6_site_ready',text:'هل الموقع جاهز 100% للقياس النهائي؟'},
+    {id:'p6_order',text:'هل أصدرت أمر القياس النهائي؟'},
+    {id:'p6_precision',text:'هل القياس النهائي دقيق للملليمتر؟'},
+    {id:'p6_floor_level',text:'هل تأكدت إن الأرضية مستوية؟'},
+    {id:'p6_walls',text:'هل الجدران مستقيمة؟'},
+    {id:'p6_final_infra',text:'هل مواقع السباكة والكهرباء نهائية؟'}
+  ],
+  [ // Phase 7 — أمر التصنيع
+    {id:'p7_dims_sent',text:'هل أرسلت المقاسات النهائية للمصنع؟'},
+    {id:'p7_design_sent',text:'هل أرسلت التصميم المعتمد للمصنع؟'},
+    {id:'p7_materials',text:'هل أرسلت قائمة المواد للمصنع؟'},
+    {id:'p7_schedule',text:'هل حددت الجدول الزمني مع المصنع؟'},
+    {id:'p7_pay35',text:'هل استلمت الدفعة الثانية (35%)؟'},
+    {id:'p7_mfg_order',text:'هل طبعت أمر التصنيع الرسمي؟'}
+  ],
+  [ // Phase 8 — التصنيع
+    {id:'p8_started',text:'هل بدأ المصنع بالعمل؟'},
+    {id:'p8_weekly',text:'هل تتابع التقدم أسبوعياً؟'},
+    {id:'p8_cutting',text:'هل خلص تقطيع الألواح؟'},
+    {id:'p8_assembly',text:'هل خلص تجميع الهياكل؟'},
+    {id:'p8_edges',text:'هل ركّبوا الحواف؟'},
+    {id:'p8_hardware',text:'هل ركّبوا المفصلات والسكك؟'},
+    {id:'p8_qc',text:'هل سويت فحص جودة أولي؟'}
+  ],
+  [ // Phase 9 — الدهان والتجهيز
+    {id:'p9_coats',text:'هل تم دهان عدد الأوجه المطلوبة؟'},
+    {id:'p9_color_match',text:'هل اللون متجانس ومطابق للاعتماد؟'},
+    {id:'p9_qc_each',text:'هل فحصت كل قطعة على حدة؟'},
+    {id:'p9_photos',text:'هل صوّرت المنتج قبل النقل؟'}
+  ],
+  [ // Phase 10 — التركيب
+    {id:'p10_team',text:'هل جهّزت فريق التركيب (نجار + كهربائي + سباك)؟'},
+    {id:'p10_lower',text:'هل ركّبت الوحدات السفلية؟'},
+    {id:'p10_upper',text:'هل ركّبت الوحدات العلوية؟'},
+    {id:'p10_surface',text:'هل ركّبت الأسطح؟'},
+    {id:'p10_sink',text:'هل ركّبت الحوض والخلاط؟'},
+    {id:'p10_appliances',text:'هل ركّبت الأجهزة؟'},
+    {id:'p10_lights',text:'هل ركّبت الإضاءة؟'},
+    {id:'p10_backsplash',text:'هل ركّبت الباك سبلاش؟'}
+  ],
+  [ // Phase 11 — الفحص والتسليم الأولي
+    {id:'p11_doors_drawers',text:'هل فحصت الأبواب والأدراج مع العميل؟'},
+    {id:'p11_hinges',text:'هل فحصت المفصلات؟'},
+    {id:'p11_surfaces',text:'هل فحصت الأسطح (خدوش، كسور)؟'},
+    {id:'p11_appliances',text:'هل فحصت الأجهزة (تشغيل)؟'},
+    {id:'p11_plumbing',text:'هل فحصت السباكة (تسريب)؟'},
+    {id:'p11_electrical',text:'هل فحصت الكهرباء؟'},
+    {id:'p11_snag',text:'هل سجّلت كل الملاحظات بالـ Snag List؟'},
+    {id:'p11_fix_date',text:'هل حددت موعد إصلاح الملاحظات؟'}
+  ],
+  [ // Phase 12 — التسليم النهائي
+    {id:'p12_fixes',text:'هل أصلحت كل ملاحظات العميل؟'},
+    {id:'p12_sign_off',text:'هل وقّع العميل على محضر التسليم؟'},
+    {id:'p12_warranty',text:'هل سلّمت العميل شهادة الضمان؟'},
+    {id:'p12_pay15',text:'هل استلمت الدفعة الأخيرة (15%)؟'},
+    {id:'p12_maintenance',text:'هل جدولت زيارة صيانة بعد 3 شهور؟'}
+  ]
+];
+
+// ── Per-phase error/missing data checks ──
+function getPhaseAlerts(c,ph){
+  const alerts=[];
+  const contract=+(c.contract||0);
+  const totalPaid=(c.payments||[]).reduce((a,pm)=>a+(+pm.amount||0),0);
+  const pay1=Math.round(contract*0.50*1000)/1000;
+  const pay2=Math.round(contract*0.35*1000)/1000;
+  const delay=getPhaseDelay(c);
+
+  // Delay alert
+  if(delay.late && getPhase(c)===ph){
+    alerts.push({type:'danger',icon:'⏰',title:'تأخير! هالمرحلة صارلها '+delay.days+' يوم',body:'المدة المتوقعة '+delay.max+' يوم فقط. تابع الموضوع فوراً — اتصل على العميل أو المسؤول الحين!'});
+  }
+
+  // Payment alerts
+  if(ph===1 && contract>0 && totalPaid<pay1){
+    alerts.push({type:'danger',icon:'💰',title:'الدفعة الأولى (50%) لم تُستلم!',body:'المطلوب: '+pay1.toFixed(3)+' د.ك — لا تبدأ شغل بدون دفعة. اتصل على العميل وحصّل حقك.'});
+  }
+  if(ph===7 && contract>0 && totalPaid<(pay1+pay2)){
+    alerts.push({type:'warning',icon:'💰',title:'الدفعة الثانية (35%) مطلوبة قبل التصنيع',body:'المحصّل: '+totalPaid.toFixed(3)+' | المطلوب: '+(pay1+pay2).toFixed(3)+' د.ك'});
+  }
+  if(ph===12 && contract>0 && totalPaid<contract){
+    alerts.push({type:'warning',icon:'💰',title:'الدفعة الأخيرة (15%) — استلمها قبل التسليم!',body:'المتبقي: '+(contract-totalPaid).toFixed(3)+' د.ك'});
+  }
+
+  // Missing data alerts
+  if(ph===1){
+    if(!c.phone) alerts.push({type:'warning',icon:'📱',title:'رقم الهاتف ناقص!',body:'سجّل رقم العميل عشان تقدر تتواصل معاه.'});
+    if(!c.address) alerts.push({type:'warning',icon:'📍',title:'العنوان ناقص!',body:'أضف عنوان العميل التفصيلي — بتحتاجه للقياس والتركيب.'});
+    if(!c.civilId) alerts.push({type:'info',icon:'🆔',title:'الرقم المدني غير مسجّل',body:'يفضّل تسجيله للعقد والتوثيق.'});
+  }
+  if(ph===2 && !c._measStart){
+    alerts.push({type:'info',icon:'📐',title:'لم يُصدر أمر قياس بداية بعد',body:'اضغط زر إصدار أمر القياس أسفل.'});
+  }
+  if(ph===6 && !c._measEnd){
+    alerts.push({type:'info',icon:'📏',title:'لم يُصدر أمر قياس نهائي بعد',body:'القياس النهائي ضروري قبل إرسال الأبعاد للمصنع.'});
+  }
+
+  return alerts;
+}
+
+let _profileClientId=null;
+let _prevPage='clients';
+
 function viewClient(id){
   const c=clients.find(x=>x.id===id);if(!c)return;
-  document.getElementById('prof-edit-btn').onclick=()=>{closeProfile();openForm(id)};
-  document.getElementById('prof-print-btn').onclick=()=>{printContract(id)};
-  document.getElementById('prof-map-btn').style.display=(c.lat&&c.lng)?'':'none';
-  document.getElementById('prof-map-btn').onclick=()=>{closeProfile();openMap(id)};
+  _profileClientId=id;
+  _prevPage=curPg==='profile'?'clients':curPg;
+  go('profile');
+  renderProfile(id);
+}
+
+function goBackFromProfile(){
+  go(_prevPage||'clients');
+}
+
+function renderProfile(id){
+  const c=clients.find(x=>x.id===id);if(!c)return;
+  const ph=getPhase(c);
+  const contract=+(c.contract||0);
+  const totalPaid=(c.payments||[]).reduce((a,pm)=>a+(+pm.amount||0),0);
+  const remaining=contract-totalPaid;
+  const cp=pct(totalPaid,contract||1);
   const si=STAGES.indexOf(c.stage);
-  const cp=pct(+c.collected||0,+c.contract||1);
-  document.getElementById('prof-body').innerHTML=`
-    <div class="p-hero">
-      <div class="p-av" style="background:${avBg(c.status)};color:${avFg(c.status)}">${ini(c.name)}</div>
-      <div style="flex:1">
-        <div class="p-name">${c.name}</div>
-        <div class="p-meta">${segB(c.status)}${prioB(c.priority)}<span class="badge bg-te">${c.type}</span><span class="badge bg-gr">👤 ${c.resp}</span></div>
-      </div>
-    </div>
+  const sq=c._smartQ||{};
 
-    <!-- ═══ PHASE PROGRESS BAR ═══ -->
-    <div style="margin-bottom:16px;padding:16px 12px;background:var(--sf);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden">
-      <div style="display:flex;align-items:flex-start;gap:2px;overflow-x:auto;padding-bottom:4px">
-        ${renderPhaseBar(c)}
-      </div>
-    </div>
+  // ── Build phase timeline ──
+  let timelineHTML='';
+  for(let i=0;i<PHASES.length;i++){
+    const p=PHASES[i];
+    const num=i+1;
+    const isDone=num<ph;
+    const isCurr=num===ph;
+    const isUp=num>ph;
+    const dotClass=isDone?'done':isCurr?'current':'upcoming';
+    const cardClass=isDone?'done-card':isCurr?'current-card expanded':'upcoming-card';
+    const lineColor=isDone?'var(--g)':isCurr?'var(--accent)':'rgba(130,185,255,.18)';
+    const dotBg=isCurr?p.color:'';
+    const alerts=isCurr?getPhaseAlerts(c,num):[];
+    const questions=PHASE_QUESTIONS[num]||[];
 
-    <!-- ═══ PHASE GUIDE — المطلوب منك الحين ═══ -->
-    ${renderPhaseGuide(c)}
+    // Phase completion date from log
+    let completedDate='';
+    if(isDone){
+      const logEntry=(c.log||[]).find(l=>l.text.includes('انتقال للمرحلة') && l.text.includes(PHASES[i+1]?.name||''));
+      if(logEntry) completedDate=logEntry.date;
+    }
 
-    <div class="cg">
-      <div class="ci"><div class="ci-ico">📞</div><div><div class="ci-l">رقم الهاتف</div><div class="ci-v"><a href="tel:${c.phone}">${c.phone}</a></div></div></div>
-      ${c.phone2?`<div class="ci"><div class="ci-ico">📱</div><div><div class="ci-l">هاتف بديل</div><div class="ci-v"><a href="tel:${c.phone2}">${c.phone2}</a></div></div></div>`:''}
-      ${c.civilId?`<div class="ci"><div class="ci-ico">🆔</div><div><div class="ci-l">الرقم المدني</div><div class="ci-v" style="font-family:'JetBrains Mono',monospace;letter-spacing:.5px">${c.civilId}</div></div></div>`:''}
-      ${c.email?`<div class="ci"><div class="ci-ico">📧</div><div><div class="ci-l">البريد</div><div class="ci-v"><a href="mailto:${c.email}">${c.email}</a></div></div></div>`:''}
-      ${c.whatsapp?`<div class="ci"><div class="ci-ico">💬</div><div><div class="ci-l">واتساب</div><div class="ci-v"><a href="https://wa.me/${c.whatsapp}" target="_blank">${c.whatsapp}</a></div></div></div>`:''}
-      <div class="ci"><div class="ci-ico">📍</div><div><div class="ci-l">المنطقة</div><div class="ci-v">${c.city}</div></div></div>
-      <div class="ci"><div class="ci-ico">🏘️</div><div><div class="ci-l">العنوان</div><div class="ci-v">${c.address||'—'}${c.lat&&c.lng?` <button class="btn-ghost btn-sm" onclick="openMap(${c.id})" style="margin-right:6px">🗺️</button>`:''}</div></div></div>
-      ${c.lat&&c.lng?`<div class="ci"><div class="ci-ico">🛰️</div><div><div class="ci-l">إحداثيات GPS</div><div class="ci-v">${c.lat}, ${c.lng}</div></div></div>`:``}
-    </div>
-    <div class="kit-section">
-      <div class="kit-title">🍳 حالة المطابخ</div>
-      <div class="kit-grid">
-        <div class="kit-box" style="background:var(--kit-brown-bg);border-color:var(--kit-brown-bd)"><div class="kit-box-lbl" style="color:var(--kit-brown)">🟤 غير مطلوبة للتصنيع</div><div class="kit-box-val">${c.kitBrown||'—'}</div>${c.kitBrownDate?`<div style="font-size:10px;color:var(--mt);margin-top:2px">📅 ${c.kitBrownDate}</div>`:''}</div>
-        <div class="kit-box" style="background:var(--kit-yellow-bg);border-color:var(--kit-yellow-bd)"><div class="kit-box-lbl" style="color:var(--kit-yellow)">🟡 مؤجلة موقتاً</div><div class="kit-box-val">${c.kitYellow||'—'}</div>${c.kitYellowDate?`<div style="font-size:10px;color:var(--mt);margin-top:2px">📅 ${c.kitYellowDate}</div>`:''}</div>
-        <div class="kit-box" style="background:var(--kit-lgreen-bg);border-color:var(--kit-lgreen-bd)"><div class="kit-box-lbl" style="color:var(--kit-lgreen)">🟢 جاري التنفيذ</div><div class="kit-box-val">${c.kitLgreen||'—'}</div>${c.kitLgreenDate?`<div style="font-size:10px;color:var(--mt);margin-top:2px">📅 ${c.kitLgreenDate}</div>`:''}</div>
-        <div class="kit-box" style="background:var(--kit-green-bg);border-color:var(--kit-green-bd)"><div class="kit-box-lbl" style="color:var(--kit-green)">🟩 مطابخ إضافية</div><div class="kit-box-val">${c.kitGreen||'—'}</div>${c.kitGreenDate?`<div style="font-size:10px;color:var(--mt);margin-top:2px">📅 ${c.kitGreenDate}</div>`:''}</div>
-        <div class="kit-box" style="background:var(--kit-dkgray-bg);border-color:var(--kit-dkgray-bd);grid-column:1/-1"><div class="kit-box-lbl" style="color:var(--kit-dkgray)">⬛ مؤقتة وقادمة</div><div class="kit-box-val">${c.kitDkgray||'—'}</div>${c.kitDkgrayDate?`<div style="font-size:10px;color:var(--mt);margin-top:2px">📅 ${c.kitDkgrayDate}</div>`:''}</div>
-      </div>
-    </div>
-    <div class="ig">
-      <div class="ib"><div class="ib-l">جاهزية الموقع</div><div class="ib-v">${siteB(c.site)}</div></div>
-      <div class="ib"><div class="ib-l">حالة الدفع</div><div class="ib-v">${payB(c.pay)}</div></div>
-      <div class="ib"><div class="ib-l">آخر تواصل</div><div class="ib-v">${c.contact||'—'}</div></div>
-      <div class="ib"><div class="ib-l">قيمة العقد</div><div class="ib-v">${fmtKWD(c.contract)}</div></div>
-      <div class="ib"><div class="ib-l">المحصّل</div><div class="ib-v" style="color:var(--g)">${fmtKWD(c.collected)}</div></div>
-      <div class="ib"><div class="ib-l">المتبقي</div><div class="ib-v" style="color:var(--re)">${fmtKWD((+c.contract||0)-(+c.collected||0))}</div></div>
-      <div class="ib"><div class="ib-l">تاريخ التعاقد</div><div class="ib-v">${c.signed||'—'}</div></div>
-      <div class="ib"><div class="ib-l">تاريخ البدء</div><div class="ib-v">${c.start||'—'}</div></div>
-      <div class="ib"><div class="ib-l">تاريخ التسليم</div><div class="ib-v">${c.delivery||'—'}</div></div>
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">💵 جدول الدفعات التفصيلي</div>
-      ${(c.payments&&c.payments.length>0)?`
-      <div style="background:rgba(200,228,255,.3);border-radius:9px;overflow:hidden;border:1px solid rgba(130,185,255,.2)">
-        <div style="display:grid;grid-template-columns:auto 1fr auto;gap:0">
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">الدفعة</div>
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">التاريخ</div>
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">المبلغ</div>
-          ${c.payments.filter(p=>p.amount>0).map((p,i)=>`
-            <div style="font-size:12px;padding:7px 10px;border-bottom:1px solid rgba(130,185,255,.1);color:var(--g)">✓ دفعة ${i+1}</div>
-            <div style="font-size:12px;padding:7px 10px;border-bottom:1px solid rgba(130,185,255,.1);color:var(--mt)">${p.date||'—'}</div>
-            <div style="font-size:12px;font-weight:700;padding:7px 10px;border-bottom:1px solid rgba(130,185,255,.1);color:var(--g)">${fmtKWD(p.amount)}</div>
-          `).join('')}
-          <div style="font-size:12px;font-weight:700;padding:7px 10px;color:var(--re)">المتبقي</div>
-          <div style="font-size:12px;padding:7px 10px;color:var(--mt)">—</div>
-          <div style="font-size:12px;font-weight:700;padding:7px 10px;color:var(--re)">${fmtKWD((+c.contract||0)-c.payments.reduce((a,p)=>a+(+p.amount||0),0))}</div>
+    timelineHTML+=`
+    <div class="phase-tl-item">
+      <div class="phase-tl-line" style="background:${lineColor}"></div>
+      <div class="phase-tl-dot ${dotClass}" style="${isCurr?'background:'+p.color:''}">${isDone?'✓':num}</div>
+      <div class="phase-tl-card ${cardClass}" onclick="this.classList.toggle('expanded')">
+        <div class="phase-tl-header">
+          <div class="phase-tl-icon" style="background:${isDone?'var(--gbg)':isCurr?p.color+'15':'rgba(130,185,255,.08)'};color:${isDone?'var(--g)':isCurr?p.color:'var(--mt)'}">${p.icon}</div>
+          <div style="flex:1">
+            <div class="phase-tl-title">${isDone?'✅ ':isCurr?'▶ ':''}المرحلة ${num} — ${p.name}</div>
+            <div class="phase-tl-subtitle">${isDone?'تم الإنجاز'+(completedDate?' · '+completedDate:''):isCurr?'🎯 '+p.action:p.action}</div>
+          </div>
+          <span class="phase-tl-toggle">▼</span>
         </div>
-      </div>`:'<div style="color:var(--mt);font-size:12px">لم تُسجّل دفعات بعد</div>'}
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">التحصيل المالي — ${cp}%</div>
-      <div class="pw"><div class="pb"><div class="pf" style="width:${cp}%;background:${cp===100?'var(--g)':cp>50?'var(--am)':'var(--re)'}"></div></div><span class="pl">${cp}%</span></div>
-    </div>
-    <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">مراحل التنفيذ</div>
-      <div class="stage-steps">${STAGES.map((st,i)=>`<div class="ss-step"><div class="s-dot ${i<si?'done':i===si?'curr':''}">${i<si?'✓':i+1}</div><div class="s-lbl">${st}</div></div>`).join('')}</div>
-    </div>
-    ${c.notes?`<div class="ib" style="margin-bottom:14px;border-right:3px solid var(--am)"><div class="ib-l">ملاحظات</div><div class="ib-v" style="font-size:13px;font-weight:400;margin-top:4px">${c.notes}</div></div>`:''}
-    <div style="margin-bottom:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <div style="font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px">📦 المواد المخصصة</div>
-        <button class="btn-p btn-sm" onclick="closeProfile();openMatCartFor(${c.id})">🛒 اختيار المواد</button>
-      </div>
-      ${(c._mats&&c._mats.length>0)?`
-      <div style="background:rgba(200,228,255,.3);border-radius:9px;overflow:hidden;border:1px solid rgba(130,185,255,.2)">
-        <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:0">
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">المادة</div>
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">الكمية</div>
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">السعر</div>
-          <div style="font-size:10px;font-weight:700;color:var(--mt);padding:6px 10px;background:rgba(130,185,255,.15);border-bottom:1px solid rgba(130,185,255,.2)">الإجمالي</div>
-          ${c._mats.map(m=>`
-            <div style="font-size:12px;padding:6px 10px;border-bottom:1px solid rgba(130,185,255,.1)">${m.name}</div>
-            <div style="font-size:12px;padding:6px 10px;border-bottom:1px solid rgba(130,185,255,.1);text-align:center">${m.qty} ${m.unit}</div>
-            <div style="font-size:12px;padding:6px 10px;border-bottom:1px solid rgba(130,185,255,.1);text-align:center">${(m.price||0).toFixed(3)}</div>
-            <div style="font-size:12px;padding:6px 10px;border-bottom:1px solid rgba(130,185,255,.1);text-align:center;color:var(--g);font-weight:700">${(m.total||0).toFixed(3)}</div>
-          `).join('')}
-          <div style="font-size:12px;font-weight:700;padding:6px 10px;color:var(--g)">الإجمالي</div>
-          <div style="padding:6px 10px"></div>
-          <div style="padding:6px 10px"></div>
-          <div style="font-size:13px;font-weight:700;padding:6px 10px;color:var(--g)">${c._mats.reduce((s,m)=>s+(m.total||0),0).toFixed(3)} د.ك</div>
+        <div class="phase-tl-body" onclick="event.stopPropagation()">
+          <!-- Guide -->
+          <div style="padding:10px 12px;background:rgba(255,255,255,.5);border-radius:8px;font-size:12.5px;color:var(--tx2);line-height:1.8;border:1px solid rgba(130,185,255,.12);margin-bottom:10px">
+            💡 <b>دليلك:</b> ${p.guide}
+          </div>
+
+          ${isCurr?`
+          <!-- Alerts -->
+          ${alerts.map(a=>`<div class="prof-alert ${a.type}"><div class="prof-alert-icon">${a.icon}</div><div class="prof-alert-body"><div class="prof-alert-title">${a.title}</div><div class="prof-alert-action">${a.body}</div></div></div>`).join('')}
+          `:''}
+
+          <!-- Smart Questions -->
+          ${questions.length>0?`
+          <div style="font-size:11px;font-weight:700;color:var(--mt);margin:${isCurr?'14px':'8px'} 0 6px;text-transform:uppercase;letter-spacing:.5px">${isCurr?'📋 هل سويت هالأشياء؟':'📋 قائمة المهام'}</div>
+          <div class="sq-list">
+            ${questions.map(q=>{
+              const checked=sq[q.id]||false;
+              return`<div class="sq-item" onclick="toggleSmartQ(${id},'${q.id}',this)">
+                <div class="sq-check ${checked?'checked':''}">${checked?'✓':''}</div>
+                <div class="sq-text">${q.text}</div>
+              </div>`;
+            }).join('')}
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--mt);text-align:center">${questions.filter(q=>sq[q.id]).length}/${questions.length} مكتمل</div>
+          `:''}
+
+          ${isCurr?`
+          <!-- Phase-specific tools -->
+          ${(ph===2||ph===6)?`<div style="margin-top:12px"><button class="btn-p btn-sm" onclick="issueMeasOrder(${id},${ph})" style="padding:10px 16px">📐 ${c[ph===2?'_measStart':'_measEnd']?'تعديل':'إصدار'} أمر قياس ${ph===2?'بداية':'نهاية'}</button>${c[ph===2?'_measStart':'_measEnd']?` <button class="btn-ghost btn-sm" onclick="printMeasOrder(${id},'${ph===2?'بداية':'نهاية'}')">🖨️ طباعة</button>`:''}</div>`:''}
+          ${ph===4?renderSiteChecklistInline(c):''}
+          ${ph===7?`<div style="margin-top:12px;display:flex;gap:8px"><button class="btn-p btn-sm" onclick="printMfgOrderFull(${id})" style="padding:10px 16px">🏭 طباعة أمر التصنيع</button></div>`:''}
+          ${ph===8?renderMfgProgressInline(c):''}
+          ${ph===11?`<div style="margin-top:12px"><button class="btn-p btn-sm" onclick="openSnagList(${id})" style="padding:10px 16px;background:linear-gradient(135deg,var(--te),#0a6b6b)">✅ Snag List</button>${c._snags&&c._snags.length>0?'<span style="margin-right:8px;font-size:12px;color:var(--mt)">'+c._snags.filter(s=>s.fixed).length+'/'+c._snags.length+' تم إصلاحها</span>':''}</div>`:''}
+          ${ph===12?`<div style="margin-top:12px;display:flex;gap:8px"><button class="btn-p btn-sm" onclick="printWarranty(${id})" style="padding:10px 16px;background:linear-gradient(135deg,#b8860b,#8b6508)">🏆 شهادة الضمان</button><button class="btn-ghost btn-sm" onclick="openSnagList(${id})">✅ Snag List</button></div>`:''}
+
+          <!-- Phase navigation -->
+          <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+            ${ph>1?`<button class="btn-ghost btn-sm" onclick="changePhase(${id},${ph-1})">⏪ رجوع</button>`:''}
+            ${ph<12?`<button class="btn-p btn-sm" onclick="changePhase(${id},${ph+1})" style="flex:1;padding:10px;font-size:13px;background:linear-gradient(135deg,${p.color},var(--accent2))">✅ اعتمد وانتقل: ${PHASES[ph]?.name||''}</button>`:`<button class="btn-p btn-sm" onclick="changePhase(${id},12)" style="flex:1;padding:10px;font-size:13px;background:linear-gradient(135deg,var(--g),#07724a)">🎉 تسليم نهائي</button>`}
+          </div>
+          `:''}
+
+          ${isDone&&completedDate?`<div style="font-size:11px;color:var(--g);margin-top:6px">✅ تم إنجاز هالمرحلة بتاريخ ${completedDate}</div>`:''}
         </div>
-      </div>`:'<div style="color:var(--mt);font-size:12px;text-align:center;padding:10px;background:rgba(200,228,255,.2);border-radius:8px">لم تُخصص مواد بعد — اضغط زر اختيار المواد</div>'}
-    </div>
-    <div>
-      <div style="font-size:10px;font-weight:700;color:var(--mt);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px">سجل التواصل</div>
-      <div class="note-log" id="nl-${c.id}">
-        ${(c.log||[]).length===0?'<div style="color:var(--mt);font-size:12px;text-align:center;padding:8px">لا توجد سجلات</div>':[...(c.log||[])].reverse().map(n=>`<div class="note-item"><div class="note-d">${n.date}</div><div>${n.text}</div></div>`).join('')}
       </div>
-      <div class="note-add">
-        <input id="ni-${c.id}" placeholder="أضف ملاحظة أو سجّل تواصل..." onkeydown="if(event.key==='Enter')addNote(${c.id})">
-        <button class="btn-p btn-sm" onclick="addNote(${c.id})">+ إضافة</button>
+    </div>`;
+  }
+
+  document.getElementById('pg-profile').innerHTML=`
+  <div class="prof-page">
+    <button class="prof-back" onclick="goBackFromProfile()">→ رجوع للقائمة</button>
+
+    <!-- ═══ HERO CARD ═══ -->
+    <div class="prof-hero-card">
+      <div class="prof-hero-top">
+        <div class="prof-hero-av" style="background:${avBg(c.status)};color:${avFg(c.status)}">${ini(c.name)}</div>
+        <div class="prof-hero-info">
+          <div class="prof-hero-name">${c.name}</div>
+          <div class="prof-hero-badges">${segB(c.status)}${prioB(c.priority)}<span class="badge bg-te">${c.type}</span><span class="badge bg-gr">👤 ${c.resp}</span></div>
+          <div class="prof-hero-actions">
+            <a href="tel:${c.phone}" class="btn-ghost btn-sm" style="color:var(--g);border-color:var(--gbd);text-decoration:none">📞 اتصال</a>
+            ${c.whatsapp?`<a href="https://wa.me/${c.whatsapp}" target="_blank" class="btn-ghost btn-sm" style="color:var(--g);border-color:var(--gbd);text-decoration:none">💬 واتساب</a>`:''}
+            <button class="btn-ghost btn-sm" onclick="openForm(${id})">✏️ تعديل</button>
+            <button class="btn-ghost btn-sm" onclick="printContract(${id})" style="color:var(--g);border-color:var(--gbd)">🖨️ طباعة العقد</button>
+            ${c.lat&&c.lng?`<button class="btn-ghost btn-sm" onclick="openMap(${id})">🗺️ خريطة</button>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="prof-hero-quick">
+        <div class="prof-qk"><div class="prof-qk-label">قيمة العقد</div><div class="prof-qk-value" style="color:var(--accent)">${fmtKWD(contract)}</div></div>
+        <div class="prof-qk"><div class="prof-qk-label">المحصّل</div><div class="prof-qk-value" style="color:var(--g)">${fmtKWD(totalPaid)}</div></div>
+        <div class="prof-qk"><div class="prof-qk-label">المتبقي</div><div class="prof-qk-value" style="color:${remaining>0?'var(--re)':'var(--g)'}">${fmtKWD(remaining)}</div></div>
+        <div class="prof-qk"><div class="prof-qk-label">المرحلة الحالية</div><div class="prof-qk-value">${ph}/12</div></div>
       </div>
     </div>
-  `;
-  document.getElementById('ov-profile').classList.add('open');
+
+    <div class="prof-grid-2">
+      <!-- ═══ RIGHT COLUMN — PHASES ═══ -->
+      <div>
+        <div class="prof-section">
+          <div class="prof-section-title">🔄 مراحل المشروع — ${ph} من 12</div>
+          <!-- Phase progress bar -->
+          <div style="display:flex;align-items:flex-start;gap:2px;overflow-x:auto;padding:8px 4px 12px;margin-bottom:14px">
+            ${renderPhaseBar(c)}
+          </div>
+          <div class="phase-timeline">
+            ${timelineHTML}
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ LEFT COLUMN — DETAILS ═══ -->
+      <div>
+        <!-- Contact Info -->
+        <div class="prof-section">
+          <div class="prof-section-title">📞 معلومات التواصل</div>
+          <div class="cg" style="margin-bottom:0">
+            <div class="ci"><div class="ci-ico">📞</div><div><div class="ci-l">الهاتف</div><div class="ci-v"><a href="tel:${c.phone}">${c.phone}</a></div></div></div>
+            ${c.phone2?`<div class="ci"><div class="ci-ico">📱</div><div><div class="ci-l">هاتف بديل</div><div class="ci-v"><a href="tel:${c.phone2}">${c.phone2}</a></div></div></div>`:''}
+            ${c.civilId?`<div class="ci"><div class="ci-ico">🆔</div><div><div class="ci-l">الرقم المدني</div><div class="ci-v" style="font-family:'JetBrains Mono',monospace">${c.civilId}</div></div></div>`:''}
+            ${c.email?`<div class="ci"><div class="ci-ico">📧</div><div><div class="ci-l">البريد</div><div class="ci-v"><a href="mailto:${c.email}">${c.email}</a></div></div></div>`:''}
+            <div class="ci"><div class="ci-ico">📍</div><div><div class="ci-l">المنطقة</div><div class="ci-v">${c.city}</div></div></div>
+            <div class="ci"><div class="ci-ico">🏘️</div><div><div class="ci-l">العنوان</div><div class="ci-v">${c.address||'—'}</div></div></div>
+          </div>
+        </div>
+
+        <!-- Financial -->
+        <div class="prof-section">
+          <div class="prof-section-title">💰 الوضع المالي</div>
+          <div style="margin-bottom:12px">
+            <div class="pw"><div class="pb" style="height:8px"><div class="pf" style="width:${cp}%;background:${cp>=100?'var(--g)':cp>50?'var(--am)':'var(--re)'};box-shadow:0 2px 8px rgba(0,0,0,.1)"></div></div><span class="pl" style="font-size:12px;font-weight:700">${cp}%</span></div>
+          </div>
+          ${(c.payments&&c.payments.length>0)?`
+          <div style="background:rgba(200,228,255,.25);border-radius:9px;overflow:hidden;border:1px solid rgba(130,185,255,.15)">
+            ${c.payments.filter(p=>p.amount>0).map((p,i)=>`<div style="display:flex;justify-content:space-between;padding:8px 12px;border-bottom:1px solid rgba(130,185,255,.1);font-size:12px">
+              <span style="color:var(--g);font-weight:600">✓ دفعة ${i+1}</span>
+              <span style="color:var(--mt)">${p.date||'—'}</span>
+              <span style="font-weight:700;color:var(--g)">${fmtKWD(p.amount)}</span>
+            </div>`).join('')}
+            ${remaining>0?`<div style="display:flex;justify-content:space-between;padding:8px 12px;font-size:12px;font-weight:700">
+              <span style="color:var(--re)">المتبقي</span><span></span><span style="color:var(--re)">${fmtKWD(remaining)}</span>
+            </div>`:''}
+          </div>`:'<div style="color:var(--mt);font-size:12px;text-align:center;padding:10px">لم تُسجّل دفعات بعد</div>'}
+        </div>
+
+        <!-- Kitchen Status -->
+        <div class="prof-section">
+          <div class="prof-section-title">🍳 حالة المطابخ</div>
+          <div class="kit-grid">
+            <div class="kit-box" style="background:var(--kit-brown-bg);border-color:var(--kit-brown-bd)"><div class="kit-box-lbl" style="color:var(--kit-brown)">🟤 غير مطلوبة</div><div class="kit-box-val">${c.kitBrown||'—'}</div></div>
+            <div class="kit-box" style="background:var(--kit-yellow-bg);border-color:var(--kit-yellow-bd)"><div class="kit-box-lbl" style="color:var(--kit-yellow)">🟡 مؤجلة</div><div class="kit-box-val">${c.kitYellow||'—'}</div></div>
+            <div class="kit-box" style="background:var(--kit-lgreen-bg);border-color:var(--kit-lgreen-bd)"><div class="kit-box-lbl" style="color:var(--kit-lgreen)">🟢 جاري التنفيذ</div><div class="kit-box-val">${c.kitLgreen||'—'}</div></div>
+            <div class="kit-box" style="background:var(--kit-green-bg);border-color:var(--kit-green-bd)"><div class="kit-box-lbl" style="color:var(--kit-green)">🟩 إضافية</div><div class="kit-box-val">${c.kitGreen||'—'}</div></div>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="prof-section">
+          <div class="prof-section-title">📅 التواريخ</div>
+          <div class="ig" style="margin-bottom:0">
+            <div class="ib"><div class="ib-l">تاريخ التعاقد</div><div class="ib-v">${c.signed||'—'}</div></div>
+            <div class="ib"><div class="ib-l">تاريخ البدء</div><div class="ib-v">${c.start||'—'}</div></div>
+            <div class="ib"><div class="ib-l">تاريخ التسليم</div><div class="ib-v">${c.delivery||'—'}</div></div>
+            <div class="ib"><div class="ib-l">آخر تواصل</div><div class="ib-v">${c.contact||'—'}</div></div>
+            <div class="ib"><div class="ib-l">جاهزية الموقع</div><div class="ib-v">${siteB(c.site)}</div></div>
+            <div class="ib"><div class="ib-l">حالة الدفع</div><div class="ib-v">${payB(c.pay)}</div></div>
+          </div>
+        </div>
+
+        ${c.notes?`<div class="prof-section"><div class="prof-section-title">📝 ملاحظات</div><div style="font-size:13px;color:var(--tx2);line-height:1.8">${c.notes}</div></div>`:''}
+
+        <!-- Communication Log -->
+        <div class="prof-section">
+          <div class="prof-section-title">💬 سجل التواصل</div>
+          <div class="note-log" id="pnl-${c.id}" style="max-height:250px">
+            ${(c.log||[]).length===0?'<div style="color:var(--mt);font-size:12px;text-align:center;padding:8px">لا توجد سجلات</div>':[...(c.log||[])].reverse().map(n=>`<div class="note-item"><div class="note-d">${n.date}</div><div>${n.text}</div></div>`).join('')}
+          </div>
+          <div class="note-add">
+            <input id="pni-${c.id}" placeholder="أضف ملاحظة أو سجّل تواصل..." onkeydown="if(event.key==='Enter')addProfileNote(${c.id})">
+            <button class="btn-p btn-sm" onclick="addProfileNote(${c.id})">+ إضافة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Helper: Site checklist inline for phase 4 ──
+function renderSiteChecklistInline(c){
+  const sc=getSiteCheck(c);
+  const done=SITE_CHECKLIST.filter(b=>sc[b.id]).length;
+  const total=SITE_CHECKLIST.length;
+  return`<div style="margin-top:12px;padding:14px;background:rgba(14,127,127,.06);border:1px solid var(--tebd);border-radius:10px">
+    <div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:var(--te);margin-bottom:8px">📋 جاهزية الموقع — ${done}/${total}</div>
+    <div class="pw" style="margin-bottom:10px"><div class="pb" style="height:6px"><div class="pf" style="width:${pct(done,total)}%;background:${done===total?'var(--g)':'var(--te)'}"></div></div><span class="pl" style="font-size:10px">${pct(done,total)}%</span></div>
+    ${SITE_CHECKLIST.map(b=>`<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;cursor:pointer;border-bottom:1px solid rgba(130,185,255,.1);font-size:13px">
+      <input type="checkbox" ${sc[b.id]?'checked':''} onchange="toggleSiteCheck(${c.id},'${b.id}',this.checked)" style="width:18px;height:18px;accent-color:var(--te);cursor:pointer">
+      <span>${b.icon} ${b.name}</span>
+      ${sc[b.id]?'<span style="margin-right:auto;font-size:10px;color:var(--g);font-weight:600">✓</span>':''}
+    </label>`).join('')}
+    ${done===total?'<div style="margin-top:10px;padding:8px;background:var(--gbg);border-radius:8px;text-align:center;font-size:12px;color:var(--g);font-weight:700">✅ الموقع جاهز 100%</div>':''}
+  </div>`;
+}
+
+// ── Helper: Mfg progress for phase 8 ──
+function renderMfgProgressInline(c){
+  const mfgPct=+(c._mfgPct||0);
+  return`<div style="margin-top:12px;padding:14px;background:rgba(154,92,0,.06);border:1px solid var(--ambd);border-radius:10px">
+    <div style="font-family:var(--font-display);font-size:12px;font-weight:800;color:var(--am);margin-bottom:8px">⚙️ نسبة التصنيع</div>
+    <div class="pw" style="margin-bottom:8px"><div class="pb" style="height:8px"><div class="pf" style="width:${mfgPct}%;background:${mfgPct===100?'var(--g)':'var(--am)'}"></div></div><span class="pl">${mfgPct}%</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      ${[0,25,50,75,100].map(v=>`<button class="btn-ghost btn-sm" style="${mfgPct===v?'background:var(--am);color:#fff;border-color:var(--am)':''}" onclick="setMfgPct(${c.id},${v})">${v}%</button>`).join('')}
+    </div>
+  </div>`;
+}
+
+// ── Smart Question Toggle ──
+function toggleSmartQ(clientId,qId,el){
+  const c=clients.find(x=>x.id===clientId);if(!c)return;
+  if(!c._smartQ)c._smartQ={};
+  c._smartQ[qId]=!c._smartQ[qId];
+  const checkEl=el.querySelector('.sq-check');
+  if(checkEl){
+    checkEl.classList.toggle('checked');
+    checkEl.textContent=c._smartQ[qId]?'✓':'';
+  }
+  const textEl=el.querySelector('.sq-text');
+  if(textEl){
+    if(c._smartQ[qId]){textEl.style.color='var(--g)';textEl.style.textDecoration='line-through';textEl.style.opacity='.7';}
+    else{textEl.style.color='';textEl.style.textDecoration='';textEl.style.opacity='';}
+  }
+  // Auto-save after short delay
+  clearTimeout(window._sqSaveTimer);
+  window._sqSaveTimer=setTimeout(()=>dbUpdateClient(clientId,c),1500);
+}
+
+// ── Add Note from Profile Page ──
+async function addProfileNote(id){
+  const inp=document.getElementById(`pni-${id}`);const txt=inp.value.trim();if(!txt)return;
+  const i=clients.findIndex(x=>x.id===id);
+  if(!clients[i].log)clients[i].log=[];
+  clients[i].log.push({date:today(),text:txt});
+  clients[i].contact=today();
+  await dbUpdateClient(id,clients[i]);
+  inp.value='';
+  document.getElementById(`pnl-${id}`).innerHTML=[...clients[i].log].reverse().map(n=>`<div class="note-item"><div class="note-d">${n.date}</div><div>${n.text}</div></div>`).join('');
+  toast('تم إضافة الملاحظة');renderSF();
 }
 
 async function addNote(id){
