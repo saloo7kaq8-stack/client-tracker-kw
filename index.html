@@ -1140,7 +1140,7 @@ function unlockShield(){
 }
 
 // ── Build login user buttons ──
-(function initLoginScreen(){
+document.addEventListener('DOMContentLoaded',function initLoginScreen(){
   const container=document.getElementById('shield-users');
   if(!container)return;
   const roleColors={'super_admin':'linear-gradient(135deg,#d4a853,#b8912f)','manager':'linear-gradient(135deg,#3498db,#2874a6)','factory_manager':'linear-gradient(135deg,#9b59b6,#7d3c98)','data_entry':'linear-gradient(135deg,#7f8c8d,#5d6d7e)','sales':'linear-gradient(135deg,#0a8f5c,#07724a)'};
@@ -1177,7 +1177,7 @@ function unlockShield(){
     });
     d.addEventListener('focus',()=>d.select());
   });
-})();
+});
 
 function checkShieldReady(){
   const digits=document.querySelectorAll('.shield-pin-digit');
