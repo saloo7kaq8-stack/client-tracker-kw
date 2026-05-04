@@ -597,6 +597,9 @@ body.dark .prof-section{background:rgba(22,40,68,.7);border-color:rgba(120,180,2
     <div class="ni" id="nav-clients" onclick="go(&#39;clients&#39;)"><span class="ni-ico">👥</span> العملاء</div>
     <div class="nav-sec">المتابعة</div>
     <div class="ni" id="nav-alerts" onclick="go(&#39;alerts&#39;)"><span class="ni-ico">🔔</span> الإشعارات <span id="alert-badge" style="background: var(--re); color: rgb(255, 255, 255); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-right: auto; display: inline;">350</span></div>
+    <div class="ni" id="nav-editreqs" onclick="renderEditRequests()" style="color:var(--am)"><span class="ni-ico">📋</span> طلبات التعديل <span id="editreq-badge" style="background:var(--am);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
+    <div class="ni" id="nav-adminnotifs" onclick="renderAdminNotifs()" style="color:var(--g)"><span class="ni-ico">📡</span> إشعارات الإدارة <span id="admin-notif-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
+    <div class="ni" id="nav-editreqs" onclick="renderEditRequests()"><span class="ni-ico">📝</span> طلبات التعديل <span id="editreq-badge" style="background:var(--am);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
     <div class="ni" id="nav-calendar" onclick="go(&#39;calendar&#39;)"><span class="ni-ico">📆</span> الكالندر</div>
     <div class="ni" id="nav-daily" onclick="go(&#39;daily&#39;)"><span class="ni-ico">⚡</span> المتابعة اليومية</div>
     <div class="nav-sec">الإدارة</div>
@@ -1420,7 +1423,7 @@ function renderPhaseGuide(c){
 }
 
 async function changePhase(id,newPh){
-  if(!requireAdmin('اعتماد مرحلة'))return;
+  if(!requireSalesOrAbove('اعتماد مرحلة'))return;
   const c=clients.find(x=>x.id===id);if(!c)return;
   const curr=getPhase(c);
   
@@ -1704,8 +1707,8 @@ const USERS={
     access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false}
   },
   'بشار دياب عيسى':{id:'K100',pin:'1100',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
-    permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false}
+    permissions:{clients:{view:true,add:false,edit:false,delete:false,requestEdit:true},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,upload:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
+    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false}
   },
   'حاتم':{id:'K103',pin:'0000',role:'data_entry',title:'إدخال بيانات',avatar:'ح',
     permissions:{clients:{view:true,add:true,edit:true,delete:false},payments:{view:true,add:true,edit:false,delete:false},contracts:{view:true,print:false,amend:false},materials:{view:true,add:true,edit:false},manufacturing:{view:true,create:false,approve:false},invoices:{view:true,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
@@ -1713,11 +1716,11 @@ const USERS={
   },
   'محمود':{id:'K102',pin:'1020',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false}
   },
   'محمد':{id:'K101',pin:'1010',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false}
   }
 };
 let currentUser=null;
@@ -1749,6 +1752,29 @@ function applyRoleVisibility(){
   Object.entries(map).forEach(([navId,page])=>{const el=document.getElementById(navId);if(el)el.style.display=u.access[page]?'':'none';});
   const pinNav=document.querySelector('[onclick="openPinChange()"]');
   if(pinNav)pinNav.style.display=u.access.pinchange?'':'none';
+  // Show edit requests nav for super_admin, sales, factory_manager
+  const editReqNav=document.getElementById('nav-editreqs');
+  if(editReqNav){
+    const showNav=['super_admin','sales','factory_manager'].includes(currentUser.role);
+    editReqNav.style.display=showNav?'':'none';
+  }
+  // Show admin notifications only for admins
+  const adminNotifNav=document.getElementById('nav-adminnotifs');
+  if(adminNotifNav){
+    adminNotifNav.style.display=['super_admin','manager'].includes(currentUser.role)?'':'none';
+  }
+  updateEditReqBadge();
+  updateAdminNotifBadge();
+}
+
+function updateEditReqBadge(){
+  const badge=document.getElementById('editreq-badge');
+  if(!badge)return;
+  const pending=editRequests.filter(r=>r.status==='pending').length;
+  const approved=editRequests.filter(r=>r.status==='approved').length;
+  const count=currentUser?.role==='super_admin'?pending:currentUser?.role==='sales'?(pending+approved):0;
+  if(count>0){badge.textContent=count;badge.style.display='inline';}
+  else{badge.style.display='none';}
 }
 
 function loginUser(){
@@ -1819,6 +1845,85 @@ function requireAdmin(action){
   return true;
 }
 
+// ── Sales & above can do operational tasks + notify admins ──
+function requireSalesOrAbove(action){
+  if(!currentUser){toast('سجّل دخول أولاً','err');loginUser();return false;}
+  const allowed=['super_admin','manager','sales','data_entry'];
+  if(!allowed.includes(currentUser.role)){
+    showUnauthorized(action);
+    addAuditLog('denied','⛔ محاولة وصول مرفوضة: '+action+' بواسطة '+currentUser.name);
+    return false;
+  }
+  // Notify admins if done by non-admin
+  if(currentUser.role!=='super_admin'&&currentUser.role!=='manager'){
+    notifyAdmins(action,currentUser.name,currentUser.title);
+  }
+  return true;
+}
+
+// ── Admin Notification System ──
+let adminNotifications=[];
+try{adminNotifications=JSON.parse(localStorage.getItem('slkr_admin_notifs')||'[]');}catch(e){adminNotifications=[];}
+function saveAdminNotifs(){try{localStorage.setItem('slkr_admin_notifs',JSON.stringify(adminNotifications));}catch(e){}}
+
+function notifyAdmins(action,byName,byRole){
+  const notif={
+    id:'N-'+Date.now(),
+    action:action,
+    by:byName,
+    role:byRole,
+    date:new Date().toLocaleString('ar-KW'),
+    dateISO:today(),
+    read:false
+  };
+  adminNotifications.unshift(notif);
+  if(adminNotifications.length>200)adminNotifications=adminNotifications.slice(0,200);
+  saveAdminNotifs();
+  updateAdminNotifBadge();
+}
+
+function getUnreadNotifCount(){
+  return adminNotifications.filter(n=>!n.read).length;
+}
+
+function updateAdminNotifBadge(){
+  const badge=document.getElementById('admin-notif-badge');
+  if(!badge)return;
+  if(!currentUser||!['super_admin','manager'].includes(currentUser.role)){badge.style.display='none';return;}
+  const count=getUnreadNotifCount();
+  if(count>0){badge.textContent=count;badge.style.display='inline';}
+  else{badge.style.display='none';}
+}
+
+function renderAdminNotifs(){
+  if(!currentUser||!['super_admin','manager'].includes(currentUser.role)){toast('⛔ هالصفحة للإدارة فقط','err');return;}
+  let ov=document.getElementById('ov-adminnotifs');
+  if(!ov){ov=document.createElement('div');ov.className='ov';ov.id='ov-adminnotifs';ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open')};const m=document.createElement('div');m.className='modal';m.id='mod-adminnotifs';m.style.maxWidth='600px';ov.appendChild(m);document.body.appendChild(ov);}
+  
+  // Mark all as read
+  adminNotifications.forEach(n=>n.read=true);
+  saveAdminNotifs();
+  updateAdminNotifBadge();
+
+  const todayNotifs=adminNotifications.filter(n=>n.dateISO===today());
+  const olderNotifs=adminNotifications.filter(n=>n.dateISO!==today()).slice(0,50);
+
+  document.getElementById('mod-adminnotifs').innerHTML=`
+  <div class="m-hdr"><div class="m-title">🔔 إشعارات الإدارة</div><button class="m-close" onclick="document.getElementById('ov-adminnotifs').classList.remove('open')">✕</button></div>
+  <div class="m-body" style="max-height:70vh;overflow-y:auto">
+    ${todayNotifs.length?'<div style="font-size:13px;font-weight:700;color:var(--g);margin-bottom:10px">📅 اليوم ('+todayNotifs.length+')</div>'+todayNotifs.map(n=>`<div style="padding:10px;background:var(--sf);border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;font-size:13px">
+      <div style="display:flex;justify-content:space-between;align-items:center"><b style="color:var(--tx)">${n.action}</b><span style="font-size:10px;color:var(--mt)">${n.date}</span></div>
+      <div style="font-size:12px;color:var(--mt);margin-top:4px">بواسطة: <b>${n.by}</b> (${n.role})</div>
+    </div>`).join(''):''}
+    ${olderNotifs.length?'<div style="font-size:13px;font-weight:700;color:var(--mt);margin:16px 0 10px">📋 سابق</div>'+olderNotifs.map(n=>`<div style="padding:8px;border-bottom:1px solid var(--bd);font-size:12px">
+      <span style="color:var(--tx)">${n.action}</span> · <span style="color:var(--mt)">${n.by}</span> · <span style="font-size:10px;color:var(--mt)">${n.date}</span>
+    </div>`).join(''):''}
+    ${adminNotifications.length===0?'<div style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:40px;margin-bottom:10px">✨</div>لا توجد إشعارات</div>':''}
+  </div>
+  <div class="m-ftr"><button class="btn-c" onclick="adminNotifications=[];saveAdminNotifs();renderAdminNotifs()">🗑️ مسح الكل</button><button class="btn-sv" onclick="document.getElementById('ov-adminnotifs').classList.remove('open')">حسناً ✓</button></div>`;
+  ov.classList.add('open');
+}
+
 function showUnauthorized(action){
   let ov=document.getElementById('ov-unauth');
   if(!ov){ov=document.createElement('div');ov.className='ov';ov.id='ov-unauth';ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open')};const m=document.createElement('div');m.className='modal';m.id='mod-unauth';m.style.maxWidth='420px';ov.appendChild(m);document.body.appendChild(ov);}
@@ -1837,6 +1942,139 @@ function showUnauthorized(action){
 function requireLogin(){
   if(!currentUser){toast('سجّل دخول أولاً','err');loginUser();return false;}
   return true;
+}
+
+// ══════════════════════════════════════
+// EDIT REQUEST SYSTEM — نظام طلبات التعديل
+// ══════════════════════════════════════
+let editRequests=[];
+try{editRequests=JSON.parse(localStorage.getItem('slkr_edit_requests')||'[]');}catch(e){editRequests=[];}
+
+function saveEditRequests(){
+  try{localStorage.setItem('slkr_edit_requests',JSON.stringify(editRequests));}catch(e){}
+}
+
+function submitEditRequest(clientId,clientName){
+  if(!currentUser)return;
+  let ov=document.getElementById('ov-editreq');
+  if(!ov){ov=document.createElement('div');ov.className='ov';ov.id='ov-editreq';ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open')};const m=document.createElement('div');m.className='modal';m.id='mod-editreq';m.style.maxWidth='500px';ov.appendChild(m);document.body.appendChild(ov);}
+  document.getElementById('mod-editreq').innerHTML=`
+  <div class="m-hdr"><div class="m-title">📝 طلب تعديل بيانات عميل</div><button class="m-close" onclick="document.getElementById('ov-editreq').classList.remove('open')">✕</button></div>
+  <div class="m-body">
+    <div style="padding:12px;background:var(--ambg);border:1px solid var(--ambd);border-radius:10px;font-size:12px;color:var(--am);margin-bottom:16px;line-height:1.8">
+      ⚠️ أنت لا تملك صلاحية التعديل المباشر.<br>سيتم إرسال طلبك للمبيعات للمراجعة ثم لـ <b>صالح الجاسم</b> للموافقة.
+    </div>
+    <div style="font-size:13px;font-weight:700;margin-bottom:6px;color:var(--tx)">العميل: ${clientName}</div>
+    <div style="font-size:11px;color:var(--mt);margin-bottom:14px">الكود: ${clientId}</div>
+    <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin-bottom:6px">📋 وصف التعديل المطلوب:</label>
+    <textarea id="editreq-notes" class="fta" style="width:100%;min-height:120px;font-size:13px;line-height:1.8" placeholder="اكتب بالتفصيل شنو تبي تعدل... مثال: تغيير نوع المطبخ من سكني إلى تجاري، أو تعديل العنوان..."></textarea>
+    <label style="font-size:12px;font-weight:600;color:var(--tx);display:block;margin:12px 0 6px">⚡ الأولوية:</label>
+    <div style="display:flex;gap:8px">
+      <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--bd);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="this.querySelector('input').checked=true;document.querySelectorAll('[name=editreq-priority]').forEach(r=>r.closest('label').style.borderColor='var(--bd)');this.style.borderColor='var(--re)'"><input type="radio" name="editreq-priority" value="عاجل" style="display:none">🔥 عاجل</label>
+      <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--bd);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="this.querySelector('input').checked=true;document.querySelectorAll('[name=editreq-priority]').forEach(r=>r.closest('label').style.borderColor='var(--bd)');this.style.borderColor='var(--am)'"><input type="radio" name="editreq-priority" value="متوسط" style="display:none" checked>⚡ متوسط</label>
+      <label style="flex:1;text-align:center;padding:10px;border:1.5px solid var(--bd);border-radius:10px;cursor:pointer;font-size:12px;font-weight:600" onclick="this.querySelector('input').checked=true;document.querySelectorAll('[name=editreq-priority]').forEach(r=>r.closest('label').style.borderColor='var(--bd)');this.style.borderColor='var(--b)'"><input type="radio" name="editreq-priority" value="عادي" style="display:none">🔵 عادي</label>
+    </div>
+  </div>
+  <div class="m-ftr">
+    <button class="btn-c" onclick="document.getElementById('ov-editreq').classList.remove('open')">إلغاء</button>
+    <button class="btn-sv" onclick="sendEditRequest('${clientId}','${clientName}')">📨 إرسال الطلب</button>
+  </div>`;
+  ov.classList.add('open');
+}
+
+function sendEditRequest(clientId,clientName){
+  const notes=document.getElementById('editreq-notes')?.value?.trim();
+  if(!notes){toast('اكتب وصف التعديل المطلوب','err');return;}
+  const priority=document.querySelector('[name=editreq-priority]:checked')?.value||'متوسط';
+  const request={
+    id:'ER-'+Date.now(),
+    clientId:clientId,
+    clientName:clientName,
+    requestedBy:currentUser.name,
+    requestedByRole:currentUser.title,
+    notes:notes,
+    priority:priority,
+    status:'pending', // pending → approved → done / rejected
+    date:new Date().toLocaleString('ar-KW'),
+    dateISO:today(),
+    approvedBy:null,
+    completedBy:null,
+    completedDate:null
+  };
+  editRequests.unshift(request);
+  saveEditRequests();
+  document.getElementById('ov-editreq')?.classList.remove('open');
+  toast('✅ تم إرسال طلب التعديل — سيصل إشعار للمبيعات');
+  addAuditLog('edit','📝 طلب تعديل بيانات عميل: '+clientName+' بواسطة '+currentUser.name);
+  updateEditReqBadge();
+}
+
+function getEditRequestCount(status){
+  return editRequests.filter(r=>r.status===status).length;
+}
+
+function renderEditRequests(){
+  let ov=document.getElementById('ov-editreqs');
+  if(!ov){ov=document.createElement('div');ov.className='ov';ov.id='ov-editreqs';ov.onclick=e=>{if(e.target===ov)ov.classList.remove('open')};const m=document.createElement('div');m.className='modal';m.id='mod-editreqs';m.style.maxWidth='650px';ov.appendChild(m);document.body.appendChild(ov);}
+  const pending=editRequests.filter(r=>r.status==='pending');
+  const approved=editRequests.filter(r=>r.status==='approved');
+  const done=editRequests.filter(r=>r.status==='done');
+  const rejected=editRequests.filter(r=>r.status==='rejected');
+
+  const isSuperAdmin=currentUser?.role==='super_admin';
+  const isSales=currentUser?.role==='sales';
+
+  const renderCard=(r)=>{
+    const priColors={'عاجل':'var(--re)','متوسط':'var(--am)','عادي':'var(--b)'};
+    const priIcons={'عاجل':'🔥','متوسط':'⚡','عادي':'🔵'};
+    const statusLabels={'pending':'⏳ بانتظار الموافقة','approved':'✅ معتمد — جاهز للتنفيذ','done':'✔️ تم التنفيذ','rejected':'❌ مرفوض'};
+    const statusColors={'pending':'var(--am)','approved':'var(--g)','done':'var(--gr)','rejected':'var(--re)'};
+    let actions='';
+    if(r.status==='pending'&&isSuperAdmin){
+      actions=`<div style="display:flex;gap:6px;margin-top:10px">
+        <button class="btn-p" style="flex:1;padding:8px;font-size:12px" onclick="approveEditRequest('${r.id}')">✅ موافقة</button>
+        <button style="flex:1;padding:8px;font-size:12px;background:var(--rebg);color:var(--re);border:1px solid var(--rebd);border-radius:8px;cursor:pointer;font-family:var(--font);font-weight:600" onclick="rejectEditRequest('${r.id}')">❌ رفض</button>
+      </div>`;
+    }
+    if(r.status==='approved'&&(isSales||isSuperAdmin)){
+      actions=`<button class="btn-p" style="width:100%;margin-top:10px;padding:8px;font-size:12px;background:linear-gradient(135deg,var(--g),#07724a)" onclick="completeEditRequest('${r.id}')">✔️ تم التنفيذ</button>`;
+    }
+    return `<div style="padding:14px;background:var(--sf);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;border-right:4px solid ${priColors[r.priority]||'var(--bd)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700;color:var(--tx)">${r.clientName}</div>
+        <span style="font-size:11px;padding:3px 10px;border-radius:8px;font-weight:600;color:${statusColors[r.status]};background:${statusColors[r.status]}15">${statusLabels[r.status]}</span>
+      </div>
+      <div style="font-size:12px;color:var(--mt);margin-bottom:8px">📝 من: <b>${r.requestedBy}</b> (${r.requestedByRole}) · ${priIcons[r.priority]} ${r.priority} · ${r.date}</div>
+      <div style="padding:10px;background:var(--sf3);border-radius:8px;font-size:13px;color:var(--tx);line-height:1.8">${r.notes}</div>
+      ${r.approvedBy?'<div style="font-size:11px;color:var(--g);margin-top:6px">✅ اعتمد بواسطة: '+r.approvedBy+'</div>':''}
+      ${r.completedBy?'<div style="font-size:11px;color:var(--gr);margin-top:4px">✔️ نفّذ بواسطة: '+r.completedBy+' — '+r.completedDate+'</div>':''}
+      ${actions}
+    </div>`;
+  };
+
+  document.getElementById('mod-editreqs').innerHTML=`
+  <div class="m-hdr"><div class="m-title">📋 طلبات تعديل بيانات العملاء <span style="font-size:12px;color:var(--am)">(${pending.length} معلّق)</span></div><button class="m-close" onclick="document.getElementById('ov-editreqs').classList.remove('open')">✕</button></div>
+  <div class="m-body" style="max-height:70vh;overflow-y:auto">
+    ${pending.length?'<div style="font-size:13px;font-weight:700;color:var(--am);margin-bottom:10px">⏳ بانتظار الموافقة (${pending.length})</div>'+pending.map(renderCard).join(''):''}
+    ${approved.length?'<div style="font-size:13px;font-weight:700;color:var(--g);margin:16px 0 10px">✅ معتمد — جاهز للتنفيذ (${approved.length})</div>'+approved.map(renderCard).join(''):''}
+    ${done.length?'<div style="font-size:13px;font-weight:700;color:var(--gr);margin:16px 0 10px">✔️ تم التنفيذ (${done.length})</div>'+done.map(renderCard).join(''):''}
+    ${rejected.length?'<div style="font-size:13px;font-weight:700;color:var(--re);margin:16px 0 10px">❌ مرفوض (${rejected.length})</div>'+rejected.map(renderCard).join(''):''}
+    ${editRequests.length===0?'<div style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:40px;margin-bottom:10px">📭</div>لا توجد طلبات تعديل</div>':''}
+  </div>`;
+  ov.classList.add('open');
+}
+
+function approveEditRequest(id){
+  const r=editRequests.find(r=>r.id===id);
+  if(r){r.status='approved';r.approvedBy=currentUser.name;saveEditRequests();renderEditRequests();toast('✅ تم اعتماد الطلب — سيصل إشعار للمبيعات');addAuditLog('approve','✅ اعتماد طلب تعديل: '+r.clientName);updateEditReqBadge();}
+}
+function rejectEditRequest(id){
+  const r=editRequests.find(r=>r.id===id);
+  if(r){r.status='rejected';r.approvedBy=currentUser.name;saveEditRequests();renderEditRequests();toast('❌ تم رفض الطلب');addAuditLog('denied','❌ رفض طلب تعديل: '+r.clientName);updateEditReqBadge();}
+}
+function completeEditRequest(id){
+  const r=editRequests.find(r=>r.id===id);
+  if(r){r.status='done';r.completedBy=currentUser.name;r.completedDate=new Date().toLocaleString('ar-KW');saveEditRequests();renderEditRequests();toast('✔️ تم تنفيذ التعديل');addAuditLog('edit','✔️ تنفيذ طلب تعديل: '+r.clientName+' بواسطة '+currentUser.name);updateEditReqBadge();}
 }
 
 // ── PIN Change (Admin Only — صالح بس يغير) ──
@@ -2079,7 +2317,7 @@ function openPaymentModal(id,payNum,suggestedAmt){
 }
 
 async function saveSmartPayment(id,payNum){
-  if(!requireAdmin('تسجيل دفعة'))return;
+  if(!requireSalesOrAbove('تسجيل دفعة'))return;
   const c=clients.find(x=>x.id===id);if(!c)return;
   const amt=+(document.getElementById('pay-amt')?.value)||0;
   const date=document.getElementById('pay-date')?.value||today();
@@ -2921,6 +3159,7 @@ function renderProfile(id){
             <a href="tel:${c.phone}" class="btn-ghost btn-sm" style="color:var(--g);border-color:var(--gbd);text-decoration:none">📞 اتصال</a>
             ${c.whatsapp?`<a href="https://wa.me/${c.whatsapp}" target="_blank" class="btn-ghost btn-sm" style="color:var(--g);border-color:var(--gbd);text-decoration:none">💬 واتساب</a>`:''}
             <button class="btn-ghost btn-sm" onclick="openForm(${id})">✏️ تعديل</button>
+            <button class="btn-ghost btn-sm" id="prof-reqedit-btn" onclick="submitEditRequest(${id},'${c.name}')" style="color:var(--am);border-color:var(--ambd);display:none">📝 طلب تعديل</button>
             <button class="btn-ghost btn-sm" onclick="printContract(${id})" style="color:var(--g);border-color:var(--gbd)">🖨️ طباعة العقد</button>
             ${c.lat&&c.lng?`<button class="btn-ghost btn-sm" onclick="openMap(${id})">🗺️ خريطة</button>`:''}
           </div>
@@ -3023,9 +3262,20 @@ function renderProfile(id){
       </div>
     </div>
   </div>`;
-}
 
-// ── Helper: Site checklist inline for phase 4 ──
+  // ── RBAC: Control edit/request-edit button visibility ──
+  setTimeout(()=>{
+    const editBtn=document.querySelector('.prof-hero-actions [onclick^="openForm"]');
+    const reqBtn=document.getElementById('prof-reqedit-btn');
+    if(currentUser){
+      const u=USERS[currentUser.name];
+      const canEdit=u?.permissions?.clients?.edit===true||(u?.permissions?.clients?.edit==='own');
+      const canRequest=u?.permissions?.clients?.requestEdit===true;
+      if(editBtn)editBtn.style.display=canEdit?'':'none';
+      if(reqBtn)reqBtn.style.display=canRequest&&!canEdit?'':'none';
+    }
+  },50);
+}
 function renderSiteChecklistInline(c){
   const sc=getSiteCheck(c);
   const done=SITE_CHECKLIST.filter(b=>sc[b.id]).length;
