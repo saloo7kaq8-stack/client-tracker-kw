@@ -1794,6 +1794,31 @@ async function changePhase(id,newPh){
     }
   }
   
+  // Smart Questions check — must complete all or get Saleh's approval
+  if(newPh>curr){
+    const questions=PHASE_QUESTIONS[curr]||[];
+    if(questions.length>0){
+      const sq=c._smartQ||{};
+      const done=questions.filter(q=>sq[q.id]).length;
+      const total=questions.length;
+      if(done<total){
+        const isSaleh=currentUser&&(currentUser.name==='صالح الجاسم'||currentUser.role==='نائب المدير العام');
+        if(!isSaleh){
+          toast('⚠️ فيه '+( total-done)+' بند ناقص من أصل '+total+' — لازم تكمل الكل أو تطلب موافقة نائب المدير (صالح الجاسم)','err');
+          return;
+        }
+        // Saleh can override with reason
+        const reason=prompt('⚠️ تنبيه بو صقر!\n\nفيه '+(total-done)+' بند ناقص من أصل '+total+'\n\nالبنود الناقصة:\n'+questions.filter(q=>!sq[q.id]).map(q=>'❌ '+q.text).join('\n')+'\n\nإذا تبي تتجاوز — اكتب السبب:');
+        if(!reason||!reason.trim()){toast('❌ تم الإلغاء — لازم تكتب سبب التجاوز','err');return;}
+        if(!c.log)c.log=[];
+        c.log.push({date:today(),text:'⚠️ تجاوز '+(total-done)+' بند ناقص بموافقة صالح الجاسم — السبب: '+reason.trim()});
+        addAuditLog('phase','⚠️ تجاوز بنود ناقصة ('+(total-done)+'/'+total+') — السبب: '+reason.trim()+' — العميل: '+c.name,c.id);
+      }
+    }
+    // Save smartQ before moving
+    await dbUpdateClient(id,c);
+  }
+  
   const phaseName=PHASES[newPh-1]?.name||'';
   if(newPh>curr){
     if(!confirm('اعتماد الانتقال للمرحلة: '+phaseName+'؟\n\nهذا الإجراء يتم بصلاحية نائب المدير (صالح الجاسم)'))return;
@@ -3798,7 +3823,8 @@ function renderProfile(id){
               </div>`;
             }).join('')}
           </div>
-          <div style="margin-top:8px;font-size:11px;color:var(--mt);text-align:center">${questions.filter(q=>sq[q.id]).length}/${questions.length} مكتمل</div>
+          <div style="margin-top:8px;font-size:11px;color:var(--mt);text-align:center" id="sq-counter-${id}">${questions.filter(q=>sq[q.id]).length}/${questions.length} مكتمل</div>
+          <div style="margin-top:10px;text-align:center"><button id="sq-save-${id}" class="btn-p btn-sm" onclick="saveSmartQ(${id})" style="display:none;padding:10px 24px;font-size:13px;font-weight:800;gap:6px;animation:fadeInUp .3s">💾 حفظ التقدم</button></div>
           `:''}
 
           ${isCurr?`
@@ -3999,9 +4025,24 @@ function toggleSmartQ(clientId,qId,el){
     if(c._smartQ[qId]){textEl.style.color='var(--g)';textEl.style.textDecoration='line-through';textEl.style.opacity='.7';}
     else{textEl.style.color='';textEl.style.textDecoration='';textEl.style.opacity='';}
   }
-  // Auto-save after short delay
-  clearTimeout(window._sqSaveTimer);
-  window._sqSaveTimer=setTimeout(()=>dbUpdateClient(clientId,c),1500);
+  // Update counter
+  const ph=getPhase(c);
+  const questions=PHASE_QUESTIONS[ph]||[];
+  const sq=c._smartQ||{};
+  const done=questions.filter(q=>sq[q.id]).length;
+  const counterEl=document.getElementById('sq-counter-'+clientId);
+  if(counterEl){counterEl.textContent=done+'/'+questions.length+' مكتمل';counterEl.style.color=done===questions.length?'var(--g)':'var(--mt)';}
+  // Show save button
+  const saveBtn=document.getElementById('sq-save-'+clientId);
+  if(saveBtn){saveBtn.style.display='inline-flex';}
+}
+async function saveSmartQ(clientId){
+  const c=clients.find(x=>x.id===clientId);if(!c)return;
+  const saveBtn=document.getElementById('sq-save-'+clientId);
+  if(saveBtn){saveBtn.innerHTML='⏳ جاري الحفظ...';saveBtn.disabled=true;}
+  await dbUpdateClient(clientId,c);
+  if(saveBtn){saveBtn.innerHTML='✅ تم الحفظ!';saveBtn.style.background='var(--g)';setTimeout(()=>{saveBtn.innerHTML='💾 حفظ التقدم';saveBtn.style.display='none';saveBtn.style.background='';saveBtn.disabled=false;},2500);}
+  toast('✅ تم حفظ تقدم المرحلة بنجاح');
 }
 
 // ── Add Note from Profile Page ──
