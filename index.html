@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <!-- saved from url=(0063)file:///C:/Users/Lenovo/Downloads/SLKR_Follow_Up_System_14.html -->
 <html lang="ar" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -1615,7 +1616,7 @@ const SITE_CHECKLIST=[
   {id:'doors',name:'الأبواب والنوافذ',icon:'🚪'},
 ];
 
-function getPhase(c){return +(c._phase||1);}
+function getPhase(c){if(c._phase&&+c._phase>0)return +c._phase;if(c.stage==='تسليم'||c.status==='منتهي')return 12;return 1;}
 function setPhase(c,ph){c._phase=ph;}
 function getSiteCheck(c){return c._siteCheck||{};}
 
