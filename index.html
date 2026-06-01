@@ -658,6 +658,19 @@ body.time-sunset .ni:hover{background:rgba(200,120,80,.10)!important}
 body.time-sunset .ni.on{background:linear-gradient(135deg,rgba(224,120,48,.15) 0%,rgba(224,120,48,.06) 100%)!important;border-color:rgba(224,120,48,.25)!important;color:#e07830!important}
 body.time-sunset .sf{background:rgba(22,16,35,.5)!important}
 body.time-sunset #bg-stars{opacity:0.45!important}
+
+/* ══ DOC TABS ══ */
+.doc-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:0;border-bottom:2px solid var(--bd2);padding-bottom:0}
+.doc-tab{padding:8px 14px;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--mt);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-ar);transition:all .2s;border-radius:8px 8px 0 0;margin-bottom:-2px}
+.doc-tab:hover{color:var(--tx);background:rgba(130,185,255,.06)}
+.doc-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(var(--accent-rgb),.06)}
+.doc-tab-content{display:none;padding-top:14px}
+.doc-tab-content.active{display:block}
+.doc-tab-inner{animation:fadeInUp .2s}
+.doc-info-grid{display:flex;flex-direction:column;gap:6px}
+.doc-info-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;font-size:13px}
+.doc-label{color:var(--mt);font-size:12px}
+.doc-val{font-weight:600;color:var(--tx)}
 </style>
 </head>
 <body>
@@ -4019,6 +4032,111 @@ function renderProfile(id){
         </div>
       </div>
     </div>
+
+    <!-- ═══ تبويبات المستندات ═══ -->
+    <div class="prof-section" style="margin-top:20px">
+      <div class="prof-section-title">📁 مستندات ومرفقات العميل</div>
+      <div class="doc-tabs" id="doc-tabs-${c.id}">
+        <button class="doc-tab active" onclick="switchDocTab(${c.id},'contract',this)">📋 العقد</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'approval',this)">✅ الاعتماد</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'mfg',this)">🏭 أمر التصنيع</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'design',this)">📐 الرسومات</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'followup',this)">📞 المتابعة</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'calendar',this)">📅 الكالندر</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'files',this)">📁 المستندات</button>
+      </div>
+
+      <!-- العقد -->
+      <div class="doc-tab-content active" id="doctab-${c.id}-contract">
+        <div class="doc-tab-inner">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="btn-ghost btn-sm" onclick="printContract(${c.id})" style="color:var(--g);border-color:var(--gbd)">🖨️ طباعة العقد</button>
+            <button class="btn-ghost btn-sm" onclick="downloadAlEissaContract('${c.name}')" style="color:var(--g);border-color:var(--gbd)">📄 تحميل العقد الرسمي</button>
+          </div>
+          <div class="doc-info-grid">
+            <div class="doc-info-row"><span class="doc-label">رقم العقد</span><span class="doc-val">${c.contractNo||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">تاريخ التعاقد</span><span class="doc-val">${c.signed||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">قيمة العقد</span><span class="doc-val" style="color:var(--accent);font-weight:700">${fmtKWD(contract)}</span></div>
+            <div class="doc-info-row"><span class="doc-label">المسؤول</span><span class="doc-val">${c.resp||'—'}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- الاعتماد -->
+      <div class="doc-tab-content" id="doctab-${c.id}-approval">
+        <div class="doc-tab-inner">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            <button class="btn-ghost btn-sm" onclick="go('approvals')" style="color:var(--accent);border-color:var(--accent)">✅ فتح صفحة الاعتمادات</button>
+          </div>
+          <div class="doc-info-grid">
+            <div class="doc-info-row"><span class="doc-label">حالة الاعتماد</span><span class="doc-val">${c.appr?.approved?'<span style="color:var(--g);font-weight:700">✅ معتمد</span>':'<span style="color:var(--am)">⏳ بانتظار الاعتماد</span>'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">تاريخ الاعتماد</span><span class="doc-val">${c.appr?.date||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">المرحلة الحالية</span><span class="doc-val">${ph}/12</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- أمر التصنيع -->
+      <div class="doc-tab-content" id="doctab-${c.id}-mfg">
+        <div class="doc-tab-inner">
+          <div class="doc-info-grid">
+            <div class="doc-info-row"><span class="doc-label">نسبة التصنيع</span><span class="doc-val"><div class="pw" style="display:inline-flex;align-items:center;gap:8px"><div class="pb" style="width:120px;height:8px"><div class="pf" style="width:${+(c._mfgPct||0)}%;background:${+(c._mfgPct||0)===100?'var(--g)':'var(--am)'}"></div></div><span>${+(c._mfgPct||0)}%</span></div></span></div>
+            <div class="doc-info-row"><span class="doc-label">المرحلة</span><span class="doc-val">${c.stage||'—'}</span></div>
+          </div>
+          ${renderMfgProgressInline(c)}
+        </div>
+      </div>
+
+      <!-- الرسومات -->
+      <div class="doc-tab-content" id="doctab-${c.id}-design">
+        <div class="doc-tab-inner">
+          <div style="color:var(--mt);font-size:13px;text-align:center;padding:20px">
+            📐 الرسومات والتصاميم — يمكن رفعها من قسم "📁 المستندات" أدناه
+          </div>
+        </div>
+      </div>
+
+      <!-- المتابعة -->
+      <div class="doc-tab-content" id="doctab-${c.id}-followup">
+        <div class="doc-tab-inner">
+          <div class="note-log" style="max-height:200px">
+            ${(c.log||[]).length===0?'<div style="color:var(--mt);font-size:12px;text-align:center;padding:8px">لا توجد سجلات تواصل</div>':[...(c.log||[])].reverse().map(n=>`<div class="note-item"><div class="note-d">${n.date}</div><div>${n.text}</div></div>`).join('')}
+          </div>
+          <div class="note-add" style="margin-top:10px">
+            <input id="pni2-${c.id}" placeholder="أضف ملاحظة متابعة..." onkeydown="if(event.key==='Enter'){document.getElementById('pni-${c.id}').value=this.value;addProfileNote(${c.id});this.value=''}">
+            <button class="btn-p btn-sm" onclick="document.getElementById('pni-${c.id}').value=document.getElementById('pni2-${c.id}').value;addProfileNote(${c.id});document.getElementById('pni2-${c.id}').value=''">+ إضافة</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- الكالندر -->
+      <div class="doc-tab-content" id="doctab-${c.id}-calendar">
+        <div class="doc-tab-inner">
+          <div class="doc-info-grid">
+            <div class="doc-info-row"><span class="doc-label">📅 تاريخ التعاقد</span><span class="doc-val">${c.signed||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">📅 آخر تواصل</span><span class="doc-val">${c.contact||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">📅 تاريخ البدء</span><span class="doc-val">${c.start||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">📅 تاريخ التسليم</span><span class="doc-val" style="color:${c.delivery&&c.delivery<today()?'var(--re)':'var(--g)'}">${c.delivery||'—'}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- المستندات -->
+      <div class="doc-tab-content" id="doctab-${c.id}-files">
+        <div class="doc-tab-inner">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+            <label class="btn-ghost btn-sm" style="cursor:pointer;color:var(--accent);border-color:var(--accent)">
+              📎 رفع ملف
+              <input type="file" style="display:none" accept=".pdf,.jpg,.jpeg,.png,.dwg,.dxf,.doc,.docx,.kd,.kda,.svg" onchange="uploadClientFile(${c.id},this)">
+            </label>
+          </div>
+          <div id="files-list-${c.id}">
+            <div style="color:var(--mt);font-size:12px;text-align:center;padding:16px">جاري تحميل الملفات...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>`;
 
   // ── RBAC: Control edit/request-edit button visibility ──
@@ -4256,6 +4374,53 @@ function _initAutoSave(){
   },300);
 }
 
+
+// ══ DOC TABS ══
+function switchDocTab(clientId, tab, btn){
+  // إزالة active من كل التبويبات
+  const tabsEl=document.getElementById('doc-tabs-'+clientId);
+  if(!tabsEl)return;
+  tabsEl.querySelectorAll('.doc-tab').forEach(b=>b.classList.remove('active'));
+  // إخفاء كل المحتويات
+  ['contract','approval','mfg','design','followup','calendar','files'].forEach(t=>{
+    const el=document.getElementById('doctab-'+clientId+'-'+t);
+    if(el)el.classList.remove('active');
+  });
+  // إظهار المحتوى المطلوب
+  btn.classList.add('active');
+  const target=document.getElementById('doctab-'+clientId+'-'+tab);
+  if(target)target.classList.add('active');
+  // لو تبويب الملفات — حمّل الملفات
+  if(tab==='files')loadClientFiles(clientId);
+}
+
+async function loadClientFiles(clientId){
+  const el=document.getElementById('files-list-'+clientId);
+  if(!el)return;
+  try{
+    const {data,error}=await window._supa.from('fu_files').select('*').eq('client_id',clientId).order('created_at',{ascending:false});
+    if(error||!data||data.length===0){
+      el.innerHTML='<div style="color:var(--mt);font-size:12px;text-align:center;padding:16px">لا توجد ملفات مرفوعة</div>';
+      return;
+    }
+    el.innerHTML=data.map(f=>`
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:6px;font-size:12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:18px">${f.file_type?.includes('pdf')?'📄':f.file_type?.includes('image')?'🖼️':'📎'}</span>
+          <div>
+            <div style="font-weight:600;color:var(--tx)">${f.file_name}</div>
+            <div style="color:var(--mt)">${f.file_size?Math.round(f.file_size/1024)+' KB':''} · ${f.created_at?.split('T')[0]||''}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          ${f.file_url?`<a href="${f.file_url}" target="_blank" class="btn-ghost btn-sm">👁 عرض</a>`:''}
+        </div>
+      </div>
+    `).join('');
+  }catch(e){
+    el.innerHTML='<div style="color:var(--re);font-size:12px;text-align:center;padding:16px">خطأ في تحميل الملفات</div>';
+  }
+}
 // ── TEAM ──
 function renderTeam(){
   document.getElementById('pg-team').innerHTML=`
