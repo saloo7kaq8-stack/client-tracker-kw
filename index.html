@@ -671,6 +671,18 @@ body.time-sunset #bg-stars{opacity:0.45!important}
 .doc-info-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;font-size:13px}
 .doc-label{color:var(--mt);font-size:12px}
 .doc-val{font-weight:600;color:var(--tx)}
+
+/* ══ ACCOUNTING ══ */
+.acc-card{padding:18px;border-radius:14px;border:1px solid var(--bd2);background:var(--bg2);display:flex;flex-direction:column;gap:4px}
+.acc-card-ico{font-size:28px}
+.acc-card-label{font-size:11px;color:var(--mt);font-weight:600}
+.acc-card-val{font-size:22px;font-weight:800;font-family:var(--font-display)}
+.acc-card-sub{font-size:11px;color:var(--mt)}
+.acc-card.acc-green .acc-card-val{color:var(--g)}
+.acc-card.acc-blue .acc-card-val{color:var(--accent)}
+.acc-card.acc-red .acc-card-val{color:var(--re)}
+.acc-card.acc-purple .acc-card-val{color:#a78bfa}
+.acc-pay-row{display:flex;align-items:center;gap:8px;font-size:12px}
 </style>
 </head>
 <body>
@@ -1107,6 +1119,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   <div id="pg-clients" style="display:none"></div>
   <div id="pg-daily" style="display:none"></div>
   <div id="pg-reports" style="display:none"></div>
+  <div id="pg-accounting" style="display:none"></div>
   <div id="pg-team" style="display:none"></div>
   <div id="pg-alerts" style="display:none"></div>
   <div id="pg-calendar" style="display:none"></div>
@@ -2147,7 +2160,7 @@ function userHasAccess(page){
 function applyRoleVisibility(){
   if(!currentUser)return;
   const u=USERS[currentUser.name];if(!u)return;
-  const map={'nav-ai':'ai','nav-team':'team','nav-import':'import','nav-materials':'materials','nav-appliances':'appliances','nav-kitchens':'kitchens','nav-approvals':'approvals','nav-mfgorder':'mfgorder','nav-reports':'reports','nav-manager':'manager','nav-slkr':'slkr','nav-cutting':'cutting','nav-factory':'factory','nav-factoryreports':'factoryreports'};
+  const map={'nav-ai':'ai','nav-team':'team','nav-import':'import','nav-materials':'materials','nav-appliances':'appliances','nav-kitchens':'kitchens','nav-approvals':'approvals','nav-mfgorder':'mfgorder','nav-reports':'reports','nav-accounting':'accounting','nav-manager':'manager','nav-slkr':'slkr','nav-cutting':'cutting','nav-factory':'factory','nav-factoryreports':'factoryreports'};
   Object.entries(map).forEach(([navId,page])=>{const el=document.getElementById(navId);if(el)el.style.display=u.access[page]?'':'none';});
   const pinNav=document.querySelector('[onclick="openPinChange()"]');
   if(pinNav)pinNav.style.display=u.access.pinchange?'':'none';
@@ -3225,7 +3238,7 @@ function go(name){
     return;
   }
   curPg=name;
-  ['dashboard','clients','daily','reports','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports'].forEach(p=>{
+  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports'].forEach(p=>{
     const el=document.getElementById('pg-'+p);
     if(el) el.style.display=p===name?'block':'none';
     const nav=document.getElementById('nav-'+p);
@@ -3245,6 +3258,7 @@ function go(name){
     else if(name==='approvals')renderApprovals();
     else if(name==='mfgorder')renderMfgOrder();
     else if(name==='materials')renderMaterials();
+    else if(name==='accounting')renderAccounting();
     else if(name==='import')renderImport();
     else if(name==='appliances')renderAppliances();
     else if(name==='slkr')renderSlkr();
@@ -4421,6 +4435,230 @@ async function loadClientFiles(clientId){
     el.innerHTML='<div style="color:var(--re);font-size:12px;text-align:center;padding:16px">خطأ في تحميل الملفات</div>';
   }
 }
+
+// ══════════════════════════════════════
+// 💰 نظام المحاسبة
+// ══════════════════════════════════════
+function renderAccounting(){
+  const totalContracts=clients.reduce((a,c)=>a+(+c.contract||0),0);
+  const totalCollected=clients.reduce((a,c)=>{
+    const paid=(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0);
+    return a+paid;
+  },0);
+  const totalRemaining=totalContracts-totalCollected;
+  const activeClients=clients.filter(c=>c.status!=='منتهي').length;
+  const completedClients=clients.filter(c=>c.status==='منتهي').length;
+
+  // إحصائيات الدفعات
+  const paidFull=clients.filter(c=>c.pay==='مدفوع').length;
+  const paidPartial=clients.filter(c=>c.pay==='دفعة أولى').length;
+  const notPaid=clients.filter(c=>c.pay==='غير مدفوع').length;
+
+  // أفضل 5 عملاء بالقيمة
+  const top5=[...clients].sort((a,b)=>(+b.contract||0)-(+a.contract||0)).slice(0,5);
+
+  // إحصائيات حسب المسؤول
+  const byResp={};
+  clients.forEach(c=>{
+    if(!byResp[c.resp])byResp[c.resp]={name:c.resp,count:0,total:0,collected:0};
+    byResp[c.resp].count++;
+    byResp[c.resp].total+=(+c.contract||0);
+    byResp[c.resp].collected+=(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0);
+  });
+  const respList=Object.values(byResp).sort((a,b)=>b.total-a.total);
+
+  // إحصائيات حسب المنطقة
+  const byCity={};
+  clients.forEach(c=>{
+    if(!byCity[c.city])byCity[c.city]={name:c.city,count:0,total:0};
+    byCity[c.city].count++;
+    byCity[c.city].total+=(+c.contract||0);
+  });
+  const cityList=Object.values(byCity).sort((a,b)=>b.total-a.total).slice(0,6);
+
+  document.getElementById('pg-accounting').innerHTML=`
+  <div class="ph">
+    <div>
+      <div class="ph-t">💰 المحاسبة والتقارير المالية</div>
+      <div class="ph-s">${clients.length} عميل · إجمالي العقود: <span style="color:var(--accent);font-weight:700">${fmtKWD(totalContracts)}</span></div>
+    </div>
+    <button class="btn-p" onclick="printAccountingReport()">🖨️ طباعة التقرير</button>
+  </div>
+
+  <!-- ═══ بطاقات الملخص ═══ -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px">
+    <div class="acc-card acc-green">
+      <div class="acc-card-ico">💵</div>
+      <div class="acc-card-label">إجمالي قيمة العقود</div>
+      <div class="acc-card-val">${fmtKWD(totalContracts)}</div>
+      <div class="acc-card-sub">${clients.length} عميل</div>
+    </div>
+    <div class="acc-card acc-blue">
+      <div class="acc-card-ico">✅</div>
+      <div class="acc-card-label">إجمالي المحصّل</div>
+      <div class="acc-card-val">${fmtKWD(totalCollected)}</div>
+      <div class="acc-card-sub">${Math.round(totalContracts>0?totalCollected/totalContracts*100:0)}% من الإجمالي</div>
+    </div>
+    <div class="acc-card acc-red">
+      <div class="acc-card-ico">⏳</div>
+      <div class="acc-card-label">إجمالي المتبقي</div>
+      <div class="acc-card-val">${fmtKWD(totalRemaining)}</div>
+      <div class="acc-card-sub">${Math.round(totalContracts>0?totalRemaining/totalContracts*100:0)}% من الإجمالي</div>
+    </div>
+    <div class="acc-card acc-purple">
+      <div class="acc-card-ico">📊</div>
+      <div class="acc-card-label">متوسط قيمة العقد</div>
+      <div class="acc-card-val">${fmtKWD(clients.length>0?totalContracts/clients.length:0)}</div>
+      <div class="acc-card-sub">${activeClients} نشط · ${completedClients} منتهي</div>
+    </div>
+  </div>
+
+  <!-- ═══ حالة الدفعات ═══ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="prof-section">
+      <div class="prof-section-title">💳 حالة الدفعات</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:10px">
+        <div class="acc-pay-row">
+          <span class="badge bg-g">مدفوع</span>
+          <div class="pw" style="flex:1;margin:0 10px"><div class="pb"><div class="pf" style="width:${clients.length>0?paidFull/clients.length*100:0}%;background:var(--g)"></div></div></div>
+          <span style="font-weight:700;color:var(--g)">${paidFull} عميل</span>
+        </div>
+        <div class="acc-pay-row">
+          <span class="badge bg-am">دفعة أولى</span>
+          <div class="pw" style="flex:1;margin:0 10px"><div class="pb"><div class="pf" style="width:${clients.length>0?paidPartial/clients.length*100:0}%;background:var(--am)"></div></div></div>
+          <span style="font-weight:700;color:var(--am)">${paidPartial} عميل</span>
+        </div>
+        <div class="acc-pay-row">
+          <span class="badge bg-re">غير مدفوع</span>
+          <div class="pw" style="flex:1;margin:0 10px"><div class="pb"><div class="pf" style="width:${clients.length>0?notPaid/clients.length*100:0}%;background:var(--re)"></div></div></div>
+          <span style="font-weight:700;color:var(--re)">${notPaid} عميل</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="prof-section">
+      <div class="prof-section-title">📍 إحصائيات حسب المنطقة</div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+        ${cityList.map(ci=>`
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px">
+          <span style="color:var(--tx2);min-width:80px">${ci.name}</span>
+          <div class="pw" style="flex:1;margin:0 8px"><div class="pb" style="height:6px"><div class="pf" style="width:${totalContracts>0?ci.total/totalContracts*100:0}%;background:var(--accent)"></div></div></div>
+          <span style="font-weight:700;color:var(--accent);min-width:70px;text-align:left">${fmtKWD(ci.total)}</span>
+          <span style="color:var(--mt);font-size:11px;min-width:40px;text-align:center">${ci.count} عميل</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ أعلى 5 عقود ═══ -->
+  <div class="prof-section" style="margin-bottom:16px">
+    <div class="prof-section-title">🏆 أعلى 5 عقود قيمةً</div>
+    <div class="tw" style="margin-top:10px"><div class="tsc"><table>
+      <thead><tr>
+        <th>#</th><th>العميل</th><th>المنطقة</th><th>المسؤول</th>
+        <th>قيمة العقد</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th>
+      </tr></thead>
+      <tbody>
+        ${top5.map((c,i)=>{
+          const paid=(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0);
+          const rem=(+c.contract||0)-paid;
+          return`<tr onclick="viewClient(${c.id})" style="cursor:pointer">
+            <td style="color:var(--accent);font-weight:700">${i+1}</td>
+            <td><div style="font-weight:600">${c.name}</div></td>
+            <td style="color:var(--mt)">${c.city}</td>
+            <td style="color:var(--mt)">${c.resp}</td>
+            <td style="font-weight:700;color:var(--accent)">${fmtKWD(c.contract)}</td>
+            <td style="color:var(--g);font-weight:600">${fmtKWD(paid)}</td>
+            <td style="color:${rem>0?'var(--re)':'var(--g)'};font-weight:600">${fmtKWD(rem)}</td>
+            <td>${segB(c.status)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div></div>
+  </div>
+
+  <!-- ═══ إحصائيات حسب المسؤول ═══ -->
+  <div class="prof-section">
+    <div class="prof-section-title">👤 إحصائيات حسب المسؤول</div>
+    <div class="tw" style="margin-top:10px"><div class="tsc"><table>
+      <thead><tr>
+        <th>المسؤول</th><th>عدد العملاء</th><th>إجمالي العقود</th><th>المحصّل</th><th>المتبقي</th><th>نسبة التحصيل</th>
+      </tr></thead>
+      <tbody>
+        ${respList.map(r=>{
+          const rem=r.total-r.collected;
+          const pct2=r.total>0?Math.round(r.collected/r.total*100):0;
+          return`<tr>
+            <td style="font-weight:600">${r.name}</td>
+            <td style="text-align:center">${r.count}</td>
+            <td style="color:var(--accent);font-weight:700">${fmtKWD(r.total)}</td>
+            <td style="color:var(--g);font-weight:600">${fmtKWD(r.collected)}</td>
+            <td style="color:${rem>0?'var(--re)':'var(--g)'};font-weight:600">${fmtKWD(rem)}</td>
+            <td><div style="display:flex;align-items:center;gap:8px">
+              <div class="pb" style="width:80px;height:6px"><div class="pf" style="width:${pct2}%;background:${pct2===100?'var(--g)':pct2>50?'var(--am)':'var(--re)'}"></div></div>
+              <span style="font-size:11px;font-weight:700">${pct2}%</span>
+            </div></td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table></div></div>
+  </div>`;
+}
+
+function printAccountingReport(){
+  const w=window.open('','_blank');
+  const totalContracts=clients.reduce((a,c)=>a+(+c.contract||0),0);
+  const totalCollected=clients.reduce((a,c)=>{
+    return a+(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0);
+  },0);
+  w.document.write(`<!DOCTYPE html><html dir="rtl" lang="ar"><head>
+    <meta charset="UTF-8">
+    <title>تقرير مالي — مطابخ العيسى</title>
+    <style>
+      body{font-family:Tajawal,sans-serif;padding:30px;color:#111;direction:rtl}
+      h1{color:#1a7a3a;border-bottom:3px solid #1a7a3a;padding-bottom:10px}
+      table{width:100%;border-collapse:collapse;margin-top:16px}
+      th{background:#1a7a3a;color:#fff;padding:8px;font-size:12px}
+      td{padding:8px;border-bottom:1px solid #eee;font-size:12px}
+      .total{font-weight:700;color:#1a7a3a;font-size:16px}
+      @media print{body{padding:10px}}
+    </style>
+  </head><body>
+    <h1>📊 التقرير المالي الشامل — شركة مطابخ العيسى</h1>
+    <p>تاريخ التقرير: ${today()} · إجمالي العملاء: ${clients.length}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin:20px 0">
+      <div style="padding:16px;border:2px solid #1a7a3a;border-radius:8px;text-align:center">
+        <div style="font-size:12px;color:#666">إجمالي العقود</div>
+        <div class="total">${fmtKWD(totalContracts)}</div>
+      </div>
+      <div style="padding:16px;border:2px solid #0a8f5c;border-radius:8px;text-align:center">
+        <div style="font-size:12px;color:#666">المحصّل</div>
+        <div class="total" style="color:#0a8f5c">${fmtKWD(totalCollected)}</div>
+      </div>
+      <div style="padding:16px;border:2px solid #c0392b;border-radius:8px;text-align:center">
+        <div style="font-size:12px;color:#666">المتبقي</div>
+        <div class="total" style="color:#c0392b">${fmtKWD(totalContracts-totalCollected)}</div>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>العميل</th><th>المنطقة</th><th>المسؤول</th><th>العقد</th><th>المحصّل</th><th>المتبقي</th><th>الحالة</th></tr></thead>
+      <tbody>
+        ${[...clients].sort((a,b)=>(+b.contract||0)-(+a.contract||0)).map((c,i)=>{
+          const paid=(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0);
+          return`<tr>
+            <td>${i+1}</td><td>${c.name}</td><td>${c.city}</td><td>${c.resp}</td>
+            <td>${fmtKWD(c.contract)}</td><td style="color:#0a8f5c">${fmtKWD(paid)}</td>
+            <td style="color:${(+c.contract||0)-paid>0?'#c0392b':'#0a8f5c'}">${fmtKWD((+c.contract||0)-paid)}</td>
+            <td>${c.status}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </body></html>`);
+  w.document.close();
+  w.print();
+}
+
 // ── TEAM ──
 function renderTeam(){
   document.getElementById('pg-team').innerHTML=`
