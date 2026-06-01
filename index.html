@@ -1119,6 +1119,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
 <div class="modal" id="modal-form">
   <div class="m-hdr">
     <div class="m-title" id="form-title">➕ إضافة عميل جديد</div>
+    <span id="auto-save-indicator" style="font-size:11px;color:var(--g);opacity:0;transition:opacity .5s;margin-left:8px">✅ حُفظ تلقائياً</span>
     <button class="m-close" onclick="closeForm()">✕</button>
   </div>
   <div class="m-body">
@@ -4152,6 +4153,7 @@ function openForm(id){
   s('f-signed',c?.signed);s('f-contact',c?.contact);s('f-start',c?.start);s('f-delivery',c?.delivery);
   s('f-notes',c?.notes);
   document.getElementById('ov-form').classList.add('open');
+  if(editId)_initAutoSave();
 }
 function closeForm(e){if(e&&e.target!==document.getElementById('ov-form'))return;document.getElementById('ov-form').classList.remove('open')}
 async function saveClient(){
@@ -4198,6 +4200,60 @@ async function delClient(id){
   if(ok){clients=clients.filter(x=>x.id!==id);toast('تم الحذف','err');}
   else toast('خطأ في الحذف','err');
   if(curPg==='clients')renderClients();renderSF();
+}
+
+// ══ AUTO SAVE ══
+let _autoSaveTimer=null;
+let _autoSaveEnabled=false;
+
+function _triggerAutoSave(){
+  if(!_autoSaveEnabled||!editId)return;
+  clearTimeout(_autoSaveTimer);
+  const ind=document.getElementById('auto-save-indicator');
+  if(ind){ind.textContent='⏳ جاري الحفظ...';ind.style.color='var(--am)';ind.style.opacity='1';}
+  _autoSaveTimer=setTimeout(async()=>{
+    const g=id=>(document.getElementById(id)?.value.trim()||'');
+    if(!g('f-name')||!g('f-phone'))return;
+    const obj={
+      name:g('f-name'),phone:g('f-phone'),phone2:g('f-phone2'),
+      civilId:g('f-civil'),email:g('f-email'),whatsapp:g('f-whatsapp'),
+      city:g('f-city'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
+      status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),
+      priority:g('f-priority'),resp:g('f-resp'),pay:g('f-pay'),
+      contract:+g('f-contract')||0,
+      collected:[1,2,3].map(i=>+g('f-pay'+i+'-amt')||0).reduce((a,b)=>a+b,0),
+      payments:[1,2,3].map(i=>({amount:+g('f-pay'+i+'-amt')||0,date:g('f-pay'+i+'-date')})).filter(p=>p.amount>0||p.date),
+      kitBrown:g('f-kit-brown'),kitYellow:g('f-kit-yellow'),kitLgreen:g('f-kit-lgreen'),
+      kitGreen:g('f-kit-green'),kitDkgray:g('f-kit-dkgray'),
+      kitBrownDate:g('f-kit-brown-date'),kitYellowDate:g('f-kit-yellow-date'),
+      kitLgreenDate:g('f-kit-lgreen-date'),kitGreenDate:g('f-kit-green-date'),
+      kitDkgrayDate:g('f-kit-dkgray-date'),
+      signed:g('f-signed'),contact:g('f-contact'),start:g('f-start'),delivery:g('f-delivery'),
+      notes:g('f-notes'),
+      log:clients.find(x=>x.id===editId)?.log||[]
+    };
+    const ok=await dbUpdateClient(editId,obj);
+    if(ok){
+      clients=clients.map(x=>x.id===editId?{...obj,id:editId}:x);
+      const ind=document.getElementById('auto-save-indicator');
+      if(ind){ind.textContent='✅ حُفظ تلقائياً';ind.style.color='var(--g)';ind.style.opacity='1';setTimeout(()=>{if(ind)ind.style.opacity='0';},2500);}
+    }
+  },1500);
+}
+
+function _initAutoSave(){
+  _autoSaveEnabled=false;
+  setTimeout(()=>{
+    const form=document.getElementById('modal-form');
+    if(!form)return;
+    form.querySelectorAll('input,select,textarea').forEach(el=>{
+      el.removeEventListener('input',_triggerAutoSave);
+      el.removeEventListener('change',_triggerAutoSave);
+      el.addEventListener('input',_triggerAutoSave);
+      el.addEventListener('change',_triggerAutoSave);
+    });
+    setTimeout(()=>{_autoSaveEnabled=true;},500);
+  },300);
 }
 
 // ── TEAM ──
