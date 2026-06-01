@@ -3500,7 +3500,7 @@ function renderClients(){
       ${th('contract','العقد (د.ك)')}${th('resp','المسؤول')}${th('city','المنطقة')}
       ${th('contact','آخر تواصل')}<th>إجراءات</th>
     </tr></thead>
-    <tbody>
+    <tbody id="clients-tbody">
     ${paged.length===0?`<tr><td colspan="13"><div class="empty"><div class="empty-ico">🔍</div><div>لا توجد نتائج</div></div></td></tr>`:
     paged.map(c=>{const cp=pct(+c.collected||0,+c.contract||1);return`<tr onclick="viewClient(${c.id})">
       <td style="color:var(--mt);font-size:11px">${c.id}</td>
@@ -3526,15 +3526,64 @@ function renderClients(){
     </tr>`;}).join('')}
     </tbody>
   </table></div></div>
-  <div class="pg-row">
-    <span class="pg-inf">صفحة ${pg} من ${tp} · ${rows.length} عميل</span>
+  <div class="pg-row" id="clients-pagination">
+    <span class="pg-inf" id="clients-count">صفحة ${pg} من ${tp} · ${rows.length} عميل</span>
     <button class="pgb" onclick="setPg(${pg-1})" ${pg<=1?'disabled':''}>→ السابق</button>
     <button class="pgb" onclick="setPg(${pg+1})" ${pg>=tp?'disabled':''}>التالي ←</button>
   </div>`;
 }
 
 function tSort(col){if(sortC===col)sortD*=-1;else{sortC=col;sortD=1;}renderClients()}
-function setSearch(v){search=v;pg=1;renderClients();const inp=document.querySelector('.sw input');if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}}
+let _searchTimer=null;
+function setSearch(v){
+  search=v;pg=1;
+  const inp=document.querySelector('.sw input');
+  if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}
+  clearTimeout(_searchTimer);
+  _searchTimer=setTimeout(()=>{
+    const tbody=document.getElementById('clients-tbody');
+    if(tbody){_renderClientsRows();}else{renderClients();}
+  },300);
+}
+function _renderClientsRows(){
+  try{
+    const rows=filtered();
+    const tp=Math.ceil(rows.length/PER)||1;
+    if(pg>tp)pg=1;
+    const paged=rows.slice((pg-1)*PER,pg*PER);
+    const tbody=document.getElementById('clients-tbody');
+    if(!tbody){renderClients();return;}
+    const cp2=(col,amt)=>amt===100?'var(--g)':amt>0?'var(--am)':'var(--re)';
+    tbody.innerHTML=paged.length===0
+      ?`<tr><td colspan="13"><div class="empty"><div class="empty-ico">🔍</div><div>لا توجد نتائج</div></div></td></tr>`
+      :paged.map(c=>{const cp=pct(+c.collected||0,+c.contract||1);return`<tr onclick="viewClient(${c.id})">
+      <td style="color:var(--mt);font-size:11px">${c.id}</td>
+      <td style="min-width:260px"><div class="td-name"><div class="av" style="background:${avBg(c.status)};color:${avFg(c.status)}">${ini(c.name)}</div>
+        <div><div class="n-main" title="${c.name}">${c.name}</div>
+        <div class="n-ph"><a href="tel:${c.phone}" onclick="event.stopPropagation()">📞 ${c.phone}</a>${c.whatsapp?` · <a href="https://wa.me/${c.whatsapp}" target="_blank" onclick="event.stopPropagation()">💬</a>`:''}</div>
+      </div></div></td>
+      <td>${segB(c.status)}</td><td>${siteB(c.site)}</td>
+      <td>${payB(c.pay)}</td><td style="color:var(--tx2)">${c.stage}</td><td>${prioB(c.priority)}</td>
+      <td style="max-width:180px">${kitBadges(c)}</td>
+      <td><div style="font-size:12px;font-weight:600">${fmtKWD(c.contract)}</div>
+        <div class="pw" style="margin-top:2px"><div class="pb"><div class="pf" style="width:${cp}%;background:${cp2('',cp)}"></div></div><span class="pl">${cp}%</span></div></td>
+      <td style="color:var(--tx2);font-size:12px">${c.resp}</td>
+      <td style="color:var(--mt);font-size:12px">${c.city}</td>
+      <td style="color:var(--mt);font-size:11px">${c.contact||'—'}</td>
+      <td onclick="event.stopPropagation()"><div class="ab">
+        <button class="abt vw" onclick="viewClient(${c.id})">👁</button>
+        <button class="abt cl" onclick="window.location='tel:${c.phone}'">📞</button>
+        ${c.lat&&c.lng?`<button class="abt mp" onclick="openMap(${c.id})">🗺️</button>`:''}
+        <button class="abt ed" onclick="openForm(${c.id})">✏️</button>
+        <button class="abt dl" onclick="delClient(${c.id})">🗑</button>
+      </div></td>
+    </tr>`;}).join('');
+    const pgEl=document.getElementById('clients-pagination');
+    if(pgEl){pgEl.innerHTML=`<span class="pg-inf" id="clients-count">صفحة ${pg} من ${tp} · ${rows.length} عميل</span>
+    <button class="pgb" onclick="setPg(${pg-1})" ${pg<=1?'disabled':''}>→ السابق</button>
+    <button class="pgb" onclick="setPg(${pg+1})" ${pg>=tp?'disabled':''}>التالي ←</button>`;}
+  }catch(e){renderClients();}
+}
 function setPg(p){pg=p;renderClients()}
 function resetF(){fSt='all';fPay='all';fResp='all';fType='all';fKit='all';search='';pg=1;renderClients()}
 function filterGo(st){fSt=st;fPay='all';fResp='all';fType='all';fKit='all';search='';pg=1;go('clients')}
