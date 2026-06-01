@@ -1427,11 +1427,11 @@ window.addEventListener('unhandledrejection',function(e){
     if(e.metaKey&&e.altKey&&(e.key==='i'||e.key==='u')){e.preventDefault();return false;}
     if(e.metaKey&&e.key==='s'){e.preventDefault();return false;}
     if((e.ctrlKey||e.metaKey)&&e.key==='a'&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){e.preventDefault();return false;}
-    if((e.ctrlKey||e.metaKey)&&e.key==='c'&&!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){e.preventDefault();return false;}
+    // Ctrl+C مسموح داخل النظام — تم إلغاء الحظر
     if((e.ctrlKey||e.metaKey)&&e.key==='p'){e.preventDefault();return false;}
   });
   document.addEventListener('dragstart',function(e){e.preventDefault();});
-  document.addEventListener('copy',function(e){if(!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){e.preventDefault();}});
+  // copy event — مسموح داخل النظام
 })();
 
 // ══════════════════════════════════════
@@ -1517,8 +1517,9 @@ function showSecurityAlert(msg){
 
 // Monitor copy attempts on body
 document.addEventListener('copy',function(e){
+  // مسموح بالنسخ داخل النظام — فقط نسجل للمراقبة
   if(!['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)){
-    logSecurityEvent('copy','محاولة نسخ محتوى من الصفحة');
+    // logSecurityEvent('copy','نسخ محتوى من الصفحة');
   }
 });
 
