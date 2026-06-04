@@ -1240,6 +1240,23 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
           </div>
+          <!-- إجمالي الأمتار + تكلفة المتر -->
+          <div id="kit-cost-summary" style="margin-top:12px;padding:14px;background:linear-gradient(135deg,rgba(26,122,58,.08),rgba(26,122,58,.02));border:1.5px solid var(--gbd);border-radius:12px">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center">
+              <div>
+                <div style="font-size:11px;color:var(--mt);font-weight:700;margin-bottom:4px">📐 إجمالي الأمتار</div>
+                <div id="kcs-meters" style="font-size:22px;font-weight:800;color:var(--accent)">0 م</div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--mt);font-weight:700;margin-bottom:4px">💵 سعر المتر (د.ك)</div>
+                <input class="fi" id="f-meter-price" type="number" step="0.001" min="0" placeholder="0.000" dir="ltr" oninput="calcTotalCost()" style="text-align:center;font-size:16px;font-weight:800;color:var(--am)">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--mt);font-weight:700;margin-bottom:4px">💰 إجمالي التكلفة</div>
+                <div id="kcs-total" style="font-size:22px;font-weight:800;color:var(--g)">0.000 د.ك</div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1310,17 +1327,9 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           <select class="fsl" id="f-pay"><option>مدفوع</option><option>دفعة أولى</option><option>غير مدفوع</option><option>متأخر</option></select>
         </div>
         <div class="fg"><div class="fl">قيمة العقد الإجمالية (د.ك)</div><input class="fi" id="f-contract" placeholder="0.000" type="number" step="0.001" dir="ltr"></div>
-        <div class="fg"><div class="fl">تكلفة المتر (د.ك)</div>
-          <input class="fi" id="f-meter-price" placeholder="0.000" type="number" step="0.001" dir="ltr" oninput="calcTotalCost()">
-        </div>
+
       </div>
-      <div id="cost-summary" style="display:none;margin-top:10px;padding:12px;background:linear-gradient(135deg,rgba(26,122,58,.08),rgba(26,122,58,.02));border:1px solid var(--gbd);border-radius:10px;font-size:13px">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
-          <div><div style="font-size:11px;color:var(--mt);font-weight:600">إجمالي الأمتار</div><div id="cs-total-m" style="font-size:18px;font-weight:800;color:var(--accent)">0 م</div></div>
-          <div><div style="font-size:11px;color:var(--mt);font-weight:600">تكلفة المتر</div><div id="cs-meter-p" style="font-size:18px;font-weight:800;color:var(--am)">0.000 د.ك</div></div>
-          <div><div style="font-size:11px;color:var(--mt);font-weight:600">إجمالي التكلفة</div><div id="cs-total-cost" style="font-size:18px;font-weight:800;color:var(--g)">0.000 د.ك</div></div>
-        </div>
-      </div>
+
       <div style="font-size:11px;color:var(--mt);margin-top:6px">💡 المبلغ المحصّل يُحسب تلقائياً من جدول الدفعات أعلاه</div>
     </div>
     <div class="fs"><div class="fs-t">📅 التواريخ</div>
@@ -5046,7 +5055,6 @@ function checkPriorityForMfgOrder(clientId, priority){
 
 // ══ حساب التكاليف الإجمالية ══
 function calcTotalCost(){
-  // احسب إجمالي الأمتار من checkboxes المطابخ
   const kitDefs=[
     {id:'fkt-main',metersId:'fkt-main-meters'},
     {id:'fkt-dirty',metersId:'fkt-dirty-meters'},
@@ -5056,28 +5064,17 @@ function calcTotalCost(){
   ];
   let totalMeters=0;
   kitDefs.forEach(k=>{
-    const cb=document.getElementById(k.id);
     const mEl=document.getElementById(k.metersId);
-    if(cb&&cb.checked&&mEl&&+mEl.value>0) totalMeters+=+mEl.value;
+    if(mEl&&+mEl.value>0) totalMeters+=+mEl.value;
   });
   const meterPrice=+document.getElementById('f-meter-price')?.value||0;
   const totalCost=totalMeters*meterPrice;
-  const summary=document.getElementById('cost-summary');
-  if(summary){
-    if(totalMeters>0||meterPrice>0){
-      summary.style.display='block';
-      document.getElementById('cs-total-m').textContent=totalMeters+' م';
-      document.getElementById('cs-meter-p').textContent=meterPrice.toFixed(3)+' د.ك';
-      document.getElementById('cs-total-cost').textContent=totalCost.toFixed(3)+' د.ك';
-      // تعبئة قيمة العقد تلقائياً لو فارغة
-      const contractEl=document.getElementById('f-contract');
-      if(contractEl&&!contractEl.value&&totalCost>0){
-        contractEl.value=totalCost.toFixed(3);
-      }
-    }else{
-      summary.style.display='none';
-    }
-  }
+  // تحديث ملخص الأمتار
+  const mEl=document.getElementById('kcs-meters');
+  const tEl=document.getElementById('kcs-total');
+  if(mEl) mEl.textContent=totalMeters+' م';
+  if(tEl) tEl.textContent=totalCost>0?totalCost.toFixed(3)+' د.ك':'0.000 د.ك';
+  if(tEl) tEl.style.color=totalCost>0?'var(--g)':'var(--mt)';
 }
 
 // ── TEAM ──
