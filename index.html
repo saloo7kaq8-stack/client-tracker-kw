@@ -1157,17 +1157,17 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
         <div class="fg full"><div class="fl">🆔 الرقم المدني (12 رقم)</div><input class="fi" id="f-civil" placeholder="مثال: 296010103456" dir="ltr" maxlength="12" pattern="[0-9]{12}"></div>
         <div class="fg"><div class="fl">البريد الإلكتروني</div><input class="fi" id="f-email" placeholder="email@example.com" dir="ltr" type="email"></div>
         <div class="fg"><div class="fl">واتساب</div><input class="fi" id="f-whatsapp" placeholder="5XXXXXXXX" dir="ltr"></div>
-        <div class="fg"><div class="fl">المحافظة</div>
-          <select class="fsl" id="f-city" onchange="updateAreaOptions()">
-            <option value="">— اختر المحافظة —</option>
-            <option>العاصمة</option><option>حولي</option><option>الفروانية</option>
-            <option>الأحمدي</option><option>الجهراء</option><option>مبارك الكبير</option>
-          </select>
-        </div>
-        <div class="fg"><div class="fl">المنطقة</div>
-          <select class="fsl" id="f-area">
-            <option value="">— اختر المحافظة أولاً —</option>
-          </select>
+        <div class="fg full"><div class="fl">المحافظة والمنطقة</div>
+          <div style="display:flex;gap:8px">
+            <select class="fsl" id="f-city" onchange="updateAreaOptions()" style="flex:1">
+              <option value="">— اختر المحافظة —</option>
+              <option>العاصمة</option><option>حولي</option><option>الفروانية</option>
+              <option>الأحمدي</option><option>الجهراء</option><option>مبارك الكبير</option>
+            </select>
+            <select class="fsl" id="f-area" style="flex:1">
+              <option value="">— اختر المحافظة أولاً —</option>
+            </select>
+          </div>
         </div>
         <div class="fg full"><div class="fl">العنوان التفصيلي (الشارع، القسيمة، المنزل)</div><input class="fi" id="f-address" placeholder="مثال: شارع تونس، ق 12، م 45"></div>
         <div class="fg full"><div class="fl">إحداثيات GPS (اختياري)</div>
