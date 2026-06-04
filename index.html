@@ -1213,12 +1213,32 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     <div class="fs"><div class="fs-t">🍳 أنواع المطابخ المطلوبة</div>
       <div class="fg2">
         <div class="fg full"><div class="fl">أنواع المطابخ (اختر كل ما ينطبق)</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd2)">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-main" value="رئيسي" style="width:16px;height:16px;accent-color:var(--g)"> 🍳 رئيسي</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-dirty" value="ديرتي" style="width:16px;height:16px;accent-color:var(--am)"> 🧹 ديرتي</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-flat" value="شقة" style="width:16px;height:16px;accent-color:var(--accent)"> 🏠 شقة</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-prep" value="تحضيري" style="width:16px;height:16px;accent-color:#a78bfa)"> 🔪 تحضيري</label>
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-laundry" value="غرفة غسيل" style="width:16px;height:16px;accent-color:#06b6d4"> 👕 غرفة غسيل</label>
+          <div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd2)">
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-main" value="رئيسي" style="width:16px;height:16px;accent-color:var(--g)"> 🍳 رئيسي</label>
+              <input class="fi" id="fkt-main-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <span style="font-size:12px;color:var(--mt)">متر</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-dirty" value="ديرتي" style="width:16px;height:16px;accent-color:var(--am)"> 🧹 ديرتي</label>
+              <input class="fi" id="fkt-dirty-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <span style="font-size:12px;color:var(--mt)">متر</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-flat" value="شقة" style="width:16px;height:16px;accent-color:var(--accent)"> 🏠 شقة</label>
+              <input class="fi" id="fkt-flat-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <span style="font-size:12px;color:var(--mt)">متر</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-prep" value="تحضيري" style="width:16px;height:16px;accent-color:#a78bfa"> 🔪 تحضيري</label>
+              <input class="fi" id="fkt-prep-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <span style="font-size:12px;color:var(--mt)">متر</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-laundry" value="غرفة غسيل" style="width:16px;height:16px;accent-color:#06b6d4"> 👕 غرفة غسيل</label>
+              <input class="fi" id="fkt-laundry-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <span style="font-size:12px;color:var(--mt)">متر</span>
+            </div>
           </div>
         </div>
       </div>
@@ -4021,6 +4041,7 @@ function renderProfile(id){
             ${c.civilId?`<div class="ci"><div class="ci-ico">🆔</div><div><div class="ci-l">الرقم المدني</div><div class="ci-v" style="font-family:'JetBrains Mono',monospace">${c.civilId}</div></div></div>`:''}
             ${c.email?`<div class="ci"><div class="ci-ico">📧</div><div><div class="ci-l">البريد</div><div class="ci-v"><a href="mailto:${c.email}">${c.email}</a></div></div></div>`:''}
             <div class="ci"><div class="ci-ico">📍</div><div><div class="ci-l">المنطقة</div><div class="ci-v">${c.city}</div></div></div>
+          ${(c.kitTypes&&c.kitTypes.length>0)?`<div class="ci"><div class="ci-ico">🍳</div><div><div class="ci-l">أنواع المطابخ</div><div class="ci-v" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">${c.kitTypes.map(t=>{const type=typeof t==='object'?t.type:t;const meters=typeof t==='object'?t.meters:0;const colors={'رئيسي':'#1a7a3a','ديرتي':'#B8860B','شقة':'#1565c0','تحضيري':'#6a1b9a','غرفة غسيل':'#00838f'};const icons={'رئيسي':'🍳','ديرتي':'🧹','شقة':'🏠','تحضيري':'🔪','غرفة غسيل':'👕'};return\`<span style="background:\${colors[type]||'#555'};color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700">\${icons[type]||'🏭'} \${type}\${meters>0?' — '+meters+'م':''}</span>\`;}).join('')}</div></div></div>`:''}
             <div class="ci"><div class="ci-ico">🏘️</div><div><div class="ci-l">العنوان</div><div class="ci-v">${c.address||'—'}</div></div></div>
           </div>
         </div>
@@ -4321,7 +4342,7 @@ function openForm(id){
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
   s('f-contract',c?.contract);s('f-collected',c?.collected);
-  ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=(c?.kitTypes||[]).includes(el.value);});
+  ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const kt=(c?.kitTypes||[]).find(k=>typeof k==='object'?k.type===el.value:k===el.value);el.checked=!!kt;const mEl=document.getElementById(id+'-meters');if(mEl)mEl.value=kt?.meters||'';});
   s('f-kit-brown',c?.kitBrown||'');s('f-kit-brown-qty',c?.kitBrownQty||'');
   s('f-kit-yellow',c?.kitYellow||'');s('f-kit-yellow-qty',c?.kitYellowQty||'');
   s('f-kit-lgreen',c?.kitLgreen||'');s('f-kit-lgreen-qty',c?.kitLgreenQty||'');
@@ -4349,7 +4370,7 @@ async function saveClient(){
     city:g('f-city'),area:g('f-area'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
     pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
-    kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value),
+    kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>({type:document.getElementById(id).value,meters:+document.getElementById(id+'-meters')?.value||0})),
     kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
     kitYellow:g('f-kit-yellow'),kitYellowQty:+g('f-kit-yellow-qty')||0,
     kitLgreen:g('f-kit-lgreen'),kitLgreenQty:+g('f-kit-lgreen-qty')||0,
@@ -4857,13 +4878,25 @@ function printMfgOrder(clientId){
   <div class="section">
     <div class="section-title">🍳 أنواع المطابخ المطلوبة للتصنيع</div>
     ${(c.kitTypes&&c.kitTypes.length>0)
-      ?`<div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0">
-          ${c.kitTypes.map(t=>{
-            const colors={'رئيسي':'#1a7a3a','ديرتي':'#B8860B','شقة':'#1565c0','تحضيري':'#6a1b9a','غرفة غسيل':'#00838f'};
-            const icons={'رئيسي':'🍳','ديرتي':'🧹','شقة':'🏠','تحضيري':'🔪','غرفة غسيل':'👕'};
-            return`<span style="background:${colors[t]||'#555'};color:#fff;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700">${icons[t]||'🏭'} ${t}</span>`;
-          }).join('')}
-        </div>`
+      ?`<table>
+          <thead><tr><th>نوع المطبخ</th><th>الأمتار</th></tr></thead>
+          <tbody>
+            ${c.kitTypes.map(t=>{
+              const type=typeof t==='object'?t.type:t;
+              const meters=typeof t==='object'?t.meters:0;
+              const colors={'رئيسي':'#1a7a3a','ديرتي':'#B8860B','شقة':'#1565c0','تحضيري':'#6a1b9a','غرفة غسيل':'#00838f'};
+              const icons={'رئيسي':'🍳','ديرتي':'🧹','شقة':'🏠','تحضيري':'🔪','غرفة غسيل':'👕'};
+              return`<tr>
+                <td><span class="kit-badge" style="background:${colors[type]||'#555'}">${icons[type]||'🏭'} ${type}</span></td>
+                <td style="font-weight:800;font-size:16px;color:#1a7a3a;text-align:center">${meters>0?meters+' متر':'—'}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+          <tfoot><tr>
+            <td style="font-weight:800;background:#f0faf4;padding:8px 10px">إجمالي الأمتار</td>
+            <td style="font-weight:800;color:#1a7a3a;font-size:16px;background:#f0faf4;text-align:center">${c.kitTypes.reduce((a,t)=>a+(typeof t==='object'?+t.meters||0:0),0)} متر</td>
+          </tr></tfoot>
+        </table>`
       :'<div style="color:#888;font-size:12px;text-align:center;padding:8px">لم تُحدَّد أنواع المطابخ بعد</div>'}
   </div>
 
