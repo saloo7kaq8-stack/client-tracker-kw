@@ -1216,27 +1216,27 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           <div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd2)">
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-main" value="رئيسي" style="width:16px;height:16px;accent-color:var(--g)"> 🍳 رئيسي</label>
-              <input class="fi" id="fkt-main-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <input class="fi" id="fkt-main-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-dirty" value="ديرتي" style="width:16px;height:16px;accent-color:var(--am)"> 🧹 ديرتي</label>
-              <input class="fi" id="fkt-dirty-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <input class="fi" id="fkt-dirty-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-flat" value="شقة" style="width:16px;height:16px;accent-color:var(--accent)"> 🏠 شقة</label>
-              <input class="fi" id="fkt-flat-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <input class="fi" id="fkt-flat-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-prep" value="تحضيري" style="width:16px;height:16px;accent-color:#a78bfa"> 🔪 تحضيري</label>
-              <input class="fi" id="fkt-prep-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <input class="fi" id="fkt-prep-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-laundry" value="غرفة غسيل" style="width:16px;height:16px;accent-color:#06b6d4"> 👕 غرفة غسيل</label>
-              <input class="fi" id="fkt-laundry-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px">
+              <input class="fi" id="fkt-laundry-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
           </div>
@@ -1310,6 +1310,16 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           <select class="fsl" id="f-pay"><option>مدفوع</option><option>دفعة أولى</option><option>غير مدفوع</option><option>متأخر</option></select>
         </div>
         <div class="fg"><div class="fl">قيمة العقد الإجمالية (د.ك)</div><input class="fi" id="f-contract" placeholder="0.000" type="number" step="0.001" dir="ltr"></div>
+        <div class="fg"><div class="fl">تكلفة المتر (د.ك)</div>
+          <input class="fi" id="f-meter-price" placeholder="0.000" type="number" step="0.001" dir="ltr" oninput="calcTotalCost()">
+        </div>
+      </div>
+      <div id="cost-summary" style="display:none;margin-top:10px;padding:12px;background:linear-gradient(135deg,rgba(26,122,58,.08),rgba(26,122,58,.02));border:1px solid var(--gbd);border-radius:10px;font-size:13px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+          <div><div style="font-size:11px;color:var(--mt);font-weight:600">إجمالي الأمتار</div><div id="cs-total-m" style="font-size:18px;font-weight:800;color:var(--accent)">0 م</div></div>
+          <div><div style="font-size:11px;color:var(--mt);font-weight:600">تكلفة المتر</div><div id="cs-meter-p" style="font-size:18px;font-weight:800;color:var(--am)">0.000 د.ك</div></div>
+          <div><div style="font-size:11px;color:var(--mt);font-weight:600">إجمالي التكلفة</div><div id="cs-total-cost" style="font-size:18px;font-weight:800;color:var(--g)">0.000 د.ك</div></div>
+        </div>
       </div>
       <div style="font-size:11px;color:var(--mt);margin-top:6px">💡 المبلغ المحصّل يُحسب تلقائياً من جدول الدفعات أعلاه</div>
     </div>
@@ -2922,7 +2932,7 @@ function dbToClient(r){
     stage:r.stage||'تصميم', type:r.type||'سكني',
     priority:r.priority||'متوسطة', resp:r.resp||'',
     pay:r.pay||'غير مدفوع', contract:+r.contract||0, collected:+r.collected||0,
-    kitTypes:r.kit_types||[], kitBrown:r.kit_brown||'', kitYellow:r.kit_yellow||'',
+    meterPrice:+r.meter_price||0, kitTypes:r.kit_types||[], kitBrown:r.kit_brown||'', kitYellow:r.kit_yellow||'',
     kitLgreen:r.kit_lgreen||'', kitGreen:r.kit_green||'',
     kitDkgray:r.kit_dkgray||'',
     kitBrownDate:r.kit_brown_date||'', kitYellowDate:r.kit_yellow_date||'',
@@ -2953,7 +2963,7 @@ function clientToDb(c){
     status:c.status, site:c.site, stage:c.stage,
     type:c.type, priority:c.priority, resp:c.resp,
     pay:c.pay, contract:+c.contract||0, collected:+c.collected||0,
-    kit_types:c.kitTypes||[], kit_brown:c.kitBrown||null, kit_yellow:c.kitYellow||null,
+    meter_price:c.meterPrice||0, kit_types:c.kitTypes||[], kit_brown:c.kitBrown||null, kit_yellow:c.kitYellow||null,
     kit_lgreen:c.kitLgreen||null, kit_green:c.kitGreen||null,
     kit_dkgray:c.kitDkgray||null,
     kit_brown_date:c.kitBrownDate||null, kit_yellow_date:c.kitYellowDate||null,
@@ -4041,6 +4051,7 @@ function renderProfile(id){
             ${c.civilId?`<div class="ci"><div class="ci-ico">🆔</div><div><div class="ci-l">الرقم المدني</div><div class="ci-v" style="font-family:'JetBrains Mono',monospace">${c.civilId}</div></div></div>`:''}
             ${c.email?`<div class="ci"><div class="ci-ico">📧</div><div><div class="ci-l">البريد</div><div class="ci-v"><a href="mailto:${c.email}">${c.email}</a></div></div></div>`:''}
             <div class="ci"><div class="ci-ico">📍</div><div><div class="ci-l">المنطقة</div><div class="ci-v">${c.city}</div></div></div>
+          ${(()=>{const totalM=(c.kitTypes||[]).reduce((a,t)=>a+(typeof t==='object'?+t.meters||0:0),0);const mPrice=+c.meterPrice||0;const totalCost=totalM*mPrice;if(totalM===0)return '';return '<div class="ci"><div class="ci-ico">📐</div><div><div class="ci-l">إجمالي الأمتار</div><div class="ci-v" style="font-weight:800;color:var(--accent)">'+totalM+' م</div></div></div>'+(mPrice>0?'<div class="ci"><div class="ci-ico">💰</div><div><div class="ci-l">تكلفة المتر × الإجمالي</div><div class="ci-v" style="font-weight:800;color:var(--g)">'+mPrice.toFixed(3)+' × '+totalM+' = '+totalCost.toFixed(3)+' د.ك</div></div></div>':'');})()}
           ${(c.kitTypes&&c.kitTypes.length>0)?('<div class="ci"><div class="ci-ico">🍳</div><div><div class="ci-l">أنواع المطابخ</div><div class="ci-v" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">'+c.kitTypes.map(function(t){var type=typeof t==='object'?t.type:t;var meters=typeof t==='object'?t.meters:0;var colors={'رئيسي':'#1a7a3a','ديرتي':'#B8860B','شقة':'#1565c0','تحضيري':'#6a1b9a','غرفة غسيل':'#00838f'};var icons={'رئيسي':'🍳','ديرتي':'🧹','شقة':'🏠','تحضيري':'🔪','غرفة غسيل':'👕'};return'<span style="background:'+(colors[type]||'#555')+';color:#fff;padding:2px 10px;border-radius:12px;font-size:11px;font-weight:700">'+(icons[type]||'🏭')+' '+type+(meters>0?' — '+meters+'م':'')+'</span>';}).join('')+'</div></div></div>'):''}
             <div class="ci"><div class="ci-ico">🏘️</div><div><div class="ci-l">العنوان</div><div class="ci-v">${c.address||'—'}</div></div></div>
           </div>
@@ -4342,6 +4353,8 @@ function openForm(id){
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
   s('f-contract',c?.contract);s('f-collected',c?.collected);
+  s('f-meter-price',c?.meterPrice||'');
+  if(c?.meterPrice||c?.kitTypes?.length)setTimeout(calcTotalCost,100);
   ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const kt=(c?.kitTypes||[]).find(k=>typeof k==='object'?k.type===el.value:k===el.value);el.checked=!!kt;const mEl=document.getElementById(id+'-meters');if(mEl)mEl.value=kt?.meters||'';});
   s('f-kit-brown',c?.kitBrown||'');s('f-kit-brown-qty',c?.kitBrownQty||'');
   s('f-kit-yellow',c?.kitYellow||'');s('f-kit-yellow-qty',c?.kitYellowQty||'');
@@ -4370,6 +4383,7 @@ async function saveClient(){
     city:g('f-city'),area:g('f-area'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
     pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
+    meterPrice:+g('f-meter-price')||0,
     kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>({type:document.getElementById(id).value,meters:+document.getElementById(id+'-meters')?.value||0})),
     kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
     kitYellow:g('f-kit-yellow'),kitYellowQty:+g('f-kit-yellow-qty')||0,
@@ -4922,6 +4936,24 @@ function printMfgOrder(clientId){
       </table>`}
   </div>
 
+  <!-- ملخص التكاليف -->
+  <div class="section">
+    <div class="section-title">💰 ملخص التكاليف</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      ${(()=>{
+        const totalM=(c.kitTypes||[]).reduce((a,t)=>a+(typeof t==='object'?+t.meters||0:0),0);
+        const mPrice=+c.meterPrice||0;
+        const totalCost=totalM*mPrice;
+        const contract=+c.contract||0;
+        return [
+          {label:'إجمالي الأمتار',val:totalM+' م',color:'#1565c0'},
+          {label:'تكلفة المتر',val:mPrice>0?mPrice.toFixed(3)+' د.ك':'غير محددة',color:'#B8860B'},
+          {label:'إجمالي التكلفة',val:totalCost>0?totalCost.toFixed(3)+' د.ك':contract>0?contract.toFixed(3)+' د.ك':'غير محددة',color:'#1a7a3a'},
+        ].map(b=>'<div style="padding:14px;border:2px solid '+b.color+';border-radius:10px;text-align:center"><div style="font-size:11px;color:#666;font-weight:600;margin-bottom:6px">'+b.label+'</div><div style="font-size:18px;font-weight:800;color:'+b.color+'">'+b.val+'</div></div>').join('');
+      })()}
+    </div>
+  </div>
+
   <!-- المواد المطلوبة للتصنيع -->
   <div class="section">
     <div class="section-title">📦 المواد المطلوبة للتصنيع</div>
@@ -5007,6 +5039,43 @@ function checkPriorityForMfgOrder(clientId, priority){
     if(!c)return;
     if(confirm(`🏭 الأولوية عالية!\nهل تريد إصدار أمر تصنيع للعميل:\n${c.name}؟`)){
       printMfgOrder(clientId);
+    }
+  }
+}
+
+
+// ══ حساب التكاليف الإجمالية ══
+function calcTotalCost(){
+  // احسب إجمالي الأمتار من checkboxes المطابخ
+  const kitDefs=[
+    {id:'fkt-main',metersId:'fkt-main-meters'},
+    {id:'fkt-dirty',metersId:'fkt-dirty-meters'},
+    {id:'fkt-flat',metersId:'fkt-flat-meters'},
+    {id:'fkt-prep',metersId:'fkt-prep-meters'},
+    {id:'fkt-laundry',metersId:'fkt-laundry-meters'},
+  ];
+  let totalMeters=0;
+  kitDefs.forEach(k=>{
+    const cb=document.getElementById(k.id);
+    const mEl=document.getElementById(k.metersId);
+    if(cb&&cb.checked&&mEl&&+mEl.value>0) totalMeters+=+mEl.value;
+  });
+  const meterPrice=+document.getElementById('f-meter-price')?.value||0;
+  const totalCost=totalMeters*meterPrice;
+  const summary=document.getElementById('cost-summary');
+  if(summary){
+    if(totalMeters>0||meterPrice>0){
+      summary.style.display='block';
+      document.getElementById('cs-total-m').textContent=totalMeters+' م';
+      document.getElementById('cs-meter-p').textContent=meterPrice.toFixed(3)+' د.ك';
+      document.getElementById('cs-total-cost').textContent=totalCost.toFixed(3)+' د.ك';
+      // تعبئة قيمة العقد تلقائياً لو فارغة
+      const contractEl=document.getElementById('f-contract');
+      if(contractEl&&!contractEl.value&&totalCost>0){
+        contractEl.value=totalCost.toFixed(3);
+      }
+    }else{
+      summary.style.display='none';
     }
   }
 }
