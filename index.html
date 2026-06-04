@@ -1210,34 +1210,49 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
         </div>
       </div>
     </div>
-    <div class="fs"><div class="fs-t">🍳 حالة المطابخ</div>
+    <div class="fs"><div class="fs-t">🍳 حالة المطابخ وعددها</div>
       <div class="fg2">
         <div class="fg"><div class="fl">🟤 غير مطلوبة للتصنيع</div>
-          <select class="fsl" id="f-kit-brown"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+          <div style="display:flex;gap:6px">
+            <select class="fsl" id="f-kit-brown" style="flex:1"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+            <input class="fi" id="f-kit-brown-qty" type="number" min="0" placeholder="العدد" style="width:70px">
+          </div>
         </div>
         <div class="fg"><div class="fl">📅 تاريخ — غير مطلوبة</div>
           <input class="fi" id="f-kit-brown-date" type="date">
         </div>
         <div class="fg"><div class="fl">🟡 مؤجلة موقتاً</div>
-          <select class="fsl" id="f-kit-yellow"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+          <div style="display:flex;gap:6px">
+            <select class="fsl" id="f-kit-yellow" style="flex:1"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+            <input class="fi" id="f-kit-yellow-qty" type="number" min="0" placeholder="العدد" style="width:70px">
+          </div>
         </div>
         <div class="fg"><div class="fl">📅 تاريخ — مؤجلة</div>
           <input class="fi" id="f-kit-yellow-date" type="date">
         </div>
         <div class="fg"><div class="fl">🟢 جاري تنفيذ تصنيعها</div>
-          <select class="fsl" id="f-kit-lgreen"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+          <div style="display:flex;gap:6px">
+            <select class="fsl" id="f-kit-lgreen" style="flex:1"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+            <input class="fi" id="f-kit-lgreen-qty" type="number" min="0" placeholder="العدد" style="width:70px">
+          </div>
         </div>
         <div class="fg"><div class="fl">📅 تاريخ — جاري التنفيذ</div>
           <input class="fi" id="f-kit-lgreen-date" type="date">
         </div>
         <div class="fg"><div class="fl">🟩 مطابخ إضافية</div>
-          <select class="fsl" id="f-kit-green"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+          <div style="display:flex;gap:6px">
+            <select class="fsl" id="f-kit-green" style="flex:1"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+            <input class="fi" id="f-kit-green-qty" type="number" min="0" placeholder="العدد" style="width:70px">
+          </div>
         </div>
         <div class="fg"><div class="fl">📅 تاريخ — إضافية</div>
           <input class="fi" id="f-kit-green-date" type="date">
         </div>
         <div class="fg"><div class="fl">⬛ مؤقتة وقادمة</div>
-          <select class="fsl" id="f-kit-dkgray"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+          <div style="display:flex;gap:6px">
+            <select class="fsl" id="f-kit-dkgray" style="flex:1"><option value="">— لا ينطبق —</option><option>نعم</option><option>لا</option></select>
+            <input class="fi" id="f-kit-dkgray-qty" type="number" min="0" placeholder="العدد" style="width:70px">
+          </div>
         </div>
         <div class="fg"><div class="fl">📅 تاريخ — مؤقتة</div>
           <input class="fi" id="f-kit-dkgray-date" type="date">
@@ -4293,9 +4308,11 @@ function openForm(id){
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
   s('f-contract',c?.contract);s('f-collected',c?.collected);
-  s('f-kit-brown',c?.kitBrown||'');s('f-kit-yellow',c?.kitYellow||'');
-  s('f-kit-lgreen',c?.kitLgreen||'');s('f-kit-green',c?.kitGreen||'');
-  s('f-kit-dkgray',c?.kitDkgray||'');
+  s('f-kit-brown',c?.kitBrown||'');s('f-kit-brown-qty',c?.kitBrownQty||'');
+  s('f-kit-yellow',c?.kitYellow||'');s('f-kit-yellow-qty',c?.kitYellowQty||'');
+  s('f-kit-lgreen',c?.kitLgreen||'');s('f-kit-lgreen-qty',c?.kitLgreenQty||'');
+  s('f-kit-green',c?.kitGreen||'');s('f-kit-green-qty',c?.kitGreenQty||'');
+  s('f-kit-dkgray',c?.kitDkgray||'');s('f-kit-dkgray-qty',c?.kitDkgrayQty||'');
   s('f-kit-brown-date',c?.kitBrownDate||'');s('f-kit-yellow-date',c?.kitYellowDate||'');
   s('f-kit-lgreen-date',c?.kitLgreenDate||'');s('f-kit-green-date',c?.kitGreenDate||'');
   s('f-kit-dkgray-date',c?.kitDkgrayDate||'');
@@ -4318,8 +4335,11 @@ async function saveClient(){
     city:g('f-city'),area:g('f-area'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
     pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
-    kitBrown:g('f-kit-brown'),kitYellow:g('f-kit-yellow'),kitLgreen:g('f-kit-lgreen'),
-    kitGreen:g('f-kit-green'),kitDkgray:g('f-kit-dkgray'),
+    kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
+    kitYellow:g('f-kit-yellow'),kitYellowQty:+g('f-kit-yellow-qty')||0,
+    kitLgreen:g('f-kit-lgreen'),kitLgreenQty:+g('f-kit-lgreen-qty')||0,
+    kitGreen:g('f-kit-green'),kitGreenQty:+g('f-kit-green-qty')||0,
+    kitDkgray:g('f-kit-dkgray'),kitDkgrayQty:+g('f-kit-dkgray-qty')||0,
     kitBrownDate:g('f-kit-brown-date'),kitYellowDate:g('f-kit-yellow-date'),
     kitLgreenDate:g('f-kit-lgreen-date'),kitGreenDate:g('f-kit-green-date'),
     kitDkgrayDate:g('f-kit-dkgray-date'),
@@ -4719,12 +4739,12 @@ function printMfgOrder(clientId){
 
   const orderNo=generateMfgOrderNumber();
   const kitItems=[
-    {label:'مطابخ بني (غير مطلوبة للتصنيع)',val:c.kitBrown,date:c.kitBrownDate,color:'#8B4513'},
-    {label:'مطابخ صفراء (مؤجلة مؤقتاً)',val:c.kitYellow,date:c.kitYellowDate,color:'#B8860B'},
-    {label:'مطابخ خضراء فاتحة (جاري التصنيع)',val:c.kitLgreen,date:c.kitLgreenDate,color:'#2E7D32'},
-    {label:'مطابخ خضراء (إضافية)',val:c.kitGreen,date:c.kitGreenDate,color:'#1B5E20'},
-    {label:'مطابخ رمادية غامقة (مؤقتة/قادمة)',val:c.kitDkgray,date:c.kitDkgrayDate,color:'#424242'},
-  ].filter(k=>k.val&&k.val.trim()!=='');
+    {label:'مطابخ بني (غير مطلوبة للتصنيع)',val:c.kitBrown,qty:c.kitBrownQty||0,date:c.kitBrownDate,color:'#8B4513'},
+    {label:'مطابخ صفراء (مؤجلة مؤقتاً)',val:c.kitYellow,qty:c.kitYellowQty||0,date:c.kitYellowDate,color:'#B8860B'},
+    {label:'مطابخ خضراء فاتحة (جاري التصنيع)',val:c.kitLgreen,qty:c.kitLgreenQty||0,date:c.kitLgreenDate,color:'#2E7D32'},
+    {label:'مطابخ خضراء (إضافية)',val:c.kitGreen,qty:c.kitGreenQty||0,date:c.kitGreenDate,color:'#1B5E20'},
+    {label:'مطابخ رمادية غامقة (مؤقتة/قادمة)',val:c.kitDkgray,qty:c.kitDkgrayQty||0,date:c.kitDkgrayDate,color:'#424242'},
+  ].filter(k=>k.val&&k.val==='نعم');
 
   const w=window.open('','_blank','width=900,height=1100');
   w.document.write(`<!DOCTYPE html>
@@ -4824,14 +4844,19 @@ function printMfgOrder(clientId){
     ${kitItems.length===0
       ?'<div style="color:#888;font-size:12px;text-align:center;padding:10px">لم تُحدَّد تفاصيل المطابخ بعد</div>'
       :`<table>
-        <thead><tr><th>نوع المطبخ</th><th>التفاصيل / المواصفات</th><th>تاريخ التسليم</th></tr></thead>
+        <thead><tr><th>نوع المطبخ</th><th>الحالة</th><th>العدد</th><th>تاريخ التسليم</th></tr></thead>
         <tbody>
           ${kitItems.map(k=>`<tr>
             <td><span class="kit-badge" style="background:${k.color}">${k.label}</span></td>
-            <td style="font-weight:600">${k.val}</td>
+            <td style="font-weight:700;color:green">✅ نعم</td>
+            <td style="font-weight:800;color:#1a7a3a;font-size:16px;text-align:center">${k.qty>0?k.qty:'—'}</td>
             <td style="color:#1a7a3a;font-weight:700">${k.date||'—'}</td>
           </tr>`).join('')}
         </tbody>
+        <tfoot><tr>
+          <td colspan="2" style="font-weight:800;padding:8px 10px;background:#f0faf4">إجمالي عدد المطابخ</td>
+          <td colspan="2" style="font-weight:800;color:#1a7a3a;font-size:16px;background:#f0faf4">${kitItems.reduce((a,k)=>a+(+k.qty||0),0)} مطبخ</td>
+        </tr></tfoot>
       </table>`}
   </div>
 
