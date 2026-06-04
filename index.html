@@ -1210,6 +1210,19 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
         </div>
       </div>
     </div>
+    <div class="fs"><div class="fs-t">🍳 أنواع المطابخ المطلوبة</div>
+      <div class="fg2">
+        <div class="fg full"><div class="fl">أنواع المطابخ (اختر كل ما ينطبق)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd2)">
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-main" value="رئيسي" style="width:16px;height:16px;accent-color:var(--g)"> 🍳 رئيسي</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-dirty" value="ديرتي" style="width:16px;height:16px;accent-color:var(--am)"> 🧹 ديرتي</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-flat" value="شقة" style="width:16px;height:16px;accent-color:var(--accent)"> 🏠 شقة</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-prep" value="تحضيري" style="width:16px;height:16px;accent-color:#a78bfa)"> 🔪 تحضيري</label>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600"><input type="checkbox" id="fkt-laundry" value="غرفة غسيل" style="width:16px;height:16px;accent-color:#06b6d4"> 👕 غرفة غسيل</label>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="fs"><div class="fs-t">🍳 حالة المطابخ وعددها</div>
       <div class="fg2">
         <div class="fg"><div class="fl">🟤 غير مطلوبة للتصنيع</div>
@@ -2889,7 +2902,7 @@ function dbToClient(r){
     stage:r.stage||'تصميم', type:r.type||'سكني',
     priority:r.priority||'متوسطة', resp:r.resp||'',
     pay:r.pay||'غير مدفوع', contract:+r.contract||0, collected:+r.collected||0,
-    kitBrown:r.kit_brown||'', kitYellow:r.kit_yellow||'',
+    kitTypes:r.kit_types||[], kitBrown:r.kit_brown||'', kitYellow:r.kit_yellow||'',
     kitLgreen:r.kit_lgreen||'', kitGreen:r.kit_green||'',
     kitDkgray:r.kit_dkgray||'',
     kitBrownDate:r.kit_brown_date||'', kitYellowDate:r.kit_yellow_date||'',
@@ -2920,7 +2933,7 @@ function clientToDb(c){
     status:c.status, site:c.site, stage:c.stage,
     type:c.type, priority:c.priority, resp:c.resp,
     pay:c.pay, contract:+c.contract||0, collected:+c.collected||0,
-    kit_brown:c.kitBrown||null, kit_yellow:c.kitYellow||null,
+    kit_types:c.kitTypes||[], kit_brown:c.kitBrown||null, kit_yellow:c.kitYellow||null,
     kit_lgreen:c.kitLgreen||null, kit_green:c.kitGreen||null,
     kit_dkgray:c.kitDkgray||null,
     kit_brown_date:c.kitBrownDate||null, kit_yellow_date:c.kitYellowDate||null,
@@ -4308,6 +4321,7 @@ function openForm(id){
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
   s('f-contract',c?.contract);s('f-collected',c?.collected);
+  ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(el)el.checked=(c?.kitTypes||[]).includes(el.value);});
   s('f-kit-brown',c?.kitBrown||'');s('f-kit-brown-qty',c?.kitBrownQty||'');
   s('f-kit-yellow',c?.kitYellow||'');s('f-kit-yellow-qty',c?.kitYellowQty||'');
   s('f-kit-lgreen',c?.kitLgreen||'');s('f-kit-lgreen-qty',c?.kitLgreenQty||'');
@@ -4335,6 +4349,7 @@ async function saveClient(){
     city:g('f-city'),area:g('f-area'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
     pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
+    kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>document.getElementById(id).value),
     kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
     kitYellow:g('f-kit-yellow'),kitYellowQty:+g('f-kit-yellow-qty')||0,
     kitLgreen:g('f-kit-lgreen'),kitLgreenQty:+g('f-kit-lgreen-qty')||0,
@@ -4836,6 +4851,20 @@ function printMfgOrder(clientId){
       <div class="info-row"><span class="info-label">تاريخ التعاقد</span><span class="info-val">${c.signed||'—'}</span></div>
       <div class="info-row"><span class="info-label">تاريخ التسليم</span><span class="info-val">${c.delivery||'—'}</span></div>
     </div>
+  </div>
+
+  <!-- أنواع المطابخ -->
+  <div class="section">
+    <div class="section-title">🍳 أنواع المطابخ المطلوبة للتصنيع</div>
+    ${(c.kitTypes&&c.kitTypes.length>0)
+      ?`<div style="display:flex;flex-wrap:wrap;gap:10px;padding:6px 0">
+          ${c.kitTypes.map(t=>{
+            const colors={'رئيسي':'#1a7a3a','ديرتي':'#B8860B','شقة':'#1565c0','تحضيري':'#6a1b9a','غرفة غسيل':'#00838f'};
+            const icons={'رئيسي':'🍳','ديرتي':'🧹','شقة':'🏠','تحضيري':'🔪','غرفة غسيل':'👕'};
+            return`<span style="background:${colors[t]||'#555'};color:#fff;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700">${icons[t]||'🏭'} ${t}</span>`;
+          }).join('')}
+        </div>`
+      :'<div style="color:#888;font-size:12px;text-align:center;padding:8px">لم تُحدَّد أنواع المطابخ بعد</div>'}
   </div>
 
   <!-- تفاصيل المطابخ -->
