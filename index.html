@@ -1194,7 +1194,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           </select>
         </div>
         <div class="fg"><div class="fl">الأولوية</div>
-          <select class="fsl" id="f-priority"><option value="عالية">🔥 عالية</option><option value="متوسطة">⚡ متوسطة</option><option value="منخفضة">🔵 منخفضة</option></select>
+          <select class="fsl" id="f-priority" onchange="onPriorityChange(this)"><option value="عالية">🔥 عالية</option><option value="متوسطة">⚡ متوسطة</option><option value="منخفضة">🔵 منخفضة</option></select>
         </div>
         <div class="fg"><div class="fl">المسؤول</div>
           <select class="fsl" id="f-resp"></select>
@@ -1894,6 +1894,44 @@ async function setMfgPct(id,val){
 }
 
 // ══════════════════════════════════════
+// ══════════════════════════════════════
+// PRIORITY CHANGE — أولوية عالية → أمر تصنيع
+// ══════════════════════════════════════
+function onPriorityChange(sel){
+  if(sel.value!=='عالية')return;
+  setTimeout(()=>{
+    const existing=document.getElementById('mfg-ask-modal');
+    if(existing)existing.remove();
+    const modal=document.createElement('div');
+    modal.id='mfg-ask-modal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+    modal.innerHTML=`
+      <div style="background:var(--bg2,#121828);border:1.5px solid rgba(255,160,0,0.35);border-radius:20px;padding:32px 36px;max-width:400px;width:90%;box-shadow:0 8px 40px rgba(255,160,0,0.2);text-align:center;animation:_mfq-in .25s ease">
+        <div style="font-size:52px;margin-bottom:12px">🏭</div>
+        <div style="font-size:18px;font-weight:800;color:#e67e22;margin-bottom:8px">أولوية عالية</div>
+        <div style="font-size:14px;font-weight:600;color:var(--tx,#e4eaf6);margin-bottom:6px">هل تريد إصدار أمر تصنيع؟</div>
+        <div style="font-size:12px;color:var(--mt,#6a82a0);margin-bottom:24px;line-height:1.7">هذا العميل تم تصنيفه أولوية عالية<br>يمكنك إصدار أمر التصنيع الرسمي الآن</div>
+        <div style="display:flex;gap:12px;justify-content:center">
+          <button onclick="
+            document.getElementById(\'mfg-ask-modal\').remove();
+            var cid=typeof editId!==\'undefined\'?editId:null;
+            if(cid){printMfgOrderFull(cid);}
+            else{toast(\'احفظ العميل أولاً ثم أصدر أمر التصنيع\',\'err\');}
+          " style="padding:11px 28px;background:linear-gradient(135deg,#e67e22,#c0392b);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal,sans-serif">
+            🏭 نعم — أصدر الأمر
+          </button>
+          <button onclick="document.getElementById(\'mfg-ask-modal\').remove()" style="padding:11px 24px;background:rgba(255,255,255,0.08);color:var(--tx,#e4eaf6);border:1px solid rgba(255,255,255,0.12);border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:Tajawal,sans-serif">
+            لاحقاً
+          </button>
+        </div>
+      </div>
+      <style>@keyframes _mfq-in{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}</style>
+    \`;
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+    document.body.appendChild(modal);
+  },200);
+}
+
 // MFG ORDER PRINT — طباعة أمر تصنيع رسمي
 // ══════════════════════════════════════
 function printMfgOrderFull(id){
