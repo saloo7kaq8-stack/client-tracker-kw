@@ -1200,7 +1200,10 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           </select>
         </div>
         <div class="fg"><div class="fl">الأولوية</div>
-          <select class="fsl" id="f-priority"><option value="عالية">🔥 عالية</option><option value="متوسطة">⚡ متوسطة</option><option value="منخفضة">🔵 منخفضة</option></select>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select class="fsl" id="f-priority" onchange="toggleMfgOrderBtn(this.value)" style="flex:1"><option value="عالية">🔥 عالية</option><option value="متوسطة">⚡ متوسطة</option><option value="منخفضة">🔵 منخفضة</option></select>
+            <button type="button" id="btn-mfg-order" onclick="printMfgOrder(editId)" style="display:none;background:var(--g);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:var(--font-ar)">🏭 أمر تصنيع</button>
+          </div>
         </div>
         <div class="fg"><div class="fl">المسؤول</div>
           <select class="fsl" id="f-resp"></select>
@@ -4286,6 +4289,7 @@ function openForm(id){
   s('f-status',c?.status||'جاهز للتنفيذ');s('f-site',c?.site||'جاهز');
   s('f-stage',c?.stage||'تصميم');s('f-type',c?.type||'سكني');
   s('f-priority',c?.priority||'متوسطة');
+  toggleMfgOrderBtn(c?.priority||'متوسطة');
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
   s('f-contract',c?.contract);s('f-collected',c?.collected);
@@ -4904,6 +4908,12 @@ function printMfgOrder(clientId){
 }
 
 // تشغيل أمر التصنيع تلقائياً عند اختيار أولوية عالية
+
+function toggleMfgOrderBtn(priority){
+  const btn=document.getElementById('btn-mfg-order');
+  if(btn)btn.style.display=priority==='عالية'?'block':'none';
+}
+
 function checkPriorityForMfgOrder(clientId, priority){
   if(priority==='عالية'){
     const c=clients.find(x=>x.id===clientId);
