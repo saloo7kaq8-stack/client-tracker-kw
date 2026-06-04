@@ -4099,9 +4099,15 @@ function renderProfile(id){
       <!-- أمر التصنيع -->
       <div class="doc-tab-content" id="doctab-${c.id}-mfg">
         <div class="doc-tab-inner">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+            <button class="btn-p btn-sm" onclick="printMfgOrder(${c.id})" style="background:var(--g);border-color:var(--g)">🏭 إصدار أمر تصنيع</button>
+            ${c.priority==='عالية'?'<span class="badge bg-re" style="align-self:center">🔥 أولوية عالية</span>':''}
+          </div>
           <div class="doc-info-grid">
+            <div class="doc-info-row"><span class="doc-label">الأولوية</span><span class="doc-val" style="color:${c.priority==='عالية'?'var(--re)':'var(--tx)'};font-weight:800">${c.priority||'—'}</span></div>
             <div class="doc-info-row"><span class="doc-label">نسبة التصنيع</span><span class="doc-val"><div class="pw" style="display:inline-flex;align-items:center;gap:8px"><div class="pb" style="width:120px;height:8px"><div class="pf" style="width:${+(c._mfgPct||0)}%;background:${+(c._mfgPct||0)===100?'var(--g)':'var(--am)'}"></div></div><span>${+(c._mfgPct||0)}%</span></div></span></div>
             <div class="doc-info-row"><span class="doc-label">المرحلة</span><span class="doc-val">${c.stage||'—'}</span></div>
+            <div class="doc-info-row"><span class="doc-label">تاريخ التسليم</span><span class="doc-val" style="color:${c.delivery&&c.delivery<today()?'var(--re)':'var(--g)'}">${c.delivery||'—'}</span></div>
           </div>
           ${renderMfgProgressInline(c)}
         </div>
@@ -4334,6 +4340,8 @@ async function saveClient(){
   if(curPg==='clients')renderClients();
   if(curPg==='daily')renderDaily();
   renderSF();
+  // تحقق من الأولوية العالية
+  if(obj.priority==='عالية'&&editId)checkPriorityForMfgOrder(editId,obj.priority);
 }
 async function delClient(id){
   if(!confirm('هل تريد حذف هذا العميل نهائياً؟'))return;
@@ -4690,6 +4698,220 @@ function updateAreaOptions(selectedArea=''){
   }
   areaEl.innerHTML='<option value="">— اختر المنطقة —</option>'+
     areas.map(a=>`<option${a===selectedArea?' selected':''}>${a}</option>`).join('');
+}
+
+
+// ══════════════════════════════════════
+// 🏭 أمر التصنيع
+// ══════════════════════════════════════
+function generateMfgOrderNumber(){
+  const d=new Date();
+  return 'MO-'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(Math.floor(Math.random()*9000)+1000);
+}
+
+function printMfgOrder(clientId){
+  const c=clients.find(x=>x.id===clientId);
+  if(!c){toast('ما لقينا بيانات العميل','err');return;}
+
+  const orderNo=generateMfgOrderNumber();
+  const kitItems=[
+    {label:'مطابخ بني (غير مطلوبة للتصنيع)',val:c.kitBrown,date:c.kitBrownDate,color:'#8B4513'},
+    {label:'مطابخ صفراء (مؤجلة مؤقتاً)',val:c.kitYellow,date:c.kitYellowDate,color:'#B8860B'},
+    {label:'مطابخ خضراء فاتحة (جاري التصنيع)',val:c.kitLgreen,date:c.kitLgreenDate,color:'#2E7D32'},
+    {label:'مطابخ خضراء (إضافية)',val:c.kitGreen,date:c.kitGreenDate,color:'#1B5E20'},
+    {label:'مطابخ رمادية غامقة (مؤقتة/قادمة)',val:c.kitDkgray,date:c.kitDkgrayDate,color:'#424242'},
+  ].filter(k=>k.val&&k.val.trim()!=='');
+
+  const w=window.open('','_blank','width=900,height=1100');
+  w.document.write(`<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>أمر تصنيع — ${c.name}</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Tajawal,sans-serif;background:#fff;color:#111;direction:rtl;padding:20px;font-size:13px}
+  .page{max-width:800px;margin:0 auto;border:2px solid #1a7a3a;border-radius:12px;overflow:hidden}
+  .header{background:linear-gradient(135deg,#1a7a3a,#0d5e2f);color:#fff;padding:20px 24px;display:flex;align-items:center;justify-content:space-between}
+  .header-logo{font-size:28px;font-weight:800;letter-spacing:1px}
+  .header-info{text-align:left;font-size:11px;opacity:.9;line-height:1.8}
+  .order-banner{background:#f0faf4;border-bottom:2px solid #1a7a3a;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+  .order-no{font-size:18px;font-weight:800;color:#1a7a3a;letter-spacing:2px}
+  .order-date{font-size:12px;color:#555}
+  .section{padding:16px 24px;border-bottom:1px solid #e8f5e9}
+  .section-title{font-size:13px;font-weight:800;color:#1a7a3a;margin-bottom:10px;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:1px}
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .info-row{display:flex;gap:8px;padding:6px 10px;background:#f8f9fa;border-radius:6px;font-size:12px}
+  .info-label{color:#888;min-width:100px;font-weight:600}
+  .info-val{color:#111;font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{background:#1a7a3a;color:#fff;padding:8px 10px;text-align:right;font-weight:600;font-size:11px}
+  td{padding:7px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+  tr:nth-child(even) td{background:#f8fff9}
+  .kit-badge{display:inline-block;padding:3px 10px;border-radius:20px;color:#fff;font-size:11px;font-weight:700}
+  .signature-section{padding:20px 24px;background:#fafafa}
+  .sig-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:10px}
+  .sig-box{border:1.5px dashed #ccc;border-radius:8px;padding:14px;text-align:center;min-height:90px}
+  .sig-title{font-size:11px;font-weight:700;color:#555;margin-bottom:6px}
+  .sig-name{font-size:12px;font-weight:800;color:#1a7a3a;margin-top:8px}
+  .sig-role{font-size:10px;color:#888}
+  .footer{background:#1a7a3a;color:#fff;padding:10px 24px;text-align:center;font-size:11px;opacity:.9}
+  .urgent-badge{background:#c0392b;color:#fff;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:800}
+  @media print{
+    body{padding:0}
+    .no-print{display:none!important}
+    .page{border:none;border-radius:0}
+  }
+</style>
+</head>
+<body>
+<div class="no-print" style="text-align:center;padding:10px;background:#f0faf4;margin-bottom:10px;border-radius:8px">
+  <button onclick="window.print()" style="background:#1a7a3a;color:#fff;border:none;padding:10px 30px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal,sans-serif">🖨️ طباعة أمر التصنيع</button>
+  <button onclick="window.close()" style="background:#eee;color:#333;border:none;padding:10px 20px;border-radius:8px;font-size:14px;cursor:pointer;margin-right:10px;font-family:Tajawal,sans-serif">✕ إغلاق</button>
+</div>
+
+<div class="page">
+  <!-- الهيدر -->
+  <div class="header">
+    <div>
+      <div class="header-logo">🍳 شركة مطابخ العيسى</div>
+      <div style="font-size:11px;opacity:.8;margin-top:4px">Kuwait — Al-Eissa Kitchens Co.</div>
+    </div>
+    <div class="header-info">
+      <div>📋 أمر تصنيع رسمي</div>
+      <div>📅 التاريخ: ${today()}</div>
+      <div style="margin-top:4px">
+        <span class="urgent-badge">🔥 أولوية عالية</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- رقم الأمر -->
+  <div class="order-banner">
+    <div>
+      <div class="order-no">رقم الأمر: ${orderNo}</div>
+      <div class="order-date">تاريخ الإصدار: ${today()} · وقت الإصدار: ${new Date().toLocaleTimeString('ar-KW')}</div>
+    </div>
+    <div style="text-align:left">
+      <div style="font-size:11px;color:#555">المرحلة الحالية</div>
+      <div style="font-size:16px;font-weight:800;color:#1a7a3a">${getPhase(c)}/12</div>
+    </div>
+  </div>
+
+  <!-- بيانات العميل -->
+  <div class="section">
+    <div class="section-title">👤 بيانات العميل</div>
+    <div class="info-grid">
+      <div class="info-row"><span class="info-label">الاسم الكامل</span><span class="info-val">${c.name}</span></div>
+      <div class="info-row"><span class="info-label">رقم الهاتف</span><span class="info-val" dir="ltr">${c.phone}</span></div>
+      <div class="info-row"><span class="info-label">المحافظة</span><span class="info-val">${c.city||'—'}</span></div>
+      <div class="info-row"><span class="info-label">المنطقة</span><span class="info-val">${c.area||'—'}</span></div>
+      <div class="info-row"><span class="info-label">العنوان</span><span class="info-val">${c.address||'—'}</span></div>
+      <div class="info-row"><span class="info-label">المسؤول</span><span class="info-val">${c.resp||'—'}</span></div>
+      <div class="info-row"><span class="info-label">تاريخ التعاقد</span><span class="info-val">${c.signed||'—'}</span></div>
+      <div class="info-row"><span class="info-label">تاريخ التسليم</span><span class="info-val">${c.delivery||'—'}</span></div>
+    </div>
+  </div>
+
+  <!-- تفاصيل المطابخ -->
+  <div class="section">
+    <div class="section-title">🍳 تفاصيل المطابخ المطلوبة للتصنيع</div>
+    ${kitItems.length===0
+      ?'<div style="color:#888;font-size:12px;text-align:center;padding:10px">لم تُحدَّد تفاصيل المطابخ بعد</div>'
+      :`<table>
+        <thead><tr><th>نوع المطبخ</th><th>التفاصيل / المواصفات</th><th>تاريخ التسليم</th></tr></thead>
+        <tbody>
+          ${kitItems.map(k=>`<tr>
+            <td><span class="kit-badge" style="background:${k.color}">${k.label}</span></td>
+            <td style="font-weight:600">${k.val}</td>
+            <td style="color:#1a7a3a;font-weight:700">${k.date||'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`}
+  </div>
+
+  <!-- المواد المطلوبة للتصنيع -->
+  <div class="section">
+    <div class="section-title">📦 المواد المطلوبة للتصنيع</div>
+    ${(c.mats&&c.mats.length>0)
+      ?`<table>
+          <thead><tr><th>#</th><th>كود المادة</th><th>اسم المادة</th><th>الفئة</th><th>الكمية</th><th>الوحدة</th><th>السعر</th><th>الإجمالي</th></tr></thead>
+          <tbody>
+            ${c.mats.map((m,i)=>`<tr>
+              <td style="color:#888">${i+1}</td>
+              <td style="font-family:monospace;color:#1a7a3a;font-weight:700">${m.id||'—'}</td>
+              <td style="font-weight:600">${m.name||m.n||'—'}</td>
+              <td style="color:#888">${m.category||m.c||'—'}</td>
+              <td style="font-weight:700;color:#1a7a3a">${m.qty||0}</td>
+              <td style="color:#888">${m.unit||m.u||'—'}</td>
+              <td>${m.price||m.p?fmtKWD(m.price||m.p):'—'}</td>
+              <td style="font-weight:700">${m.total?fmtKWD(m.total):'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="7" style="text-align:left;font-weight:800;padding:8px 10px;background:#f0faf4">إجمالي تكلفة المواد</td>
+              <td style="font-weight:800;color:#1a7a3a;font-size:14px;background:#f0faf4">${fmtKWD(c.mats.reduce((a,m)=>a+(+m.total||0),0))}</td>
+            </tr>
+          </tfoot>
+        </table>`
+      :'<div style="color:#888;font-size:12px;text-align:center;padding:10px">لم تُحدَّد مواد التصنيع بعد — يرجى تعبئة قائمة المواد من ملف العميل</div>'}
+  </div>
+
+  <!-- ملاحظات -->
+  <div class="section">
+    <div class="section-title">💬 ملاحظات خاصة</div>
+    <div style="background:#fffde7;border:1px solid #f9a825;border-radius:8px;padding:12px;font-size:12px;min-height:60px;color:#555">
+      ${c.notes||'لا توجد ملاحظات خاصة'}
+    </div>
+  </div>
+
+  <!-- التوقيعات والاعتماد -->
+  <div class="signature-section">
+    <div class="section-title" style="color:#1a7a3a">✍️ التوقيعات والاعتماد</div>
+    <div class="sig-grid">
+      <div class="sig-box">
+        <div class="sig-title">مسؤول المبيعات</div>
+        <div style="height:40px"></div>
+        <div class="sig-name">${c.resp||'—'}</div>
+        <div class="sig-role">مسؤول المبيعات</div>
+      </div>
+      <div class="sig-box" style="border-color:#1a7a3a;background:#f0faf4">
+        <div class="sig-title" style="color:#1a7a3a">اعتماد مدير المصنع</div>
+        <div style="height:40px"></div>
+        <div class="sig-name">بشار دياب عيسى</div>
+        <div class="sig-role">مدير المصنع — K100</div>
+      </div>
+      <div class="sig-box">
+        <div class="sig-title">اعتماد الإدارة</div>
+        <div style="height:40px"></div>
+        <div class="sig-name">عيسى العيسى</div>
+        <div class="sig-role">المدير العام — 001</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px;background:#fff3e0;border-radius:8px;font-size:11px;color:#e65100;text-align:center;font-weight:600">
+      ⚠️ هذا الأمر ملزم للتنفيذ بعد اعتماد مدير المصنع — أي تعديل يستلزم إصدار أمر تصنيع جديد
+    </div>
+  </div>
+
+  <div class="footer">
+    شركة مطابخ العيسى للمطابخ المصنّعة · الكويت · رقم الأمر: ${orderNo} · © ${new Date().getFullYear()} جميع الحقوق محفوظة
+  </div>
+</div>
+</body></html>`);
+  w.document.close();
+}
+
+// تشغيل أمر التصنيع تلقائياً عند اختيار أولوية عالية
+function checkPriorityForMfgOrder(clientId, priority){
+  if(priority==='عالية'){
+    const c=clients.find(x=>x.id===clientId);
+    if(!c)return;
+    if(confirm(`🏭 الأولوية عالية!\nهل تريد إصدار أمر تصنيع للعميل:\n${c.name}؟`)){
+      printMfgOrder(clientId);
+    }
+  }
 }
 
 // ── TEAM ──
