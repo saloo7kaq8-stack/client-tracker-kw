@@ -1122,6 +1122,8 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   <div id="pg-daily" style="display:none"></div>
   <div id="pg-reports" style="display:none"></div>
   <div id="pg-accounting" style="display:none"></div>
+  <div id="pg-pricing" style="display:none"></div>
+  <div id="pg-profitreport" style="display:none"></div>
   <div id="pg-team" style="display:none"></div>
   <div id="pg-alerts" style="display:none"></div>
   <div id="pg-calendar" style="display:none"></div>
@@ -4656,7 +4658,7 @@ var _pricingState={clientId:null,fullMeters:0,lowerMeters:0,upperMeters:0,addons
 
 function renderPricingPage(){
   if(!userHasAccess('pricing')){
-    document.getElementById('pricing').innerHTML='<div class="ph"><div class="ph-t">💲 نظام التسعير</div></div><div style="padding:40px;text-align:center;color:var(--mt)">🚫 ما عندك صلاحية للوصول لهذه الصفحة</div>';
+    document.getElementById('pg-pricing').innerHTML='<div class="ph"><div class="ph-t">💲 نظام التسعير</div></div><div style="padding:40px;text-align:center;color:var(--mt)">🚫 ما عندك صلاحية للوصول لهذه الصفحة</div>';
     return;
   }
   var clientOpts=clients.map(function(c){return '<option value="'+c.id+'">'+pEsc(c.name)+(c.area?' — '+pEsc(c.area):'')+'</option>';}).join('');
@@ -4722,7 +4724,7 @@ function renderPricingPage(){
 
   '</div>';
 
-  document.getElementById('pricing').innerHTML=html;
+  document.getElementById('pg-pricing').innerHTML=html;
   recalcPricingUI();
 }
 
@@ -5020,7 +5022,7 @@ function printQuote(){
 // ══════════════════════════════════════
 function renderProfitReport(){
   if(!userHasAccess('profitreport')){
-    document.getElementById('profitreport').innerHTML='<div class="ph"><div class="ph-t">📊 تقرير الربحية</div></div><div style="padding:40px;text-align:center;color:var(--mt)">🚫 هذا التقرير سري — للإدارة العليا فقط</div>';
+    document.getElementById('pg-profitreport').innerHTML='<div class="ph"><div class="ph-t">📊 تقرير الربحية</div></div><div style="padding:40px;text-align:center;color:var(--mt)">🚫 هذا التقرير سري — للإدارة العليا فقط</div>';
     return;
   }
 
@@ -5081,7 +5083,7 @@ function renderProfitReport(){
   '<div style="margin-top:16px"><button class="btn-ghost" onclick="loadPricingApprovals()">📋 عرض طلبات الموافقة على الخصم</button></div>'+
   '<div id="approvals-list" style="margin-top:12px"></div>';
 
-  document.getElementById('profitreport').innerHTML=html;
+  document.getElementById('pg-profitreport').innerHTML=html;
   loadPricingApprovals();
 }
 
