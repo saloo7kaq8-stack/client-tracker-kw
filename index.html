@@ -17,6 +17,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=Cairo:wght@600;700;800;900&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <style>
 :root{
   /* ═══ Premium Light Theme ═══ */
@@ -4021,6 +4022,7 @@ function renderClientPricingTab(c){
   rows+='<div class="doc-info-row"><span class="doc-label">📦 سعر الأمتار</span><span class="doc-val">'+(+(p.base||0)).toFixed(0)+' د.ك</span></div>';
   if(p.addonsTotal)rows+='<div class="doc-info-row"><span class="doc-label">➕ الإضافات</span><span class="doc-val">'+(+p.addonsTotal).toFixed(0)+' د.ك</span></div>';
   if(p.customTotal)rows+='<div class="doc-info-row"><span class="doc-label">✨ بنود مخصصة</span><span class="doc-val">'+(+p.customTotal).toFixed(0)+' د.ك</span></div>';
+  if(p.sinksTotal)rows+='<div class="doc-info-row"><span class="doc-label">🚿 المغاسل</span><span class="doc-val">'+(+p.sinksTotal).toFixed(0)+' د.ك</span></div>';
   rows+='<div class="doc-info-row"><span class="doc-label">💰 السعر القياسي</span><span class="doc-val">'+(+(p.standardPrice||0)).toFixed(0)+' د.ك</span></div>';
   if(p.discountPct)rows+='<div class="doc-info-row"><span class="doc-label">🏷️ الخصم</span><span class="doc-val" style="color:#e74c3c">'+p.discountPct+'%</span></div>';
 
@@ -4047,9 +4049,58 @@ function renderClientPricingTab(c){
     '</div>'+
     savedInfo+
     '<div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap">'+
-      '<button class="btn-ghost btn-sm" style="flex:1;color:var(--g);border-color:var(--gbd)" onclick="printClientQuote('+c.id+')">🖨️ طباعة عرض السعر</button>'+
-      '<button class="btn-ghost btn-sm" style="color:var(--accent)" onclick="goToPricingForClient('+c.id+')">✏️ تعديل التسعيرة</button>'+
-    '</div>';
+      '<button class="btn-ghost btn-sm" style="flex:1;color:var(--g);border-color:var(--gbd)" onclick="printClientQuote('+c.id+')">🖨️ طباعة</button>'+
+      '<button class="btn-ghost btn-sm" style="color:#e74c3c;border-color:#e74c3c55" onclick="downloadClientQuotePDF('+c.id+')">📄 PDF</button>'+
+      '<button class="btn-ghost btn-sm" style="color:#25d366;border-color:#25d36655" onclick="sendClientQuoteWhatsapp('+c.id+')">📤 واتساب</button>'+
+    '</div>'+
+    '<div style="margin-top:8px"><button class="btn-ghost btn-sm" style="width:100%;color:var(--accent)" onclick="goToPricingForClient('+c.id+')">✏️ تعديل التسعيرة</button></div>';
+}
+
+function _clientQuoteRes(c){
+  var p=c.pricing||{};
+  return {
+    fullMeters:p.fullMeters||0,lowerMeters:p.lowerMeters||0,upperMeters:p.upperMeters||0,
+    standardPrice:p.standardPrice||0,discountPct:p.discountPct||0,
+    customTotal:+(p.customTotal||0),sinksTotal:+(p.sinksTotal||0),
+    discountAmount:((+(p.base||0))+(+(p.addonsTotal||0)))*((+(p.discountPct||0))/100),
+    finalPrice:p.finalPrice||0
+  };
+}
+
+function downloadClientQuotePDF(id){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c||!c.pricing){toast('⚠️ لا توجد تسعيرة','err');return;}
+  if(typeof html2pdf==='undefined'){toast('⚠️ جاري تحميل أداة PDF...','err');return;}
+  toast('📄 جاري إنشاء PDF...','ok');
+  var res=_clientQuoteRes(c);
+  var wrap=document.createElement('div');
+  wrap.style.cssText='font-family:Tajawal,sans-serif;direction:rtl';
+  wrap.innerHTML=_buildQuoteHTML(c,res);
+  document.body.appendChild(wrap);
+  var fname='عرض_سعر_'+(c.name||'عميل').replace(/[^\u0600-\u06FF a-zA-Z0-9]/g,'_')+'.pdf';
+  html2pdf().set({margin:[5,5,5,5],filename:fname,image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(wrap.querySelector('#quote-doc')).save().then(function(){
+    document.body.removeChild(wrap);toast('✅ تم حفظ PDF','ok');
+  }).catch(function(){if(wrap.parentNode)document.body.removeChild(wrap);toast('⚠️ خطأ','err');});
+}
+
+function sendClientQuoteWhatsapp(id){
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c||!c.pricing){toast('⚠️ لا توجد تسعيرة','err');return;}
+  var phone=(c.whatsapp||c.phone||'').replace(/[^0-9]/g,'');
+  if(!phone){toast('⚠️ ما فيه رقم هاتف','err');return;}
+  if(phone.length===8)phone='965'+phone;
+  var res=_clientQuoteRes(c);
+  var fmt=function(d){return d.toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});};
+  var expiry=new Date(Date.now()+PRICING_CONFIG.quoteValidityDays*86400000);
+  var msg='🍳 *مطابخ العيسى*\n\nعزيزنا '+c.name+' 🌟\nعرض السعر لمطبخكم:\n\n'+
+    '📐 إجمالي الأمتار: '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م\n'+
+    (res.discountPct>0?'🏷️ خصم: '+res.discountPct+'%\n':'')+
+    '━━━━━━━━━━━━━\n💵 *السعر النهائي: '+res.finalPrice.toFixed(0)+' د.ك*\n━━━━━━━━━━━━━\n\n'+
+    '💳 الدفعات:\n• 50%: '+(res.finalPrice*0.5).toFixed(0)+' د.ك\n• 40%: '+(res.finalPrice*0.4).toFixed(0)+' د.ك\n• 10%: '+(res.finalPrice*0.1).toFixed(0)+' د.ك\n\n'+
+    '⏳ صالح حتى: '+fmt(expiry)+'\n✅ شامل التصنيع والتركيب\n\nنتشرف بخدمتكم 🙏';
+  window.open('https://wa.me/'+phone+'?text='+encodeURIComponent(msg),'_blank');
+  logSecurityEvent('quote','إرسال عرض سعر واتساب — '+c.name);
+  toast('📤 تم فتح واتساب العميل','ok');
 }
 
 function goToPricingForClient(id){
@@ -4859,7 +4910,7 @@ function calcPricing(data){
       addonsBreakdown.push({key:a.key,label:a.label,icon:a.icon,qty:qty,price:price,sub:sub});
     }
   });
-  // البنود المخصصة (رخام/كورين/مغاسل...)
+  // البنود المخصصة (رخام/كورين...)
   var customTotal=0, customBreakdown=[];
   var customs=data.customAddons||[];
   customs.forEach(function(ca){
@@ -4870,15 +4921,27 @@ function calcPricing(data){
       customBreakdown.push({label:ca.label,unit:ca.unit||'حبة',qty:qty,price:price,sub:sub,custom:true});
     }
   });
-  var standardPrice=base+addonsTotal+customTotal;
+  // المغاسل (أنواع مختلفة — سعر يحدده المستخدم)
+  var sinksTotal=0, sinksBreakdown=[];
+  var sinks=data.sinks||[];
+  sinks.forEach(function(s){
+    var qty=+s.qty||0, price=+s.price||0;
+    if(qty>0&&price>0){
+      var sub=qty*price;
+      sinksTotal+=sub;
+      sinksBreakdown.push({label:s.label,qty:qty,price:price,sub:sub,sink:true});
+    }
+  });
+  var standardPrice=base+addonsTotal+customTotal+sinksTotal;
   var discountPct=+data.discountPct||0;
-  // الخصم ينطبق فقط على (الأمتار + الإضافات الثابتة) — البنود المخصصة معفاة
+  // الخصم ينطبق فقط على (الأمتار + الإضافات الثابتة) — البنود المخصصة والمغاسل معفاة
   var discountableBase=base+addonsTotal;
   var discountAmount=discountableBase*(discountPct/100);
-  var finalPrice=(discountableBase-discountAmount)+customTotal;
+  var finalPrice=(discountableBase-discountAmount)+customTotal+sinksTotal;
   return {
     base:base, addonsTotal:addonsTotal, addonsBreakdown:addonsBreakdown,
     customTotal:customTotal, customBreakdown:customBreakdown,
+    sinksTotal:sinksTotal, sinksBreakdown:sinksBreakdown,
     discountableBase:discountableBase,
     standardPrice:standardPrice, discountPct:discountPct,
     discountAmount:discountAmount, finalPrice:finalPrice,
@@ -4901,6 +4964,7 @@ function isPricingAdmin(){
 // ── حالة صفحة التسعير ──
 var _pricingState={clientId:null,fullMeters:0,lowerMeters:0,upperMeters:0,addons:{},discountPct:0,overridePct:null,overrideReason:''};
 var _customAddons=[]; // البنود المخصصة الحالية [{label,price,unit,qty}]
+var _sinks=[]; // المغاسل [{label,price,qty}]
 
 function renderPricingPage(){
   if(!userHasAccess('pricing')){
@@ -4986,6 +5050,12 @@ function renderPricingCalcTab(){
         '<button class="lux-btn lux-btn-gold" style="padding:8px 14px;font-size:13px" onclick="openCustomAddonModal()">\u2795 \u0623\u0636\u0641 \u0628\u0646\u062f</button>'+
       '</div>'+
       '<div id="custom-addons-list" style="display:grid;gap:10px"></div>'+
+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 12px">'+
+        '<div class="lux-card-title" style="margin:0"><span class="ico">\ud83d\udebf</span> \u0627\u0644\u0645\u063a\u0627\u0633\u0644</div>'+
+        '<button class="lux-btn lux-btn-gold" style="padding:8px 14px;font-size:13px" onclick="addSink()">\u2795 \u0623\u0636\u0641 \u0645\u063a\u0633\u0644\u0629</button>'+
+      '</div>'+
+      '<div id="sinks-list" style="display:grid;gap:10px"></div>'+
     '</div>'+
 
     '<div class="lux-card">'+
@@ -5003,14 +5073,19 @@ function renderPricingCalcTab(){
       '<div id="pricing-final"></div>'+
 
       '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">'+
-        '<button class="lux-btn lux-btn-primary" style="flex:1" onclick="savePricingToClient()">\ud83d\udcbe \u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</button>'+
+        '<button class="lux-btn lux-btn-primary" style="flex:1;min-width:140px" onclick="savePricingToClient()">\ud83d\udcbe \u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</button>'+
         '<button class="lux-btn lux-btn-gold" onclick="printQuote()">\ud83d\udda8\ufe0f \u0639\u0631\u0636 \u0633\u0639\u0631</button>'+
+      '</div>'+
+      '<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">'+
+        '<button class="lux-btn lux-btn-ghost" style="flex:1;min-width:140px;color:#e74c3c;border-color:#e74c3c55" onclick="downloadQuotePDF()">\ud83d\udcc4 \u062d\u0641\u0638 PDF</button>'+
+        '<button class="lux-btn lux-btn-ghost" style="flex:1;min-width:140px;color:#25d366;border-color:#25d36655" onclick="sendQuoteWhatsapp()">\ud83d\udce4 \u0625\u0631\u0633\u0627\u0644 \u0644\u0644\u0639\u0645\u064a\u0644</button>'+
       '</div>'+
     '</div>'+
 
   '</div>';
 
   document.getElementById('pricing-tab-content').innerHTML=html;
+  renderSinksList();
   recalcPricingUI();
 }
 
@@ -5032,12 +5107,20 @@ function _readPricingInputs(){
     var el=document.getElementById('custom-qty-'+i);
     if(el)ca.qty=+el.value||0;
   });
+  // قراءة المغاسل من الواجهة
+  _sinks.forEach(function(s,i){
+    var qEl=document.getElementById('sink-qty-'+i);
+    var pEl=document.getElementById('sink-price-'+i);
+    if(qEl)s.qty=+qEl.value||0;
+    if(pEl)s.price=+pEl.value||0;
+  });
   return {
     fullMeters:+(document.getElementById('p-fullMeters')||{}).value||0,
     lowerMeters:+(document.getElementById('p-lowerMeters')||{}).value||0,
     upperMeters:+(document.getElementById('p-upperMeters')||{}).value||0,
     addons:addons,
     customAddons:_customAddons,
+    sinks:_sinks,
     discountPct:+(document.getElementById('p-discount-num')||{}).value||0
   };
 }
@@ -5057,10 +5140,15 @@ function recalcPricingUI(){
     return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span>✨ '+pEsc(a.label)+' ('+a.qty+' '+(a.unit==='متر'?'م':'حبة')+')</span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">'+a.sub.toFixed(0)+' د.ك</span></div>';
   }).join('');
 
+  var sinkRows=res.sinksBreakdown.map(function(s){
+    return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span>🚿 '+pEsc(s.label||'مغسلة')+' × '+s.qty+'</span><span style="font-weight:700;color:var(--accent)">'+s.sub.toFixed(0)+' د.ك</span></div>';
+  }).join('');
+
   resEl.innerHTML=''+
     '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--mt)">📐 سعر الأمتار</span><span style="font-weight:700">'+res.base.toFixed(0)+' د.ك</span></div>'+
     (addonRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+addonRows+'</div>':'')+
     (customRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+customRows+'</div>':'')+
+    (sinkRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+sinkRows+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:16px"><span style="font-weight:800">السعر القياسي</span><span style="font-weight:800;color:var(--accent)">'+res.standardPrice.toFixed(0)+' د.ك</span></div>';
 
   var cls=classifyDiscount(res.discountPct);
@@ -5074,8 +5162,8 @@ function recalcPricingUI(){
 
   var finalEl=document.getElementById('pricing-final');
   if(finalEl){
-    var customNote=res.customTotal>0?
-      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">✨ بنود مخصصة <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+res.customTotal.toFixed(0)+' د.ك</span></div>':'';
+    var customNote=(res.customTotal>0||res.sinksTotal>0)?
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">✨ بنود + مغاسل <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+(res.customTotal+res.sinksTotal).toFixed(0)+' د.ك</span></div>':'';
     finalEl.innerHTML=''+
       '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">قيمة الخصم ('+res.discountPct+'%)</span><span style="font-weight:700;color:#e74c3c">- '+res.discountAmount.toFixed(0)+' د.ك</span></div>'+
       customNote+
@@ -5140,6 +5228,49 @@ function removeCustomAddon(i){
   recalcPricingUI();
 }
 
+// ── المغاسل (أنواع مختلفة — سعر يحدده المستخدم) ──
+function renderSinksList(){
+  var el=document.getElementById('sinks-list');
+  if(!el)return;
+  if(!_sinks.length){
+    el.innerHTML='<div style="text-align:center;padding:14px;color:var(--mt);font-size:12px;border:1.5px dashed var(--bd);border-radius:12px">لا توجد مغاسل — اضغط "أضف مغسلة" وحدد الاسم والسعر والعدد</div>';
+    return;
+  }
+  el.innerHTML=_sinks.map(function(s,i){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--bg);border:1.5px solid var(--bd)">'+
+      '<div class="lux-addon-ico" style="background:linear-gradient(135deg,rgba(15,76,159,.15),rgba(10,143,92,.12))">🚿</div>'+
+      '<div style="flex:1;display:grid;gap:6px">'+
+        '<input type="text" id="sink-label-'+i+'" value="'+pEsc(s.label||'')+'" placeholder="اسم المغسلة (مثلاً: مغسلة فرانكي)" oninput="updateSinkLabel('+i+',this.value)" class="lux-input" style="padding:8px 10px;font-size:13px">'+
+        '<div style="display:flex;gap:8px;align-items:center">'+
+          '<div style="flex:1;display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--mt);font-weight:700">السعر</span>'+
+            '<input type="number" min="0" step="0.5" id="sink-price-'+i+'" value="'+(s.price||0)+'" placeholder="0" oninput="recalcPricingUI()" class="lux-addon-qty" style="flex:1">'+
+            '<span style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:700">د.ك</span></div>'+
+          '<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--mt);font-weight:700">العدد</span>'+
+            '<input type="number" min="0" id="sink-qty-'+i+'" value="'+(s.qty||1)+'" oninput="recalcPricingUI()" class="lux-addon-qty" style="width:55px"></div>'+
+        '</div>'+
+      '</div>'+
+      '<button onclick="removeSink('+i+')" style="background:none;border:none;color:#e74c3c;font-size:18px;cursor:pointer;padding:4px" title="حذف">🗑️</button>'+
+      '</div>';
+  }).join('');
+}
+
+function addSink(){
+  _sinks.push({label:'',price:0,qty:1});
+  renderSinksList();
+  recalcPricingUI();
+  setTimeout(function(){var el=document.getElementById('sink-label-'+(_sinks.length-1));if(el)el.focus();},80);
+}
+
+function updateSinkLabel(i,val){
+  if(_sinks[i])_sinks[i].label=val;
+}
+
+function removeSink(i){
+  _sinks.splice(i,1);
+  renderSinksList();
+  recalcPricingUI();
+}
+
 function loadClientPricing(){
   var id=+document.getElementById('pricing-client').value||null;
   _pricingState.clientId=id;
@@ -5157,6 +5288,8 @@ function loadClientPricing(){
   // تحميل البنود المخصصة
   _customAddons=(p.customAddons||[]).map(function(ca){return {label:ca.label,price:ca.price,unit:ca.unit||'حبة',qty:ca.qty||0};});
   renderCustomAddonsList();
+  _sinks=(p.sinks||[]).map(function(s){return {label:s.label||'',price:s.price||0,qty:s.qty||0};});
+  renderSinksList();
   syncDiscount(p.discountPct||0);
   toast('✅ تم تحميل تسعير '+c.name,'ok');
 }
@@ -5210,8 +5343,8 @@ function savePricingToClient(){
   // حفظ مباشر
   c.pricing={
     fullMeters:res.fullMeters,lowerMeters:res.lowerMeters,upperMeters:res.upperMeters,
-    addons:data.addons,customAddons:_customAddons,discountPct:res.discountPct,
-    base:res.base,addonsTotal:res.addonsTotal,customTotal:res.customTotal,
+    addons:data.addons,customAddons:_customAddons,sinks:_sinks,discountPct:res.discountPct,
+    base:res.base,addonsTotal:res.addonsTotal,customTotal:res.customTotal,sinksTotal:res.sinksTotal,
     standardPrice:res.standardPrice,finalPrice:res.finalPrice,
     savedBy:currentUser?currentUser.name:'',savedAt:new Date().toISOString()
   };
@@ -5591,6 +5724,117 @@ function printQuote(){
   w.document.write(html);
   w.document.close();
   logSecurityEvent('quote','طباعة عرض سعر لـ '+c.name+' — '+res.finalPrice.toFixed(0)+' د.ك');
+}
+
+// ── بناء HTML عرض السعر (مشترك للطباعة و PDF) ──
+function _buildQuoteHTML(c,res){
+  var today=new Date();
+  var expiry=new Date(today.getTime()+PRICING_CONFIG.quoteValidityDays*86400000);
+  var fmt=function(d){return d.toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});};
+  var kitSummary=(c.kitTypes&&c.kitTypes.length)?c.kitTypes.map(function(k){return k.label||k.name||'';}).filter(Boolean).join('، '):'';
+  var pay1=(res.finalPrice*0.5).toFixed(0), pay2=(res.finalPrice*0.4).toFixed(0), pay3=(res.finalPrice*0.1).toFixed(0);
+  var extras=(+(res.customTotal||0))+(+(res.sinksTotal||0));
+  return '<div id="quote-doc" style="font-family:Tajawal,sans-serif;color:#1a1a1a;background:#fff;padding:40px;position:relative;max-width:800px;margin:0 auto">'+
+    '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-30deg);font-size:120px;font-weight:800;color:rgba(201,168,76,0.06);z-index:0;pointer-events:none;white-space:nowrap">مطابخ العيسى</div>'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #c9a84c;padding-bottom:20px;margin-bottom:24px;position:relative;z-index:1">'+
+      '<div><h1 style="color:#0a8f5c;font-size:28px;margin:0">🍳 مطابخ العيسى</h1><div style="color:#888;font-size:13px;margin-top:4px">SLKR Follow Up System — الكويت</div></div>'+
+      '<div style="background:#0a8f5c;color:#fff;padding:8px 16px;border-radius:10px;font-weight:700;font-size:13px">عرض سعر رسمي</div></div>'+
+    '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">بيانات العميل</h2>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
+        '<div style="padding:6px 0"><b style="color:#555">الاسم:</b> '+pEsc(c.name)+'</div>'+
+        '<div style="padding:6px 0"><b style="color:#555">الهاتف:</b> '+pEsc(c.phone||'—')+'</div>'+
+        '<div style="padding:6px 0"><b style="color:#555">المنطقة:</b> '+pEsc(c.area||c.city||'—')+'</div>'+
+        '<div style="padding:6px 0"><b style="color:#555">تاريخ العرض:</b> '+fmt(today)+'</div></div></div>'+
+    '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">ملخص المطبخ</h2>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
+        (kitSummary?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
+        '<div style="padding:6px 0"><b style="color:#555">إجمالي الأمتار:</b> '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م</div></div></div>'+
+    (res.discountPct>0?'<div style="margin-bottom:20px;position:relative;z-index:1"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
+        '<div style="padding:6px 0"><b style="color:#555">السعر قبل الخصم:</b> '+res.standardPrice.toFixed(0)+' د.ك</div>'+
+        '<div style="padding:6px 0"><b style="color:#555">نسبة الخصم:</b> '+res.discountPct+'% (- '+res.discountAmount.toFixed(0)+' د.ك)</div>'+
+        (extras>0?'<div style="grid-column:1/3;padding:6px 0;color:#0a8f5c"><b>✨ بنود ومغاسل (بدون خصم):</b> + '+extras.toFixed(0)+' د.ك</div>':'')+
+      '</div></div>':'')+
+    '<div style="background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;padding:24px;border-radius:16px;text-align:center;margin:20px 0;position:relative;z-index:1">'+
+      '<div style="font-size:14px;opacity:0.9">السعر النهائي شامل</div><div style="font-size:42px;font-weight:800;margin-top:6px">'+res.finalPrice.toFixed(0)+' <span style="font-size:20px">د.ك</span></div></div>'+
+    '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">جدول الدفعات</h2>'+
+      '<table style="width:100%;border-collapse:collapse;margin-top:10px;font-size:14px"><tr style="background:#f5f5f5"><th style="padding:10px;border:1px solid #ddd">الدفعة</th><th style="padding:10px;border:1px solid #ddd">النسبة</th><th style="padding:10px;border:1px solid #ddd">المبلغ</th><th style="padding:10px;border:1px solid #ddd">التوقيت</th></tr>'+
+      '<tr><td style="padding:10px;border:1px solid #ddd;text-align:center">الأولى</td><td style="padding:10px;border:1px solid #ddd;text-align:center">50%</td><td style="padding:10px;border:1px solid #ddd;text-align:center">'+pay1+' د.ك</td><td style="padding:10px;border:1px solid #ddd;text-align:center">عند التوقيع</td></tr>'+
+      '<tr><td style="padding:10px;border:1px solid #ddd;text-align:center">الثانية</td><td style="padding:10px;border:1px solid #ddd;text-align:center">40%</td><td style="padding:10px;border:1px solid #ddd;text-align:center">'+pay2+' د.ك</td><td style="padding:10px;border:1px solid #ddd;text-align:center">عند التركيب</td></tr>'+
+      '<tr><td style="padding:10px;border:1px solid #ddd;text-align:center">الأخيرة</td><td style="padding:10px;border:1px solid #ddd;text-align:center">10%</td><td style="padding:10px;border:1px solid #ddd;text-align:center">'+pay3+' د.ك</td><td style="padding:10px;border:1px solid #ddd;text-align:center">عند التسليم</td></tr></table></div>'+
+    '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">الشروط والأحكام</h2>'+
+      '<div style="font-size:12px;color:#666;line-height:1.8;background:#faf8f0;padding:16px;border-radius:12px">'+
+      '• هذا العرض صالح لمدة '+PRICING_CONFIG.quoteValidityDays+' أيام (حتى '+fmt(expiry)+').<br>• الأسعار شاملة التصنيع والتركيب.<br>• مدة التنفيذ 60 يوم عمل تبدأ من القياس النهائي.<br>• القياس النهائي بعد اكتمال الأرضيات والبياض والتمديدات.<br>• تأخر جاهزية الموقع مسؤولية العميل.</div></div>'+
+    '<div style="margin-top:30px;text-align:center;color:#999;font-size:11px;border-top:1px solid #eee;padding-top:16px;position:relative;z-index:1">© '+today.getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>تم الإصدار بواسطة: '+pEsc(currentUser?currentUser.name:'النظام')+'</div>'+
+  '</div>';
+}
+
+function _getQuoteContext(){
+  var id=_pricingState.clientId||+(document.getElementById('pricing-client')||{}).value||null;
+  if(!id){toast('⚠️ اختر العميل أولاً','err');return null;}
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c){toast('⚠️ العميل غير موجود','err');return null;}
+  var data=_readPricingInputs();
+  var res=calcPricing(data);
+  return {c:c,res:res};
+}
+
+// ── حفظ عرض السعر PDF ──
+function downloadQuotePDF(){
+  var ctx=_getQuoteContext();
+  if(!ctx)return;
+  if(typeof html2pdf==='undefined'){
+    toast('⚠️ جاري تحميل أداة PDF... جرّب بعد ثانية','err');
+    return;
+  }
+  toast('📄 جاري إنشاء ملف PDF...','ok');
+  var wrap=document.createElement('div');
+  wrap.style.cssText='font-family:Tajawal,sans-serif;direction:rtl';
+  wrap.innerHTML=_buildQuoteHTML(ctx.c,ctx.res);
+  document.body.appendChild(wrap);
+  var fname='عرض_سعر_'+(ctx.c.name||'عميل').replace(/[^\u0600-\u06FF a-zA-Z0-9]/g,'_')+'.pdf';
+  var opt={margin:[5,5,5,5],filename:fname,image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}};
+  html2pdf().set(opt).from(wrap.querySelector('#quote-doc')).save().then(function(){
+    document.body.removeChild(wrap);
+    logSecurityEvent('quote','حفظ عرض سعر PDF — '+ctx.c.name);
+    toast('✅ تم حفظ PDF بالكمبيوتر','ok');
+  }).catch(function(){
+    if(wrap.parentNode)document.body.removeChild(wrap);
+    toast('⚠️ خطأ بإنشاء PDF','err');
+  });
+}
+
+// ── إرسال عرض السعر للعميل واتساب ──
+function sendQuoteWhatsapp(){
+  var ctx=_getQuoteContext();
+  if(!ctx)return;
+  var c=ctx.c, res=ctx.res;
+  var phone=(c.whatsapp||c.phone||'').replace(/[^0-9]/g,'');
+  if(!phone){toast('⚠️ ما فيه رقم هاتف لهذا العميل','err');return;}
+  // إضافة كود الكويت لو ما كان موجود
+  if(phone.length===8)phone='965'+phone;
+  var fmt=function(d){return d.toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});};
+  var today=new Date();
+  var expiry=new Date(today.getTime()+PRICING_CONFIG.quoteValidityDays*86400000);
+  var msg='🍳 *مطابخ العيسى*\n\n'+
+    'عزيزنا '+c.name+' 🌟\n'+
+    'يسعدنا تقديم عرض السعر لمطبخكم:\n\n'+
+    '📐 إجمالي الأمتار: '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م\n'+
+    (res.discountPct>0?'🏷️ خصم خاص: '+res.discountPct+'%\n':'')+
+    '━━━━━━━━━━━━━\n'+
+    '💵 *السعر النهائي: '+res.finalPrice.toFixed(0)+' د.ك*\n'+
+    '━━━━━━━━━━━━━\n\n'+
+    '💳 جدول الدفعات:\n'+
+    '• 50% عند التوقيع: '+(res.finalPrice*0.5).toFixed(0)+' د.ك\n'+
+    '• 40% عند التركيب: '+(res.finalPrice*0.4).toFixed(0)+' د.ك\n'+
+    '• 10% عند التسليم: '+(res.finalPrice*0.1).toFixed(0)+' د.ك\n\n'+
+    '⏳ العرض صالح حتى: '+fmt(expiry)+'\n'+
+    '✅ الأسعار شاملة التصنيع والتركيب\n\n'+
+    'نتشرف بخدمتكم 🙏';
+  var waUrl='https://wa.me/'+phone+'?text='+encodeURIComponent(msg);
+  window.open(waUrl,'_blank');
+  logSecurityEvent('quote','إرسال عرض سعر واتساب للعميل — '+c.name);
+  toast('📤 تم فتح واتساب العميل','ok');
 }
 
 // ══════════════════════════════════════
