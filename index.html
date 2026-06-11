@@ -4684,6 +4684,7 @@ function renderPricingPage(){
     // العمود الأيسر: المدخلات
     '<div class="card" style="padding:16px">'+
       '<div style="font-weight:800;margin-bottom:12px;font-size:15px">📋 ربط العميل</div>'+
+      '<input type="text" id="pricing-client-search" placeholder="🔍 ابحث باسم العميل أو الهاتف..." oninput="filterPricingClients()" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);margin-bottom:8px">'+
       '<select id="pricing-client" onchange="loadClientPricing()" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);margin-bottom:16px">'+
         '<option value="">— اختر العميل —</option>'+clientOpts+'</select>'+
 
@@ -4798,6 +4799,32 @@ function loadClientPricing(){
   });
   syncDiscount(p.discountPct||0);
   toast('✅ تم تحميل تسعير '+c.name,'ok');
+}
+
+function filterPricingClients(){
+  var q=(document.getElementById('pricing-client-search')||{}).value||'';
+  q=q.trim().toLowerCase();
+  var sel=document.getElementById('pricing-client');
+  if(!sel)return;
+  var current=sel.value;
+  var matched=clients.filter(function(c){
+    if(!q)return true;
+    var name=(c.name||'').toLowerCase();
+    var phone=(c.phone||'').toLowerCase();
+    var area=(c.area||'').toLowerCase();
+    return name.indexOf(q)>-1||phone.indexOf(q)>-1||area.indexOf(q)>-1;
+  });
+  var opts='<option value="">— اختر العميل —</option>'+matched.map(function(c){
+    return '<option value="'+c.id+'">'+pEsc(c.name)+(c.area?' — '+pEsc(c.area):'')+'</option>';
+  }).join('');
+  sel.innerHTML=opts;
+  // لو فيه نتيجة وحدة بس، اخترها تلقائياً
+  if(q&&matched.length===1){
+    sel.value=matched[0].id;
+    loadClientPricing();
+  }else if(current&&matched.some(function(c){return String(c.id)===current;})){
+    sel.value=current;
+  }
 }
 
 function savePricingToClient(){
