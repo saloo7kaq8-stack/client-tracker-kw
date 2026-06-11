@@ -683,6 +683,105 @@ body.time-sunset #bg-stars{opacity:0.45!important}
 .acc-card.acc-red .acc-card-val{color:var(--re)}
 .acc-card.acc-purple .acc-card-val{color:#a78bfa}
 .acc-pay-row{display:flex;align-items:center;gap:8px;font-size:12px}
+
+/* ═══════ 💎 نظام التسعير الفاخر — Emerald & Gold Royal ═══════ */
+.lux-pricing{--lux-emerald:#0a8f5c;--lux-emerald2:#0d7a50;--lux-gold:#d4af37;--lux-gold2:#b8941f;--lux-dark:#0a1f1a;position:relative}
+.lux-hero{position:relative;border-radius:24px;padding:28px 32px;margin-bottom:20px;overflow:hidden;
+  background:linear-gradient(135deg,#0a2e22 0%,#0a8f5c 55%,#0d7a50 100%);
+  box-shadow:0 20px 60px rgba(10,143,92,.35),inset 0 1px 0 rgba(255,255,255,.15)}
+.lux-hero::before{content:'';position:absolute;top:-50%;right:-10%;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(212,175,55,.35),transparent 70%);filter:blur(40px);animation:luxFloat 8s ease-in-out infinite}
+.lux-hero::after{content:'';position:absolute;bottom:-40%;left:-5%;width:250px;height:250px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.12),transparent 70%);filter:blur(30px);animation:luxFloat 10s ease-in-out infinite reverse}
+@keyframes luxFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-20px,20px) scale(1.1)}}
+.lux-hero-title{position:relative;z-index:2;font-size:26px;font-weight:900;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px}
+.lux-hero-sub{position:relative;z-index:2;font-size:13px;color:rgba(255,255,255,.8);margin-top:6px;font-weight:600}
+.lux-hero-crown{font-size:32px;filter:drop-shadow(0 2px 8px rgba(212,175,55,.6));animation:luxPulse 3s ease-in-out infinite}
+@keyframes luxPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+
+.lux-tabs{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;position:relative;z-index:5}
+.lux-tab{position:relative;padding:12px 22px;border-radius:14px;font-weight:800;font-size:14px;cursor:pointer;
+  background:var(--card);border:1px solid var(--bd);color:var(--mt);transition:all .3s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:8px}
+.lux-tab:hover{transform:translateY(-2px);border-color:var(--lux-gold);color:var(--tx)}
+.lux-tab.active{background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;border-color:transparent;
+  box-shadow:0 8px 24px rgba(10,143,92,.4),inset 0 1px 0 rgba(255,255,255,.2)}
+.lux-tab.active::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--lux-gold);box-shadow:0 0 12px var(--lux-gold)}
+.lux-tab-bell{position:relative}
+.lux-tab-badge{position:absolute;top:-8px;left:-8px;min-width:20px;height:20px;border-radius:10px;background:linear-gradient(135deg,#ff4757,#e8334a);
+  color:#fff;font-size:11px;font-weight:900;display:flex;align-items:center;justify-content:center;padding:0 5px;
+  box-shadow:0 2px 8px rgba(232,51,74,.5);animation:luxBellRing 2s ease-in-out infinite;border:2px solid var(--bg)}
+@keyframes luxBellRing{0%,100%{transform:rotate(0)}10%,30%{transform:rotate(-12deg)}20%,40%{transform:rotate(12deg)}}
+
+.lux-card{position:relative;border-radius:20px;padding:22px;background:var(--card);
+  border:1px solid var(--bd);box-shadow:0 8px 32px rgba(0,0,0,.08);transition:all .3s;overflow:hidden}
+.lux-card::before{content:'';position:absolute;top:0;right:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,var(--lux-gold),transparent);opacity:.6}
+.lux-card-title{font-weight:900;font-size:16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;color:var(--tx)}
+.lux-card-title .ico{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;
+  background:linear-gradient(135deg,rgba(10,143,92,.15),rgba(212,175,55,.15));border:1px solid rgba(212,175,55,.25)}
+
+.lux-input{width:100%;padding:12px 14px;border:1.5px solid var(--bd);border-radius:12px;background:var(--bg);color:var(--tx);
+  font-weight:700;transition:all .25s;font-size:14px}
+.lux-input:focus{outline:none;border-color:var(--lux-emerald);box-shadow:0 0 0 4px rgba(10,143,92,.12)}
+.lux-meter-box{background:linear-gradient(135deg,rgba(10,143,92,.06),rgba(212,175,55,.04));border:1.5px solid var(--bd);
+  border-radius:14px;padding:12px;text-align:center;transition:all .25s}
+.lux-meter-box:focus-within{border-color:var(--lux-emerald);box-shadow:0 4px 16px rgba(10,143,92,.15)}
+.lux-meter-label{font-size:11px;color:var(--mt);font-weight:800;margin-bottom:6px}
+.lux-meter-price{font-size:10px;color:var(--lux-gold);font-weight:800}
+.lux-meter-input{width:100%;border:none;background:transparent;color:var(--tx);text-align:center;font-size:22px;font-weight:900;padding:4px 0}
+.lux-meter-input:focus{outline:none}
+
+.lux-addon{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;
+  background:var(--bg);border:1.5px solid var(--bd);transition:all .25s}
+.lux-addon:hover{border-color:rgba(212,175,55,.4);transform:translateX(-3px)}
+.lux-addon-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;
+  background:linear-gradient(135deg,rgba(10,143,92,.12),rgba(212,175,55,.1));flex-shrink:0}
+.lux-addon-qty{width:64px;padding:8px;border:1.5px solid var(--bd);border-radius:10px;background:var(--card);color:var(--tx);
+  text-align:center;font-weight:900;font-size:15px;transition:all .25s}
+.lux-addon-qty:focus{outline:none;border-color:var(--lux-emerald);box-shadow:0 0 0 3px rgba(10,143,92,.1)}
+
+.lux-result-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--bd)}
+.lux-total-box{background:linear-gradient(135deg,#0a2e22,#0a8f5c);border-radius:18px;padding:24px;margin-top:14px;
+  position:relative;overflow:hidden;box-shadow:0 12px 36px rgba(10,143,92,.3)}
+.lux-total-box::before{content:'';position:absolute;top:-30%;right:-10%;width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,rgba(212,175,55,.3),transparent 70%);filter:blur(30px)}
+.lux-total-label{font-size:13px;color:rgba(255,255,255,.85);font-weight:700;position:relative;z-index:2}
+.lux-total-val{font-size:38px;font-weight:900;color:#fff;position:relative;z-index:2;margin-top:4px;text-shadow:0 2px 12px rgba(0,0,0,.2)}
+.lux-total-val .cur{font-size:18px;color:var(--lux-gold)}
+
+.lux-discount-pill{padding:12px 16px;border-radius:14px;text-align:center;font-weight:900;font-size:14px;margin:12px 0;transition:all .3s}
+.lux-slider{flex:1;-webkit-appearance:none;height:8px;border-radius:8px;background:linear-gradient(90deg,#0a8f5c,#d4af37);outline:none}
+.lux-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#fff;cursor:pointer;
+  box-shadow:0 2px 10px rgba(0,0,0,.3),0 0 0 4px rgba(212,175,55,.3);transition:all .2s}
+.lux-slider::-webkit-slider-thumb:hover{transform:scale(1.15)}
+
+.lux-btn{padding:14px 24px;border-radius:14px;font-weight:900;font-size:14px;cursor:pointer;border:none;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:8px}
+.lux-btn-primary{background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;box-shadow:0 8px 24px rgba(10,143,92,.35)}
+.lux-btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(10,143,92,.45)}
+.lux-btn-gold{background:linear-gradient(135deg,#d4af37,#b8941f);color:#1a1a1a;box-shadow:0 8px 24px rgba(212,175,55,.35)}
+.lux-btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(212,175,55,.45)}
+.lux-btn-ghost{background:var(--bg);border:1.5px solid var(--bd);color:var(--tx)}
+.lux-btn-ghost:hover{border-color:var(--lux-gold);transform:translateY(-2px)}
+
+.lux-approval-card{position:relative;border-radius:18px;padding:20px;margin-bottom:14px;background:var(--card);
+  border:1.5px solid var(--bd);transition:all .3s;overflow:hidden}
+.lux-approval-card:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.1)}
+.lux-approval-card.pending{border-right:5px solid #f39c12;background:linear-gradient(90deg,rgba(243,156,18,.05),var(--card) 30%)}
+.lux-approval-card.approved{border-right:5px solid #27ae60;background:linear-gradient(90deg,rgba(39,174,96,.05),var(--card) 30%)}
+.lux-approval-card.rejected{border-right:5px solid #e74c3c;background:linear-gradient(90deg,rgba(231,76,60,.05),var(--card) 30%)}
+.lux-approval-name{font-weight:900;font-size:17px;color:var(--tx);margin-bottom:6px}
+.lux-approval-meta{font-size:13px;color:var(--mt);font-weight:600;line-height:1.8}
+.lux-status-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:900}
+.lux-price-flow{display:inline-flex;align-items:center;gap:8px;background:var(--bg);padding:6px 12px;border-radius:10px;font-weight:800;margin-top:6px}
+.lux-price-old{color:var(--mt);text-decoration:line-through;font-size:13px}
+.lux-price-new{color:var(--lux-emerald);font-size:16px}
+.lux-approval-actions{display:flex;gap:10px;flex-shrink:0}
+.lux-act-approve{background:linear-gradient(135deg,#27ae60,#1e8e4f);color:#fff;border:none;padding:10px 20px;border-radius:12px;font-weight:900;cursor:pointer;font-size:13px;transition:all .25s;box-shadow:0 4px 14px rgba(39,174,96,.3)}
+.lux-act-approve:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(39,174,96,.45)}
+.lux-act-reject{background:linear-gradient(135deg,#e74c3c,#c0392b);color:#fff;border:none;padding:10px 20px;border-radius:12px;font-weight:900;cursor:pointer;font-size:13px;transition:all .25s;box-shadow:0 4px 14px rgba(231,76,60,.3)}
+.lux-act-reject:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(231,76,60,.45)}
+.lux-empty{text-align:center;padding:50px 20px;color:var(--mt)}
+.lux-empty-ico{font-size:54px;margin-bottom:12px;opacity:.4}
+@media(max-width:760px){.lux-pricing-grid{grid-template-columns:1fr!important}.lux-hero{padding:20px}.lux-hero-title{font-size:20px}}
 </style>
 </head>
 <body>
@@ -4658,74 +4757,106 @@ var _pricingState={clientId:null,fullMeters:0,lowerMeters:0,upperMeters:0,addons
 
 function renderPricingPage(){
   if(!userHasAccess('pricing')){
-    document.getElementById('pg-pricing').innerHTML='<div class="ph"><div class="ph-t">💲 نظام التسعير</div></div><div style="padding:40px;text-align:center;color:var(--mt)">🚫 ما عندك صلاحية للوصول لهذه الصفحة</div>';
+    document.getElementById('pg-pricing').innerHTML='<div class="ph"><div class="ph-t">\ud83d\udcb2 \u0646\u0638\u0627\u0645 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</div></div><div style="padding:40px;text-align:center;color:var(--mt)">\ud83d\udeab \u0645\u0627 \u0639\u0646\u062f\u0643 \u0635\u0644\u0627\u062d\u064a\u0629 \u0644\u0644\u0648\u0635\u0648\u0644 \u0644\u0647\u0630\u0647 \u0627\u0644\u0635\u0641\u062d\u0629</div>';
     return;
   }
-  var clientOpts=clients.map(function(c){return '<option value="'+c.id+'">'+pEsc(c.name)+(c.area?' — '+pEsc(c.area):'')+'</option>';}).join('');
+  if(!_pricingTab)_pricingTab='calc';
+  var showApprovalsTab=isPricingAdmin();
+  var bellBadge='';
+  if(showApprovalsTab&&_pendingApprovalsCount>0){
+    bellBadge='<span class="lux-tab-badge">'+_pendingApprovalsCount+'</span>';
+  }
+  var tabs='<div class="lux-tabs">'+
+    '<div class="lux-tab '+(_pricingTab==='calc'?'active':'')+'" onclick="switchPricingTab(\'calc\')">\ud83e\uddee \u062d\u0627\u0633\u0628\u0629 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</div>';
+  if(showApprovalsTab){
+    tabs+='<div class="lux-tab '+(_pricingTab==='approvals'?'active':'')+'" onclick="switchPricingTab(\'approvals\')">'+
+      '<span class="lux-tab-bell">\ud83d\udd14'+bellBadge+'</span> \u0637\u0644\u0628\u0627\u062a \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629</div>';
+  }
+  tabs+='</div>';
+
+  var hero='<div class="lux-hero">'+
+    '<div class="lux-hero-title"><span class="lux-hero-crown">\ud83d\udc51</span> \u0646\u0638\u0627\u0645 \u0627\u0644\u062a\u0633\u0639\u064a\u0631 \u0627\u0644\u0645\u0644\u0643\u064a</div>'+
+    '<div class="lux-hero-sub">\u0645\u0637\u0627\u0628\u062e \u0627\u0644\u0639\u064a\u0633\u0649 \u2014 \u062a\u0633\u0639\u064a\u0631 \u0627\u062d\u062a\u0631\u0627\u0641\u064a \u0628\u062f\u0642\u0629 \u0648\u0641\u062e\u0627\u0645\u0629</div></div>';
+
+  var html='<div class="lux-pricing">'+hero+tabs+'<div id="pricing-tab-content"></div></div>';
+  document.getElementById('pg-pricing').innerHTML=html;
+  if(_pricingTab==='approvals'&&showApprovalsTab){
+    renderPricingApprovalsTab();
+  }else{
+    renderPricingCalcTab();
+  }
+  refreshPricingApprovalBadge();
+}
+
+var _pricingTab='calc';
+var _pendingApprovalsCount=0;
+
+function switchPricingTab(tab){
+  _pricingTab=tab;
+  renderPricingPage();
+}
+
+function renderPricingCalcTab(){
+  var clientOpts=clients.map(function(c){return '<option value="'+c.id+'">'+pEsc(c.name)+(c.area?' \u2014 '+pEsc(c.area):'')+'</option>';}).join('');
   var addonsHtml=PRICING_ADDONS.map(function(a){
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--card);border:1px solid var(--bd);border-radius:10px">'+
-      '<span style="font-size:18px">'+a.icon+'</span>'+
-      '<div style="flex:1"><div style="font-weight:700;font-size:13px">'+a.label+'</div>'+
-      '<div style="font-size:11px;color:var(--mt)">'+PRICING_CONFIG[a.cfgKey]+' د.ك / حبة</div></div>'+
-      '<input type="number" min="0" id="addon-'+a.key+'" value="0" oninput="recalcPricingUI()" style="width:70px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700">'+
+    return '<div class="lux-addon">'+
+      '<div class="lux-addon-ico">'+a.icon+'</div>'+
+      '<div style="flex:1"><div style="font-weight:800;font-size:14px">'+a.label+'</div>'+
+      '<div style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:800">'+PRICING_CONFIG[a.cfgKey]+' \u062f.\u0643 / \u062d\u0628\u0629</div></div>'+
+      '<input type="number" min="0" id="addon-'+a.key+'" value="0" oninput="recalcPricingUI()" class="lux-addon-qty">'+
       '</div>';
   }).join('');
 
   var adminBtns=isPricingAdmin()?
-    '<button class="btn-ghost btn-sm" onclick="openPricingConfig()" style="color:var(--gold)">⚙️ إعدادات الأسعار</button>'+
-    '<button class="btn-ghost btn-sm" onclick="openOverrideModal()" style="color:#e74c3c">🔓 تجاوز الحدود</button>':'';
+    '<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px" onclick="openPricingConfig()">\u2699\ufe0f \u0627\u0644\u0623\u0633\u0639\u0627\u0631</button>'+
+    '<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px;color:#e74c3c" onclick="openOverrideModal()">\ud83d\udd13 \u062a\u062c\u0627\u0648\u0632 \u0627\u0644\u062d\u062f\u0648\u062f</button>':'';
 
-  var html=''+
-  '<div class="ph"><div><div class="ph-t">💲 نظام التسعير</div><div class="ph-s">احسب سعر المطبخ حسب الأمتار والإضافات</div></div>'+
-  '<div style="display:flex;gap:8px;flex-wrap:wrap">'+adminBtns+'</div></div>'+
+  var html='<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:16px">'+adminBtns+'</div>'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="lux-pricing-grid">'+
 
-  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" class="pricing-grid">'+
+    '<div class="lux-card">'+
+      '<div class="lux-card-title"><span class="ico">\ud83d\udc64</span> \u0631\u0628\u0637 \u0627\u0644\u0639\u0645\u064a\u0644</div>'+
+      '<input type="text" id="pricing-client-search" placeholder="\ud83d\udd0d \u0627\u0628\u062d\u062b \u0628\u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0627\u0644\u0647\u0627\u062a\u0641..." oninput="filterPricingClients()" class="lux-input" style="margin-bottom:10px">'+
+      '<select id="pricing-client" onchange="loadClientPricing()" class="lux-input" style="margin-bottom:20px">'+
+        '<option value="">\u2014 \u0627\u062e\u062a\u0631 \u0627\u0644\u0639\u0645\u064a\u0644 \u2014</option>'+clientOpts+'</select>'+
 
-    // العمود الأيسر: المدخلات
-    '<div class="card" style="padding:16px">'+
-      '<div style="font-weight:800;margin-bottom:12px;font-size:15px">📋 ربط العميل</div>'+
-      '<input type="text" id="pricing-client-search" placeholder="🔍 ابحث باسم العميل أو الهاتف..." oninput="filterPricingClients()" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);margin-bottom:8px">'+
-      '<select id="pricing-client" onchange="loadClientPricing()" style="width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);margin-bottom:16px">'+
-        '<option value="">— اختر العميل —</option>'+clientOpts+'</select>'+
-
-      '<div style="font-weight:800;margin-bottom:12px;font-size:15px">📐 الأمتار</div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">'+
-        '<div><label style="font-size:11px;color:var(--mt);font-weight:700">متر كامل ('+PRICING_CONFIG.baseMeterPrice+')</label>'+
-          '<input type="number" min="0" step="0.1" id="p-fullMeters" value="0" oninput="recalcPricingUI()" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700"></div>'+
-        '<div><label style="font-size:11px;color:var(--mt);font-weight:700">سفلي فقط ('+PRICING_CONFIG.lowerMeterPrice+')</label>'+
-          '<input type="number" min="0" step="0.1" id="p-lowerMeters" value="0" oninput="recalcPricingUI()" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700"></div>'+
-        '<div><label style="font-size:11px;color:var(--mt);font-weight:700">علوي فقط ('+PRICING_CONFIG.upperMeterPrice+')</label>'+
-          '<input type="number" min="0" step="0.1" id="p-upperMeters" value="0" oninput="recalcPricingUI()" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700"></div>'+
+      '<div class="lux-card-title"><span class="ico">\ud83d\udcd0</span> \u0627\u0644\u0623\u0645\u062a\u0627\u0631</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">'+
+        '<div class="lux-meter-box"><div class="lux-meter-label">\u0645\u062a\u0631 \u0643\u0627\u0645\u0644</div><div class="lux-meter-price">'+PRICING_CONFIG.baseMeterPrice+' \u062f.\u0643</div>'+
+          '<input type="number" min="0" step="0.1" id="p-fullMeters" value="0" oninput="recalcPricingUI()" class="lux-meter-input"></div>'+
+        '<div class="lux-meter-box"><div class="lux-meter-label">\u0633\u0641\u0644\u064a \u0641\u0642\u0637</div><div class="lux-meter-price">'+PRICING_CONFIG.lowerMeterPrice+' \u062f.\u0643</div>'+
+          '<input type="number" min="0" step="0.1" id="p-lowerMeters" value="0" oninput="recalcPricingUI()" class="lux-meter-input"></div>'+
+        '<div class="lux-meter-box"><div class="lux-meter-label">\u0639\u0644\u0648\u064a \u0641\u0642\u0637</div><div class="lux-meter-price">'+PRICING_CONFIG.upperMeterPrice+' \u062f.\u0643</div>'+
+          '<input type="number" min="0" step="0.1" id="p-upperMeters" value="0" oninput="recalcPricingUI()" class="lux-meter-input"></div>'+
       '</div>'+
 
-      '<div style="font-weight:800;margin-bottom:12px;font-size:15px">➕ الإضافات</div>'+
-      '<div style="display:grid;gap:8px">'+addonsHtml+'</div>'+
+      '<div class="lux-card-title"><span class="ico">\u2795</span> \u0627\u0644\u0625\u0636\u0627\u0641\u0627\u062a</div>'+
+      '<div style="display:grid;gap:10px">'+addonsHtml+'</div>'+
     '</div>'+
 
-    // العمود الأيمن: النتيجة
-    '<div class="card" style="padding:16px">'+
-      '<div style="font-weight:800;margin-bottom:12px;font-size:15px">💰 السعر</div>'+
+    '<div class="lux-card">'+
+      '<div class="lux-card-title"><span class="ico">\ud83d\udcb0</span> \u0627\u0644\u0633\u0639\u0631</div>'+
       '<div id="pricing-result"></div>'+
 
-      '<div style="font-weight:800;margin:16px 0 8px;font-size:15px">🏷️ الخصم</div>'+
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">'+
-        '<input type="range" min="0" max="50" value="0" id="p-discount" oninput="syncDiscount(this.value)" style="flex:1">'+
-        '<input type="number" min="0" max="50" value="0" id="p-discount-num" oninput="syncDiscount(this.value)" style="width:60px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700">'+
-        '<span style="font-weight:800">%</span>'+
+      '<div class="lux-card-title" style="margin-top:20px"><span class="ico">\ud83c\udff7\ufe0f</span> \u0627\u0644\u062e\u0635\u0645</div>'+
+      '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">'+
+        '<input type="range" min="0" max="50" value="0" id="p-discount" oninput="syncDiscount(this.value)" class="lux-slider">'+
+        '<input type="number" min="0" max="50" value="0" id="p-discount-num" oninput="syncDiscount(this.value)" class="lux-input" style="width:70px;text-align:center">'+
+        '<span style="font-weight:900;font-size:18px;color:var(--lux-gold,#d4af37)">%</span>'+
       '</div>'+
-      '<div id="discount-status" style="padding:10px;border-radius:10px;text-align:center;font-weight:700;margin-bottom:12px"></div>'+
+      '<div id="discount-status" class="lux-discount-pill"></div>'+
 
       '<div id="pricing-final"></div>'+
 
-      '<div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">'+
-        '<button class="btn" onclick="savePricingToClient()" style="flex:1">💾 حفظ التسعير</button>'+
-        '<button class="btn-ghost" onclick="printQuote()">🖨️ عرض سعر</button>'+
+      '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">'+
+        '<button class="lux-btn lux-btn-primary" style="flex:1" onclick="savePricingToClient()">\ud83d\udcbe \u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</button>'+
+        '<button class="lux-btn lux-btn-gold" onclick="printQuote()">\ud83d\udda8\ufe0f \u0639\u0631\u0636 \u0633\u0639\u0631</button>'+
       '</div>'+
     '</div>'+
 
   '</div>';
 
-  document.getElementById('pg-pricing').innerHTML=html;
+  document.getElementById('pricing-tab-content').innerHTML=html;
   recalcPricingUI();
 }
 
@@ -4876,6 +5007,12 @@ function createPricingApproval(c,res){
   }]).then(function(r){
     if(r.error){toast('⚠️ خطأ بإرسال الطلب','err');return;}
     logSecurityEvent('pricing_approval','طلب موافقة خصم '+res.discountPct+'% لـ '+c.name);
+    // تبليغ صالح بطلب جديد
+    if(typeof dbInsertNotification==='function'){
+      dbInsertNotification('🏷️ طلب موافقة على خصم',
+        (currentUser?currentUser.name:'موظف')+' يطلب خصم '+res.discountPct+'% للعميل '+c.name+' — السعر '+res.finalPrice.toFixed(0)+' د.ك. راجعه في نظام التسعير ← طلبات الموافقة.',
+        'warning', 'صالح الجاسم', currentUser?currentUser.name:'');
+    }
     toast('⚠️ تم إرسال طلب الموافقة لصالح','ok');
     refreshPricingApprovalBadge();
   });
@@ -4885,12 +5022,92 @@ function refreshPricingApprovalBadge(){
   if(typeof sb==='undefined'||!sb)return;
   if(!isPricingAdmin())return;
   sb.from('pricing_approvals').select('id').eq('status','pending').then(function(r){
-    var badge=document.getElementById('pricing-approval-badge');
-    if(!badge)return;
     var n=(r.data||[]).length;
-    badge.style.display=n>0?'inline':'none';
-    badge.textContent=n;
+    _pendingApprovalsCount=n;
+    // عداد السايدبار
+    var badge=document.getElementById('pricing-approval-badge');
+    if(badge){badge.style.display=n>0?'inline':'none';badge.textContent=n;}
+    // عداد جرس التبويب (لو الصفحة مفتوحة)
+    var tabBadge=document.querySelector('.lux-tab-badge');
+    if(tabBadge)tabBadge.textContent=n;
+    else if(n>0&&curPg==='pricing'&&_pricingTab!=='approvals'){
+      // لو فيه طلبات جديدة والجرس مو ظاهر، نعيد رسم التبويبات
+      var bell=document.querySelector('.lux-tab-bell');
+      if(bell&&!bell.querySelector('.lux-tab-badge')){
+        bell.insertAdjacentHTML('beforeend','<span class="lux-tab-badge">'+n+'</span>');
+      }
+    }
   });
+}
+
+// ── تبويب طلبات الموافقة الفاخر ──
+function renderPricingApprovalsTab(){
+  var cont=document.getElementById('pricing-tab-content');
+  if(!cont)return;
+  cont.innerHTML='<div class="lux-card"><div class="lux-empty"><div class="lux-empty-ico">\u23f3</div><div>\u062c\u0627\u0631\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0637\u0644\u0628\u0627\u062a...</div></div></div>';
+  if(typeof sb==='undefined'||!sb){
+    cont.innerHTML='<div class="lux-card"><div class="lux-empty"><div class="lux-empty-ico">\u26a0\ufe0f</div><div>\u064a\u062d\u062a\u0627\u062c \u0627\u062a\u0635\u0627\u0644 \u0628\u0642\u0627\u0639\u062f\u0629 \u0627\u0644\u0628\u064a\u0627\u0646\u0627\u062a</div></div></div>';
+    return;
+  }
+  sb.from('pricing_approvals').select('*').order('created_at',{ascending:false}).then(function(r){
+    var list=r.data||[];
+    var pending=list.filter(function(a){return a.status==='pending';});
+    var done=list.filter(function(a){return a.status!=='pending';});
+
+    if(!list.length){
+      cont.innerHTML='<div class="lux-card"><div class="lux-empty"><div class="lux-empty-ico">\ud83c\udf89</div>'+
+        '<div style="font-weight:800;font-size:16px;color:var(--tx)">\u0645\u0627 \u0641\u064a\u0647 \u0637\u0644\u0628\u0627\u062a \u062e\u0635\u0645</div>'+
+        '<div style="margin-top:6px">\u0643\u0644 \u0627\u0644\u062a\u0633\u0639\u064a\u0631\u0627\u062a \u0636\u0645\u0646 \u0627\u0644\u062d\u062f\u0648\u062f \u0627\u0644\u0645\u0633\u0645\u0648\u062d\u0629</div></div></div>';
+      return;
+    }
+
+    var html='';
+    if(pending.length){
+      html+='<div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#f39c12">\u23f3 \u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0645\u0648\u0627\u0641\u0642\u062a\u0643 ('+pending.length+')</div>';
+      html+=pending.map(function(a){return _approvalCard(a,true);}).join('');
+    }
+    if(done.length){
+      html+='<div style="font-weight:900;font-size:15px;margin:24px 0 12px;color:var(--mt)">\ud83d\udcdc \u0627\u0644\u0633\u062c\u0644 ('+done.length+')</div>';
+      html+=done.map(function(a){return _approvalCard(a,false);}).join('');
+    }
+    cont.innerHTML=html;
+  });
+}
+
+function _approvalCard(a,isPending){
+  var c=clients.find(function(x){return x.id===a.client_id;});
+  var cname=c?c.name:'#'+a.client_id;
+  var cls=a.status==='pending'?'pending':a.status==='approved'?'approved':'rejected';
+  var chip=a.status==='pending'?'<span class="lux-status-chip" style="background:#f39c1222;color:#f39c12">\u23f3 \u0628\u0627\u0646\u062a\u0638\u0627\u0631</span>':
+    a.status==='approved'?'<span class="lux-status-chip" style="background:#27ae6022;color:#27ae60">\u2705 \u0645\u0648\u0627\u0641\u0642</span>':
+    '<span class="lux-status-chip" style="background:#e74c3c22;color:#e74c3c">\u274c \u0645\u0631\u0641\u0648\u0636</span>';
+  var when='';
+  try{when=new Date(a.created_at).toLocaleString('ar-KW',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){}
+
+  var actions=isPending?
+    '<div class="lux-approval-actions">'+
+      '<button class="lux-act-approve" onclick="decideApproval('+a.id+',\'approved\')">\u2705 \u0645\u0648\u0627\u0641\u0642\u0629</button>'+
+      '<button class="lux-act-reject" onclick="decideApproval('+a.id+',\'rejected\')">\u274c \u0631\u0641\u0636</button>'+
+    '</div>':
+    (a.approved_by?'<div style="font-size:12px;color:var(--mt);font-weight:700;text-align:left">\u0628\u0648\u0627\u0633\u0637\u0629<br>'+pEsc(a.approved_by)+'</div>':'');
+
+  return '<div class="lux-approval-card '+cls+'">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'+
+      '<div style="flex:1;min-width:200px">'+
+        '<div class="lux-approval-name">'+pEsc(cname)+' '+chip+'</div>'+
+        '<div class="lux-approval-meta">'+
+          '\ud83d\udc64 \u0627\u0644\u0645\u0648\u0638\u0641: <b>'+pEsc(a.requested_by||'\u2014')+'</b> \u2022 \ud83d\udd52 '+when+'<br>'+
+          '\ud83c\udff7\ufe0f \u062e\u0635\u0645 <b style="color:#e74c3c">'+a.discount_percentage+'%</b>'+
+        '</div>'+
+        '<div class="lux-price-flow">'+
+          '<span class="lux-price-old">'+(+a.original_price).toFixed(0)+' \u062f.\u0643</span>'+
+          '<span style="color:var(--lux-gold,#d4af37)">\u2190</span>'+
+          '<span class="lux-price-new">'+(+a.discounted_price).toFixed(0)+' \u062f.\u0643</span>'+
+        '</div>'+
+      '</div>'+
+      actions+
+    '</div>'+
+  '</div>';
 }
 
 // ── إعدادات الأسعار (لصالح وعيسى) ──
@@ -5147,16 +5364,52 @@ function loadPricingApprovals(){
 }
 
 function decideApproval(id,decision){
-  if(typeof sb==='undefined'||!sb)return;
+  if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال بقاعدة البيانات','err');return;}
   if(!isPricingAdmin()){toast('🚫 للإدارة فقط','err');return;}
-  sb.from('pricing_approvals').update({
-    status:decision,approved_by:currentUser?currentUser.name:'',approved_at:new Date().toISOString()
-  }).eq('id',id).then(function(r){
-    if(r.error){toast('⚠️ خطأ','err');return;}
-    logSecurityEvent('pricing_approval',(decision==='approved'?'✅ موافقة':'❌ رفض')+' طلب خصم #'+id);
-    toast(decision==='approved'?'✅ تمت الموافقة':'❌ تم الرفض','ok');
-    loadPricingApprovals();
-    refreshPricingApprovalBadge();
+  // نجيب بيانات الطلب أولاً
+  sb.from('pricing_approvals').select('*').eq('id',id).then(function(r){
+    var req=(r.data||[])[0];
+    if(!req){toast('⚠️ الطلب غير موجود','err');return;}
+    var byName=currentUser?currentUser.name:'';
+    sb.from('pricing_approvals').update({
+      status:decision,approved_by:byName,approved_at:new Date().toISOString()
+    }).eq('id',id).then(function(r2){
+      if(r2.error){toast('⚠️ خطأ بالتحديث','err');return;}
+      var c=clients.find(function(x){return x.id===req.client_id;});
+      var cname=c?c.name:'#'+req.client_id;
+
+      if(decision==='approved'&&c){
+        // ✅ تطبيق الخصم تلقائياً على تسعيرة العميل
+        var std=+req.original_price||0;
+        var disc=+req.discount_percentage||0;
+        var fin=+req.discounted_price||(std*(1-disc/100));
+        c.pricing=Object.assign({},c.pricing||{},{
+          discountPct:disc, standardPrice:std, finalPrice:fin,
+          approvedBy:byName, approvedAt:new Date().toISOString(),
+          approvalId:id
+        });
+        dbUpdateClient(c.id,c);
+        // تبليغ الموظف
+        if(typeof dbInsertNotification==='function'){
+          dbInsertNotification('✅ تمت الموافقة على الخصم',
+            'وافق '+byName+' على خصم '+disc+'% للعميل '+cname+' — السعر النهائي '+fin.toFixed(0)+' د.ك',
+            'success', req.requested_by, byName);
+        }
+      }else if(decision==='rejected'){
+        // تبليغ الموظف بالرفض
+        if(typeof dbInsertNotification==='function'){
+          dbInsertNotification('❌ تم رفض طلب الخصم',
+            'رفض '+byName+' طلب خصم '+req.discount_percentage+'% للعميل '+cname+'. تواصل مع الإدارة.',
+            'error', req.requested_by, byName);
+        }
+      }
+
+      logSecurityEvent('pricing_approval',(decision==='approved'?'✅ موافقة على':'❌ رفض')+' طلب خصم '+req.discount_percentage+'% — '+cname+' — بواسطة '+byName);
+      toast(decision==='approved'?'✅ تمت الموافقة وطُبّق الخصم':'❌ تم الرفض وأُبلغ الموظف','ok');
+      renderPricingApprovalsTab();
+      refreshPricingApprovalBadge();
+      if(typeof renderAlerts==='function'&&curPg==='alerts')renderAlerts();
+    });
   });
 }
 
