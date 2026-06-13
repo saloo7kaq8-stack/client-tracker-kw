@@ -3131,7 +3131,7 @@ const KWD='د.ك';
 function dbToClient(r){
   return {
     id:r.id, name:r.name, phone:r.phone||'', phone2:r.phone2||'',
-    createdAt:r.created_at||null,
+    createdAt:r.created_at||null, legacyExempt:r.legacy_exempt===true,
     civilId:r.civil_id||'',
     email:r.email||'', whatsapp:r.whatsapp||'', city:r.city||'',
     address:r.address||'', lat:r.lat||'', lng:r.lng||'',
@@ -3172,7 +3172,7 @@ function clientToDb(c){
     type:c.type, priority:c.priority, resp:c.resp,
     pay:c.pay, contract:+c.contract||0, collected:+c.collected||0,
     meter_price:c.meterPrice||0, kit_types:c.kitTypes||[], kit_brown:c.kitBrown||null, kit_yellow:c.kitYellow||null,
-    pricing:c.pricing||{}, material_costs:c.material_costs||[], pricing_overrides:c.pricing_overrides||[],
+    pricing:c.pricing||{}, material_costs:c.material_costs||[], pricing_overrides:c.pricing_overrides||[], legacy_exempt:c.legacyExempt===true,
     kit_lgreen:c.kitLgreen||null, kit_green:c.kitGreen||null,
     kit_dkgray:c.kitDkgray||null,
     kit_brown_date:c.kitBrownDate||null, kit_yellow_date:c.kitYellowDate||null,
@@ -4114,7 +4114,10 @@ function renderClientPricingTab(c){
   var p=c.pricing;
   // شارة حالة صلاحية التسعيرة (20 يوم عمل)
   var validityBanner='';
-  if(!p.approvedAt&&!c.stage&&c.status!=='منتهي'){
+  if(c.legacyExempt){
+    validityBanner='<div style="background:#0f4c9f15;border:1.5px solid #0f4c9f55;border-radius:12px;padding:10px;margin-bottom:14px;text-align:center">'+
+      '<div style="font-weight:800;color:#0f4c9f;font-size:13px">📋 عميل سابق — التسعيرة قابلة للتعديل بدون حد زمني</div></div>';
+  }else if(!p.approvedAt&&!c.stage&&c.status!=='منتهي'){
     var left=quoteWorkdaysLeft(c);
     if(left!==null){
       if(left<=0){
@@ -5018,6 +5021,7 @@ function addWorkdays(dateStr,workdays){
 
 // فحص: هل العميل له تسعيرة منتهية الصلاحية؟
 function isQuoteExpired(c){
+  if(c.legacyExempt)return false; // عميل قديم مستثنى — لا يدخل نظام الصلاحية
   if(!c.pricing||!c.pricing.finalPrice)return false; // ما له تسعيرة
   if(c.pricing.approvedAt||c.status==='منتهي'||c.stage)return false; // معتمد أو تقدّم
   if(c.pricing.expiryHandled)return false; // عولج مسبقاً
