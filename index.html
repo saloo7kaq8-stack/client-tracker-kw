@@ -4961,6 +4961,16 @@ function isPricingAdmin(){
   return currentUser&&(currentUser.role==='super_admin'||currentUser.role==='manager');
 }
 
+// مسمى وظيفي بدل الاسم الصريح (للإشعارات والموافقات)
+function roleTitle(user){
+  var u=user||currentUser;
+  if(!u)return 'الإدارة';
+  if(u.role==='super_admin')return 'نائب المدير العام';
+  if(u.role==='manager')return 'المدير العام';
+  if(u.title)return u.title;
+  return 'الإدارة';
+}
+
 // ── حالة صفحة التسعير ──
 var _pricingState={clientId:null,fullMeters:0,lowerMeters:0,upperMeters:0,addons:{},discountPct:0,overridePct:null,overrideReason:''};
 var _customAddons=[]; // البنود المخصصة الحالية [{label,price,unit,qty}]
@@ -5019,9 +5029,8 @@ function renderPricingCalcTab(){
       '</div>';
   }).join('');
 
-  var adminBtns=isPricingAdmin()?
-    '<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px" onclick="openPricingConfig()">\u2699\ufe0f \u0627\u0644\u0623\u0633\u0639\u0627\u0631</button>'+
-    '<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px;color:#e74c3c" onclick="openOverrideModal()">\ud83d\udd13 \u062a\u062c\u0627\u0648\u0632 \u0627\u0644\u062d\u062f\u0648\u062f</button>':'';
+  var adminBtns='<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px" onclick="openPricingConfig()">\u2699\ufe0f \u0627\u0644\u0623\u0633\u0639\u0627\u0631</button>'+
+    (isPricingAdmin()?'<button class="lux-btn lux-btn-ghost" style="padding:10px 16px;font-size:13px;color:#e74c3c" onclick="openOverrideModal()">\ud83d\udd13 \u062a\u062c\u0627\u0648\u0632 \u0627\u0644\u062d\u062f\u0648\u062f</button>':'');
 
   var html='<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:16px">'+adminBtns+'</div>'+
   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px" class="lux-pricing-grid">'+
@@ -5395,21 +5404,22 @@ function refreshPricingApprovalBadge(){
   if(typeof sb==='undefined'||!sb)return;
   if(!isPricingAdmin())return;
   sb.from('pricing_approvals').select('id').eq('status','pending').then(function(r){
-    var n=(r.data||[]).length;
-    _pendingApprovalsCount=n;
-    // عداد السايدبار
-    var badge=document.getElementById('pricing-approval-badge');
-    if(badge){badge.style.display=n>0?'inline':'none';badge.textContent=n;}
-    // عداد جرس التبويب (لو الصفحة مفتوحة)
-    var tabBadge=document.querySelector('.lux-tab-badge');
-    if(tabBadge)tabBadge.textContent=n;
-    else if(n>0&&curPg==='pricing'&&_pricingTab!=='approvals'){
-      // لو فيه طلبات جديدة والجرس مو ظاهر، نعيد رسم التبويبات
-      var bell=document.querySelector('.lux-tab-bell');
-      if(bell&&!bell.querySelector('.lux-tab-badge')){
-        bell.insertAdjacentHTML('beforeend','<span class="lux-tab-badge">'+n+'</span>');
+    var n1=(r.data||[]).length;
+    sb.from('pricing_config_requests').select('id').eq('status','pending').then(function(r2){
+      var n2=(r2.data||[]).length;
+      var n=n1+n2;
+      _pendingApprovalsCount=n;
+      var badge=document.getElementById('pricing-approval-badge');
+      if(badge){badge.style.display=n>0?'inline':'none';badge.textContent=n;}
+      var tabBadge=document.querySelector('.lux-tab-badge');
+      if(tabBadge)tabBadge.textContent=n;
+      else if(n>0&&curPg==='pricing'&&_pricingTab!=='approvals'){
+        var bell=document.querySelector('.lux-tab-bell');
+        if(bell&&!bell.querySelector('.lux-tab-badge')){
+          bell.insertAdjacentHTML('beforeend','<span class="lux-tab-badge">'+n+'</span>');
+        }
       }
-    }
+    });
   });
 }
 
@@ -5423,27 +5433,31 @@ function renderPricingApprovalsTab(){
     return;
   }
   sb.from('pricing_approvals').select('*').order('created_at',{ascending:false}).then(function(r){
-    var list=r.data||[];
-    var pending=list.filter(function(a){return a.status==='pending';});
-    var done=list.filter(function(a){return a.status!=='pending';});
+    var discList=(r.data||[]).map(function(a){a._kind='discount';return a;});
+    // نجيب طلبات تعديل الأسعار كمان
+    sb.from('pricing_config_requests').select('*').order('created_at',{ascending:false}).then(function(r2){
+      var cfgList=(r2.data||[]).map(function(a){a._kind='config';return a;});
+      var list=discList.concat(cfgList).sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at);});
+      var pending=list.filter(function(a){return a.status==='pending';});
+      var done=list.filter(function(a){return a.status!=='pending';});
 
-    if(!list.length){
-      cont.innerHTML='<div class="lux-card"><div class="lux-empty"><div class="lux-empty-ico">\ud83c\udf89</div>'+
-        '<div style="font-weight:800;font-size:16px;color:var(--tx)">\u0645\u0627 \u0641\u064a\u0647 \u0637\u0644\u0628\u0627\u062a \u062e\u0635\u0645</div>'+
-        '<div style="margin-top:6px">\u0643\u0644 \u0627\u0644\u062a\u0633\u0639\u064a\u0631\u0627\u062a \u0636\u0645\u0646 \u0627\u0644\u062d\u062f\u0648\u062f \u0627\u0644\u0645\u0633\u0645\u0648\u062d\u0629</div></div></div>';
-      return;
-    }
-
-    var html='';
-    if(pending.length){
-      html+='<div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#f39c12">\u23f3 \u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0645\u0648\u0627\u0641\u0642\u062a\u0643 ('+pending.length+')</div>';
-      html+=pending.map(function(a){return _approvalCard(a,true);}).join('');
-    }
-    if(done.length){
-      html+='<div style="font-weight:900;font-size:15px;margin:24px 0 12px;color:var(--mt)">\ud83d\udcdc \u0627\u0644\u0633\u062c\u0644 ('+done.length+')</div>';
-      html+=done.map(function(a){return _approvalCard(a,false);}).join('');
-    }
-    cont.innerHTML=html;
+      if(!list.length){
+        cont.innerHTML='<div class="lux-card"><div class="lux-empty"><div class="lux-empty-ico">\ud83c\udf89</div>'+
+          '<div style="font-weight:800;font-size:16px;color:var(--tx)">\u0645\u0627 \u0641\u064a\u0647 \u0637\u0644\u0628\u0627\u062a</div>'+
+          '<div style="margin-top:6px">\u0643\u0644 \u0627\u0644\u062a\u0633\u0639\u064a\u0631\u0627\u062a \u0648\u0627\u0644\u0623\u0633\u0639\u0627\u0631 \u0636\u0645\u0646 \u0627\u0644\u062d\u062f\u0648\u062f</div></div></div>';
+        return;
+      }
+      var html='';
+      if(pending.length){
+        html+='<div style="font-weight:900;font-size:15px;margin-bottom:12px;color:#f39c12">\u23f3 \u0628\u0627\u0646\u062a\u0638\u0627\u0631 \u0645\u0648\u0627\u0641\u0642\u062a\u0643 ('+pending.length+')</div>';
+        html+=pending.map(function(a){return a._kind==='config'?_configCard(a,true):_approvalCard(a,true);}).join('');
+      }
+      if(done.length){
+        html+='<div style="font-weight:900;font-size:15px;margin:24px 0 12px;color:var(--mt)">\ud83d\udcdc \u0627\u0644\u0633\u062c\u0644 ('+done.length+')</div>';
+        html+=done.map(function(a){return a._kind==='config'?_configCard(a,false):_approvalCard(a,false);}).join('');
+      }
+      cont.innerHTML=html;
+    });
   });
 }
 
@@ -5488,6 +5502,70 @@ function _approvalCard(a,isPending){
   '</div>';
 }
 
+// ── كرت طلب تعديل الأسعار ──
+function _configCard(a,isPending){
+  var cls=a.status==='pending'?'pending':a.status==='approved'?'approved':'rejected';
+  var chip=a.status==='pending'?'<span class="lux-status-chip" style="background:#f39c1222;color:#f39c12">⏳ بانتظار</span>':
+    a.status==='approved'?'<span class="lux-status-chip" style="background:#27ae6022;color:#27ae60">✅ مطبّق</span>':
+    '<span class="lux-status-chip" style="background:#e74c3c22;color:#e74c3c">❌ مرفوض</span>';
+  var when='';
+  try{when=new Date(a.created_at).toLocaleString('ar-KW',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){}
+  var changesList=(a.changes_summary||'').split('، ').map(function(ch){return '<div style="padding:2px 0">• '+pEsc(ch)+'</div>';}).join('');
+  var actions=isPending?
+    '<div class="lux-approval-actions">'+
+      '<button class="lux-act-approve" onclick="decideConfigRequest('+a.id+',\'approved\')">✅ موافقة وتطبيق</button>'+
+      '<button class="lux-act-reject" onclick="decideConfigRequest('+a.id+',\'rejected\')">❌ رفض</button>'+
+    '</div>':'';
+  return '<div class="lux-approval-card '+cls+'">'+
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'+
+      '<div style="flex:1;min-width:200px">'+
+        '<div class="lux-approval-name">⚙️ طلب تعديل أسعار '+chip+'</div>'+
+        '<div class="lux-approval-meta">👤 الموظف: <b>'+pEsc(a.requested_by||'—')+'</b> • 🕒 '+when+'</div>'+
+        '<div style="margin-top:8px;padding:10px;background:var(--bg);border-radius:10px;font-size:13px;font-weight:700">'+changesList+'</div>'+
+      '</div>'+
+      actions+
+    '</div>'+
+  '</div>';
+}
+
+function decideConfigRequest(id,decision){
+  if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
+  if(!isPricingAdmin()){toast('🚫 للإدارة فقط','err');return;}
+  sb.from('pricing_config_requests').select('*').eq('id',id).then(function(r){
+    var req=(r.data||[])[0];
+    if(!req){toast('⚠️ الطلب غير موجود','err');return;}
+    var byName=currentUser?currentUser.name:'';
+    var byTitle=roleTitle(currentUser);
+    sb.from('pricing_config_requests').update({
+      status:decision,approved_by:byName,approved_at:new Date().toISOString()
+    }).eq('id',id).then(function(r2){
+      if(r2.error){toast('⚠️ خطأ','err');return;}
+      if(decision==='approved'&&req.new_config){
+        // تطبيق الأسعار الجديدة فعلياً
+        Object.keys(req.new_config).forEach(function(k){
+          if(typeof req.new_config[k]==='number')PRICING_CONFIG[k]=req.new_config[k];
+        });
+        savePricingConfig();
+        if(typeof dbInsertNotification==='function'){
+          dbInsertNotification('✅ تمت الموافقة على تعديل الأسعار',
+            'وافقت '+byTitle+' على تعديل الأسعار: '+(req.changes_summary||''),
+            'success', req.requested_by, byTitle);
+        }
+      }else if(decision==='rejected'){
+        if(typeof dbInsertNotification==='function'){
+          dbInsertNotification('❌ تم رفض تعديل الأسعار',
+            'رفضت '+byTitle+' طلب تعديل الأسعار: '+(req.changes_summary||''),
+            'error', req.requested_by, byTitle);
+        }
+      }
+      logSecurityEvent('pricing_config_decision',(decision==='approved'?'✅ موافقة على':'❌ رفض')+' تعديل أسعار — '+(req.changes_summary||'')+' — بواسطة '+byName);
+      toast(decision==='approved'?'✅ تمت الموافقة وطُبّقت الأسعار':'❌ تم الرفض','ok');
+      renderPricingApprovalsTab();
+      refreshPricingApprovalBadge();
+    });
+  });
+}
+
 // ── طباعة شهادة الموافقة على الخصم ──
 function printApproval(id){
   if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
@@ -5499,6 +5577,12 @@ function printApproval(id){
     var when='';
     try{when=new Date(a.approved_at||a.created_at).toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});}catch(e){}
     var refNo='AP-'+String(a.id).padStart(5,'0');
+    // عرض المسمى الوظيفي بدل الاسم الصريح (للسرية)
+    var approverDisplay=a.approved_by||'الإدارة';
+    if(USERS[a.approved_by]){
+      var au=USERS[a.approved_by];
+      approverDisplay=au.role==='super_admin'?'نائب المدير العام':au.role==='manager'?'المدير العام':(au.title||approverDisplay);
+    }
 
     var w=window.open('','_blank');
     var html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>موافقة خصم — '+pEsc(cname)+'</title>'+
@@ -5556,11 +5640,11 @@ function printApproval(id){
       '<div class="approval-stamp">'+
         '<div class="check">✅</div>'+
         '<div class="txt">تمت الموافقة على هذا الخصم</div>'+
-        '<div class="by">المُعتمِد: '+pEsc(a.approved_by||'الإدارة')+'</div>'+
+        '<div class="by">المُعتمِد: '+pEsc(approverDisplay)+'</div>'+
       '</div>'+
 
       '<div class="sig-row">'+
-        '<div class="sig-box">توقيع المعتمِد<br><span style="font-size:12px;color:#888;font-weight:400">'+pEsc(a.approved_by||'')+'</span></div>'+
+        '<div class="sig-box">توقيع المعتمِد<br><span style="font-size:12px;color:#888;font-weight:400">'+pEsc(approverDisplay)+'</span></div>'+
         '<div class="sig-box">ختم الشركة</div>'+
       '</div>'+
 
@@ -5576,7 +5660,6 @@ function printApproval(id){
 
 // ── إعدادات الأسعار (لصالح وعيسى) ──
 function openPricingConfig(){
-  if(!isPricingAdmin()){toast('🚫 للإدارة فقط','err');return;}
   var fields=[
     ['baseMeterPrice','متر كامل'],['lowerMeterPrice','متر سفلي'],['upperMeterPrice','متر علوي'],
     ['longCabinetPrice','كبت طويل'],['fullCornerPrice','زاوية كاملة'],['drawerPrice','درج عادي'],
@@ -5588,21 +5671,65 @@ function openPricingConfig(){
     return '<div style="display:flex;align-items:center;gap:10px;padding:6px 0"><label style="flex:1;font-size:13px;font-weight:700">'+f[1]+'</label>'+
       '<input type="number" id="cfg-'+f[0]+'" value="'+PRICING_CONFIG[f[0]]+'" style="width:90px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);text-align:center;font-weight:700"></div>';
   }).join('');
+  var isAdmin=isPricingAdmin();
+  var notice=isAdmin?'':
+    '<div style="background:#f39c1222;border:1px solid #f39c1255;border-radius:10px;padding:10px;margin-bottom:12px;color:#f39c12;font-size:13px;font-weight:700">⚠️ أي تعديل على الأسعار يحتاج موافقة الإدارة قبل تطبيقه.</div>';
+  var btnLabel=isAdmin?'💾 حفظ الإعدادات':'📤 إرسال طلب التعديل للإدارة';
   pShowModal('⚙️ إعدادات الأسعار',
-    '<div style="max-height:60vh;overflow:auto">'+rows+'</div>'+
-    '<button class="btn" onclick="savePricingConfigUI()" style="width:100%;margin-top:12px">💾 حفظ الإعدادات</button>');
+    notice+
+    '<div style="max-height:55vh;overflow:auto">'+rows+'</div>'+
+    '<button class="btn" onclick="savePricingConfigUI()" style="width:100%;margin-top:12px">'+btnLabel+'</button>');
 }
 
 function savePricingConfigUI(){
-  ['baseMeterPrice','lowerMeterPrice','upperMeterPrice','longCabinetPrice','fullCornerPrice','drawerPrice','glassDrawerPrice','fixBasketPrice','spicesBasketPrice','magicBasketPrice','greenBasketSetPrice','extraHeightPerMeter','freeDiscountMax','approvalDiscountMax','quoteValidityDays'].forEach(function(k){
+  var keys=['baseMeterPrice','lowerMeterPrice','upperMeterPrice','longCabinetPrice','fullCornerPrice','drawerPrice','glassDrawerPrice','fixBasketPrice','spicesBasketPrice','magicBasketPrice','greenBasketSetPrice','extraHeightPerMeter','freeDiscountMax','approvalDiscountMax','quoteValidityDays'];
+  var labels={baseMeterPrice:'متر كامل',lowerMeterPrice:'متر سفلي',upperMeterPrice:'متر علوي',longCabinetPrice:'كبت طويل',fullCornerPrice:'زاوية كاملة',drawerPrice:'درج عادي',glassDrawerPrice:'دراج جام',fixBasketPrice:'سلة فكس',spicesBasketPrice:'سلة بهارات',magicBasketPrice:'سلة ماجيك',greenBasketSetPrice:'طقم سلال خضر',extraHeightPerMeter:'متر ارتفاع زائد',freeDiscountMax:'حد الخصم التلقائي',approvalDiscountMax:'حد خصم الموافقة',quoteValidityDays:'صلاحية العرض'};
+
+  // قراءة القيم الجديدة
+  var newConfig=Object.assign({},PRICING_CONFIG);
+  var changes=[];
+  keys.forEach(function(k){
     var el=document.getElementById('cfg-'+k);
-    if(el)PRICING_CONFIG[k]=+el.value||0;
+    if(el){
+      var v=+el.value||0;
+      if(v!==PRICING_CONFIG[k])changes.push(labels[k]+': '+PRICING_CONFIG[k]+' ← '+v);
+      newConfig[k]=v;
+    }
   });
-  savePricingConfig();
-  logSecurityEvent('pricing_config','تعديل إعدادات الأسعار');
-  pCloseModal();
-  toast('✅ تم حفظ الإعدادات','ok');
-  renderPricingPage();
+
+  if(!changes.length){toast('ℹ️ ما فيه تغييرات','err');return;}
+
+  if(isPricingAdmin()){
+    // الإدارة: تطبيق مباشر
+    keys.forEach(function(k){PRICING_CONFIG[k]=newConfig[k];});
+    savePricingConfig();
+    logSecurityEvent('pricing_config','تعديل إعدادات الأسعار: '+changes.join('، '));
+    pCloseModal();
+    toast('✅ تم حفظ الإعدادات','ok');
+    renderPricingPage();
+  }else{
+    // البياع: إرسال طلب موافقة
+    if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
+    sb.from('pricing_config_requests').insert([{
+      requested_by:currentUser?currentUser.name:'',
+      old_config:PRICING_CONFIG, new_config:newConfig,
+      changes_summary:changes.join('، '), status:'pending'
+    }]).then(function(r){
+      if(r.error){toast('⚠️ خطأ بإرسال الطلب','err');return;}
+      logSecurityEvent('pricing_config_request','طلب تعديل أسعار: '+changes.join('، '));
+      if(typeof dbInsertNotification==='function'){
+        dbInsertNotification('⚙️ طلب تعديل أسعار',
+          (currentUser?currentUser.name:'موظف')+' يطلب تعديل الأسعار: '+changes.join('، ')+'. راجعه في نظام التسعير ← طلبات الموافقة.',
+          'warning','صالح الجاسم',currentUser?currentUser.name:'');
+      }
+      // واتساب الإدارة
+      var waMsg='⚙️ *طلب تعديل أسعار*\n\n👤 الموظف: '+(currentUser?currentUser.name:'موظف')+'\n\nالتغييرات المطلوبة:\n'+changes.map(function(ch){return '• '+ch;}).join('\n')+'\n\nيرجى المراجعة في نظام التسعير ← طلبات الموافقة';
+      window.open('https://wa.me/'+PRICING_CONFIG.approvalWhatsapp+'?text='+encodeURIComponent(waMsg),'_blank');
+      pCloseModal();
+      toast('📤 تم إرسال طلب التعديل للإدارة','ok');
+      refreshPricingApprovalBadge();
+    });
+  }
 }
 
 // ── تجاوز الحدود (Override) ──
@@ -5947,6 +6074,7 @@ function decideApproval(id,decision){
     var req=(r.data||[])[0];
     if(!req){toast('⚠️ الطلب غير موجود','err');return;}
     var byName=currentUser?currentUser.name:'';
+    var byTitle=roleTitle(currentUser);
     sb.from('pricing_approvals').update({
       status:decision,approved_by:byName,approved_at:new Date().toISOString()
     }).eq('id',id).then(function(r2){
@@ -5961,22 +6089,22 @@ function decideApproval(id,decision){
         var fin=+req.discounted_price||(std*(1-disc/100));
         c.pricing=Object.assign({},c.pricing||{},{
           discountPct:disc, standardPrice:std, finalPrice:fin,
-          approvedBy:byName, approvedAt:new Date().toISOString(),
+          approvedBy:byTitle, approvedAt:new Date().toISOString(),
           approvalId:id
         });
         dbUpdateClient(c.id,c);
         // تبليغ الموظف
         if(typeof dbInsertNotification==='function'){
           dbInsertNotification('✅ تمت الموافقة على الخصم',
-            'وافق '+byName+' على خصم '+disc+'% للعميل '+cname+' — السعر النهائي '+fin.toFixed(0)+' د.ك',
-            'success', req.requested_by, byName);
+            'وافقت '+byTitle+' على خصم '+disc+'% للعميل '+cname+' — السعر النهائي '+fin.toFixed(0)+' د.ك',
+            'success', req.requested_by, byTitle);
         }
       }else if(decision==='rejected'){
         // تبليغ الموظف بالرفض
         if(typeof dbInsertNotification==='function'){
           dbInsertNotification('❌ تم رفض طلب الخصم',
-            'رفض '+byName+' طلب خصم '+req.discount_percentage+'% للعميل '+cname+'. تواصل مع الإدارة.',
-            'error', req.requested_by, byName);
+            'رفضت '+byTitle+' طلب خصم '+req.discount_percentage+'% للعميل '+cname+'. تواصل مع الإدارة.',
+            'error', req.requested_by, byTitle);
         }
       }
 
