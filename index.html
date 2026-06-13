@@ -4252,7 +4252,7 @@ function sendClientQuoteWhatsapp(id){
   var fmt=function(d){return d.toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});};
   var expiry=new Date(Date.now()+PRICING_CONFIG.quoteValidityDays*86400000);
   var msg='🍳 *مطابخ العيسى*\n\nعزيزنا '+c.name+' 🌟\nعرض السعر لمطبخكم:\n\n'+
-    '📐 إجمالي الأمتار: '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م\n'+
+    (_quoteAddonNames(c).length?'📋 المحتويات:\n'+_quoteAddonNames(c).map(function(n){return '• '+n;}).join('\n')+'\n\n':'')+
     (res.discountPct>0?'🏷️ خصم: '+res.discountPct+'%\n':'')+
     '━━━━━━━━━━━━━\n💵 *السعر النهائي: '+res.finalPrice.toFixed(0)+' د.ك*\n━━━━━━━━━━━━━\n\n'+
     '💳 الدفعات:\n• 50%: '+(res.finalPrice*0.5).toFixed(0)+' د.ك\n• 40%: '+(res.finalPrice*0.4).toFixed(0)+' د.ك\n• 10%: '+(res.finalPrice*0.1).toFixed(0)+' د.ك\n\n'+
@@ -4278,6 +4278,26 @@ function printClientQuote(id){
   var p=c.pricing;
   _printQuoteData={client:c,pricing:p};
   printQuoteFromData(c,p);
+}
+
+// قائمة كل الإضافات بالأسماء فقط (بدون أسعار) — للعرض في عرض السعر
+function _quoteAddonNames(c){
+  var p=c.pricing||{};
+  var names=[];
+  // الإضافات الثابتة
+  if(p.addons&&typeof PRICING_ADDONS!=='undefined'){
+    PRICING_ADDONS.forEach(function(a){
+      var qty=+(p.addons[a.key])||0;
+      if(qty>0)names.push((a.icon?a.icon+' ':'')+a.label+(qty>1?' ×'+qty:''));
+    });
+  }
+  // البنود المخصصة
+  (p.customAddons||[]).forEach(function(x){if((x.qty||0)>0)names.push('✨ '+x.label+(x.qty>1?' ×'+x.qty:''));});
+  // المغاسل
+  (p.sinks||[]).forEach(function(x){if((x.qty||0)>0)names.push('🚿 '+(x.label||'مغسلة')+(x.qty>1?' ×'+x.qty:''));});
+  // الإكسسوارات
+  (p.accessories||[]).forEach(function(x){if((x.qty||0)>0)names.push((x.icon||'🧩')+' '+x.label+(x.qty>1?' ×'+x.qty:''));});
+  return names;
 }
 
 function printQuoteFromData(c,p){
@@ -4319,7 +4339,8 @@ function printQuoteFromData(c,p){
     '<div><b>المنطقة:</b> '+pEsc(c.area||c.city||'—')+'</div><div><b>تاريخ العرض:</b> '+fmt(today)+'</div></div></div>'+
   '<div class="sec"><h2>ملخص المطبخ</h2><div class="info">'+
     (kitSummary?'<div style="grid-column:1/3"><b>الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
-    '<div><b>إجمالي الأمتار:</b> '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م</div></div></div>'+
+    (_quoteAddonNames(c).length?'<div style="grid-column:1/3"><b>الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
+  '</div></div>'+
   (res.discountPct>0?'<div class="sec"><div class="info"><div><b>السعر قبل الخصم:</b> '+res.standardPrice.toFixed(0)+' د.ك</div><div><b>نسبة الخصم:</b> '+res.discountPct+'% (- '+res.discountAmount.toFixed(0)+' د.ك)</div>'+(res.customTotal>0?'<div style="grid-column:1/3;color:#0a8f5c"><b>✨ بنود مخصصة (بدون خصم):</b> + '+res.customTotal.toFixed(0)+' د.ك</div>':'')+'</div></div>':'')+
   '<div class="total-box"><div class="lbl">السعر النهائي شامل</div><div class="val">'+res.finalPrice.toFixed(0)+' <span style="font-size:20px">د.ك</span></div></div>'+
   '<div class="sec"><h2>جدول الدفعات</h2><table class="pay-table"><tr><th>الدفعة</th><th>النسبة</th><th>المبلغ</th><th>التوقيت</th></tr>'+
@@ -5321,8 +5342,9 @@ function renderPricingCalcTab(){
     '<div class="lux-card">'+
       '<div class="lux-card-title"><span class="ico">\ud83d\udc64</span> \u0631\u0628\u0637 \u0627\u0644\u0639\u0645\u064a\u0644</div>'+
       '<input type="text" id="pricing-client-search" placeholder="\ud83d\udd0d \u0627\u0628\u062d\u062b \u0628\u0627\u0633\u0645 \u0627\u0644\u0639\u0645\u064a\u0644 \u0623\u0648 \u0627\u0644\u0647\u0627\u062a\u0641..." oninput="filterPricingClients()" class="lux-input" style="margin-bottom:10px">'+
-      '<select id="pricing-client" onchange="loadClientPricing()" class="lux-input" style="margin-bottom:20px">'+
+      '<select id="pricing-client" onchange="loadClientPricing()" class="lux-input" style="margin-bottom:10px">'+
         '<option value="">\u2014 \u0627\u062e\u062a\u0631 \u0627\u0644\u0639\u0645\u064a\u0644 \u2014</option>'+clientOpts+'</select>'+
+      '<button class="lux-btn lux-btn-gold" style="width:100%;margin-bottom:20px;padding:11px" onclick="quickAddClientForPricing()">\u2795 \u0639\u0645\u064a\u0644 \u062c\u062f\u064a\u062f (\u0627\u0633\u0645 + \u0647\u0627\u062a\u0641)</button>'+
 
       '<div class="lux-card-title"><span class="ico">\ud83d\udcd0</span> \u0627\u0644\u0623\u0645\u062a\u0627\u0631</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">'+
@@ -5663,6 +5685,48 @@ function loadClientPricing(){
   renderAccessoriesList();
   syncDiscount(p.discountPct||0);
   toast('✅ تم تحميل تسعير '+c.name,'ok');
+}
+
+function quickAddClientForPricing(){
+  pShowModal('➕ عميل جديد سريع',
+    '<div style="display:grid;gap:14px">'+
+    '<div style="background:#0a8f5c15;border:1px solid #0a8f5c33;border-radius:10px;padding:10px;color:var(--lux-emerald,#0a8f5c);font-size:12px;font-weight:700">💡 أضف العميل بسرعة وابدأ التسعير فوراً — تقدر تكمّل باقي بياناته لاحقاً</div>'+
+    '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">اسم العميل *</label>'+
+      '<input type="text" id="qac-name" placeholder="مثلاً: محمد العنزي" class="lux-input"></div>'+
+    '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">رقم الهاتف *</label>'+
+      '<input type="tel" id="qac-phone" placeholder="مثلاً: 99966056" class="lux-input"></div>'+
+    '<button class="lux-btn lux-btn-primary" style="width:100%" onclick="saveQuickClient()">✅ إضافة وبدء التسعير</button>'+
+    '</div>');
+  setTimeout(function(){var el=document.getElementById('qac-name');if(el)el.focus();},100);
+}
+
+async function saveQuickClient(){
+  var name=(document.getElementById('qac-name')||{}).value||'';
+  var phone=(document.getElementById('qac-phone')||{}).value||'';
+  name=name.trim(); phone=phone.trim();
+  if(!name){toast('⚠️ اكتب اسم العميل','err');return;}
+  if(!phone){toast('⚠️ اكتب رقم الهاتف','err');return;}
+  toast('⏳ جاري إضافة العميل...','ok');
+  var obj={name:name,phone:phone,resp:currentUser?currentUser.name:'',stage:1,priority:'متوسطة',kind:'سكني',legacyExempt:false};
+  try{
+    var saved=await dbInsertClient(obj);
+    if(!saved){toast('⚠️ خطأ بإضافة العميل','err');return;}
+    clients.push(saved);
+    pCloseModal();
+    toast('✅ تم إضافة '+name,'ok');
+    // إعادة بناء قائمة العملاء واختيار الجديد
+    filterPricingClients();
+    var sel=document.getElementById('pricing-client');
+    if(sel){
+      // نتأكد إنه ضمن الخيارات
+      var opt=document.createElement('option');
+      opt.value=saved.id; opt.textContent=saved.name;
+      if(!Array.prototype.some.call(sel.options,function(o){return +o.value===saved.id;}))sel.appendChild(opt);
+      sel.value=saved.id;
+      loadClientPricing();
+    }
+    logSecurityEvent('client','إضافة عميل سريع من التسعير: '+name);
+  }catch(e){toast('⚠️ خطأ بالاتصال','err');}
 }
 
 function filterPricingClients(){
@@ -6179,7 +6243,7 @@ function printQuote(){
 
   '<div class="sec"><h2>ملخص المطبخ</h2><div class="info">'+
     (kitSummary?'<div style="grid-column:1/3"><b>الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
-    '<div><b>إجمالي الأمتار:</b> '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م</div>'+
+    (_quoteAddonNames(c).length?'<div style="grid-column:1/3"><b>الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
   '</div></div>'+
 
   (res.discountPct>0?
@@ -6237,7 +6301,8 @@ function _buildQuoteHTML(c,res){
     '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">ملخص المطبخ</h2>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
         (kitSummary?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
-        '<div style="padding:6px 0"><b style="color:#555">إجمالي الأمتار:</b> '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م</div></div></div>'+
+        (_quoteAddonNames(c).length?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
+      '</div></div>'+
     (res.discountPct>0?'<div style="margin-bottom:20px;position:relative;z-index:1"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
         '<div style="padding:6px 0"><b style="color:#555">السعر قبل الخصم:</b> '+res.standardPrice.toFixed(0)+' د.ك</div>'+
         '<div style="padding:6px 0"><b style="color:#555">نسبة الخصم:</b> '+res.discountPct+'% (- '+res.discountAmount.toFixed(0)+' د.ك)</div>'+
@@ -6308,7 +6373,7 @@ function sendQuoteWhatsapp(){
   var msg='🍳 *مطابخ العيسى*\n\n'+
     'عزيزنا '+c.name+' 🌟\n'+
     'يسعدنا تقديم عرض السعر لمطبخكم:\n\n'+
-    '📐 إجمالي الأمتار: '+(res.fullMeters+res.lowerMeters+res.upperMeters).toFixed(1)+' م\n'+
+    (_quoteAddonNames(c).length?'📋 المحتويات:\n'+_quoteAddonNames(c).map(function(n){return '• '+n;}).join('\n')+'\n\n':'')+
     (res.discountPct>0?'🏷️ خصم خاص: '+res.discountPct+'%\n':'')+
     '━━━━━━━━━━━━━\n'+
     '💵 *السعر النهائي: '+res.finalPrice.toFixed(0)+' د.ك*\n'+
