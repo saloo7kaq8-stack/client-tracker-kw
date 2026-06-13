@@ -5013,16 +5013,28 @@ function calcPricing(data){
       sinksBreakdown.push({label:s.label,qty:qty,price:price,sub:sub,sink:true});
     }
   });
-  var standardPrice=base+addonsTotal+customTotal+sinksTotal;
+  // الإكسسوارات (بنود جاهزة — سعر يحدده المستخدم — معفاة من الخصم)
+  var accTotal=0, accBreakdown=[];
+  var accs=data.accessories||[];
+  accs.forEach(function(a){
+    var qty=+a.qty||0, price=+a.price||0;
+    if(qty>0&&price>0){
+      var sub=qty*price;
+      accTotal+=sub;
+      accBreakdown.push({key:a.key,label:a.label,icon:a.icon,qty:qty,price:price,sub:sub,acc:true});
+    }
+  });
+  var standardPrice=base+addonsTotal+customTotal+sinksTotal+accTotal;
   var discountPct=+data.discountPct||0;
-  // الخصم ينطبق فقط على (الأمتار + الإضافات الثابتة) — البنود المخصصة والمغاسل معفاة
+  // الخصم ينطبق فقط على (الأمتار + الإضافات الثابتة) — البنود المخصصة والمغاسل والإكسسوارات معفاة
   var discountableBase=base+addonsTotal;
   var discountAmount=discountableBase*(discountPct/100);
-  var finalPrice=(discountableBase-discountAmount)+customTotal+sinksTotal;
+  var finalPrice=(discountableBase-discountAmount)+customTotal+sinksTotal+accTotal;
   return {
     base:base, addonsTotal:addonsTotal, addonsBreakdown:addonsBreakdown,
     customTotal:customTotal, customBreakdown:customBreakdown,
     sinksTotal:sinksTotal, sinksBreakdown:sinksBreakdown,
+    accTotal:accTotal, accBreakdown:accBreakdown,
     discountableBase:discountableBase,
     standardPrice:standardPrice, discountPct:discountPct,
     discountAmount:discountAmount, finalPrice:finalPrice,
@@ -5056,6 +5068,16 @@ function roleTitle(user){
 var _pricingState={clientId:null,fullMeters:0,lowerMeters:0,upperMeters:0,addons:{},discountPct:0,overridePct:null,overrideReason:''};
 var _customAddons=[]; // البنود المخصصة الحالية [{label,price,unit,qty}]
 var _sinks=[]; // المغاسل [{label,price,qty}]
+// الإكسسوارات الجاهزة (منقولة من ستور الأجهزة) — معفاة من الخصم
+var PRICING_ACCESSORIES=[
+  {key:'acc_waste',label:'سلة نفايات سحب مزدوجة',icon:'🗑️'},
+  {key:'acc_corner',label:'رف دوار زاوية كامل',icon:'🔄'},
+  {key:'acc_drawer_org',label:'منظّم أدراج خشب/بامبو',icon:'📐'},
+  {key:'acc_plate',label:'حامل أطباق داخلي ألمنيوم',icon:'🍽️'},
+  {key:'acc_spice',label:'سلة توابل سحب ضيقة 15 سم',icon:'🧂'},
+  {key:'acc_aventos',label:'رافع باب (Aventos) هيدروليك',icon:'⬆️'}
+];
+var _accessories=[]; // [{key,label,icon,price,qty}]
 
 function renderPricingPage(){
   if(!userHasAccess('pricing')){
@@ -5146,6 +5168,12 @@ function renderPricingCalcTab(){
         '<button class="lux-btn lux-btn-gold" style="padding:8px 14px;font-size:13px" onclick="addSink()">\u2795 \u0623\u0636\u0641 \u0645\u063a\u0633\u0644\u0629</button>'+
       '</div>'+
       '<div id="sinks-list" style="display:grid;gap:10px"></div>'+
+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 12px">'+
+        '<div class="lux-card-title" style="margin:0"><span class="ico">\ud83e\udde9</span> \u0627\u0644\u0625\u0643\u0633\u0633\u0648\u0627\u0631\u0627\u062a</div>'+
+        '<button class="lux-btn lux-btn-gold" style="padding:8px 14px;font-size:13px" onclick="openAccessoryPicker()">\u2795 \u0623\u0636\u0641 \u0625\u0643\u0633\u0633\u0648\u0627\u0631</button>'+
+      '</div>'+
+      '<div id="accessories-list" style="display:grid;gap:10px"></div>'+
     '</div>'+
 
     '<div class="lux-card">'+
@@ -5176,6 +5204,7 @@ function renderPricingCalcTab(){
 
   document.getElementById('pricing-tab-content').innerHTML=html;
   renderSinksList();
+  renderAccessoriesList();
   recalcPricingUI();
 }
 
@@ -5204,6 +5233,13 @@ function _readPricingInputs(){
     if(qEl)s.qty=+qEl.value||0;
     if(pEl)s.price=+pEl.value||0;
   });
+  // قراءة الإكسسوارات من الواجهة
+  _accessories.forEach(function(a,i){
+    var qEl=document.getElementById('acc-qty-'+i);
+    var pEl=document.getElementById('acc-price-'+i);
+    if(qEl)a.qty=+qEl.value||0;
+    if(pEl)a.price=+pEl.value||0;
+  });
   return {
     fullMeters:+(document.getElementById('p-fullMeters')||{}).value||0,
     lowerMeters:+(document.getElementById('p-lowerMeters')||{}).value||0,
@@ -5211,6 +5247,7 @@ function _readPricingInputs(){
     addons:addons,
     customAddons:_customAddons,
     sinks:_sinks,
+    accessories:_accessories,
     discountPct:+(document.getElementById('p-discount-num')||{}).value||0
   };
 }
@@ -5234,11 +5271,16 @@ function recalcPricingUI(){
     return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span>🚿 '+pEsc(s.label||'مغسلة')+' × '+s.qty+'</span><span style="font-weight:700;color:var(--accent)">'+s.sub.toFixed(0)+' د.ك</span></div>';
   }).join('');
 
+  var accRows=res.accBreakdown.map(function(a){
+    return '<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0"><span>'+(a.icon||'🧩')+' '+pEsc(a.label)+' × '+a.qty+'</span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">'+a.sub.toFixed(0)+' د.ك</span></div>';
+  }).join('');
+
   resEl.innerHTML=''+
     '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--bd)"><span style="color:var(--mt)">📐 سعر الأمتار</span><span style="font-weight:700">'+res.base.toFixed(0)+' د.ك</span></div>'+
     (addonRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+addonRows+'</div>':'')+
     (customRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+customRows+'</div>':'')+
     (sinkRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+sinkRows+'</div>':'')+
+    (accRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+accRows+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:16px"><span style="font-weight:800">السعر القياسي</span><span style="font-weight:800;color:var(--accent)">'+res.standardPrice.toFixed(0)+' د.ك</span></div>';
 
   var cls=classifyDiscount(res.discountPct);
@@ -5252,8 +5294,8 @@ function recalcPricingUI(){
 
   var finalEl=document.getElementById('pricing-final');
   if(finalEl){
-    var customNote=(res.customTotal>0||res.sinksTotal>0)?
-      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">✨ بنود + مغاسل <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+(res.customTotal+res.sinksTotal).toFixed(0)+' د.ك</span></div>':'';
+    var customNote=(res.customTotal>0||res.sinksTotal>0||res.accTotal>0)?
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">✨ بنود + مغاسل + إكسسوارات <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+(res.customTotal+res.sinksTotal+res.accTotal).toFixed(0)+' د.ك</span></div>':'';
     finalEl.innerHTML=''+
       '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">قيمة الخصم ('+res.discountPct+'%)</span><span style="font-weight:700;color:#e74c3c">- '+res.discountAmount.toFixed(0)+' د.ك</span></div>'+
       customNote+
@@ -5361,6 +5403,63 @@ function removeSink(i){
   recalcPricingUI();
 }
 
+// ── الإكسسوارات (بنود جاهزة — سعر يحدده المستخدم — معفاة من الخصم) ──
+function renderAccessoriesList(){
+  var el=document.getElementById('accessories-list');
+  if(!el)return;
+  if(!_accessories.length){
+    el.innerHTML='<div style="text-align:center;padding:14px;color:var(--mt);font-size:12px;border:1.5px dashed var(--bd);border-radius:12px">لا توجد إكسسوارات — اضغط "أضف إكسسوار" واختر من القائمة وحدد السعر</div>';
+    return;
+  }
+  el.innerHTML=_accessories.map(function(a,i){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:var(--bg);border:1.5px solid var(--bd)">'+
+      '<div class="lux-addon-ico" style="background:linear-gradient(135deg,rgba(212,175,55,.18),rgba(10,143,92,.12))">'+(a.icon||'🧩')+'</div>'+
+      '<div style="flex:1"><div style="font-weight:800;font-size:14px">'+pEsc(a.label)+'</div>'+
+        '<div style="display:flex;gap:8px;align-items:center;margin-top:6px">'+
+          '<div style="flex:1;display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--mt);font-weight:700">السعر</span>'+
+            '<input type="number" min="0" step="0.5" id="acc-price-'+i+'" value="'+(a.price||0)+'" placeholder="0" oninput="recalcPricingUI()" class="lux-addon-qty" style="flex:1">'+
+            '<span style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:700">د.ك</span></div>'+
+          '<div style="display:flex;align-items:center;gap:4px"><span style="font-size:11px;color:var(--mt);font-weight:700">العدد</span>'+
+            '<input type="number" min="0" id="acc-qty-'+i+'" value="'+(a.qty||1)+'" oninput="recalcPricingUI()" class="lux-addon-qty" style="width:55px"></div>'+
+        '</div>'+
+      '</div>'+
+      '<button onclick="removeAccessory('+i+')" style="background:none;border:none;color:#e74c3c;font-size:18px;cursor:pointer;padding:4px" title="حذف">🗑️</button>'+
+      '</div>';
+  }).join('');
+}
+
+function openAccessoryPicker(){
+  // الإكسسوارات اللي ما أُضيفت بعد
+  var added=_accessories.map(function(a){return a.key;});
+  var available=PRICING_ACCESSORIES.filter(function(p){return added.indexOf(p.key)===-1;});
+  var rows=available.length?available.map(function(p){
+    return '<div onclick="addAccessory(\''+p.key+'\')" style="display:flex;align-items:center;gap:12px;padding:14px;border:1.5px solid var(--bd);border-radius:12px;cursor:pointer;margin-bottom:8px;transition:all .2s" onmouseover="this.style.borderColor=\'var(--lux-gold,#d4af37)\'" onmouseout="this.style.borderColor=\'var(--bd)\'">'+
+      '<span style="font-size:24px">'+p.icon+'</span>'+
+      '<span style="font-weight:800;font-size:14px;flex:1">'+pEsc(p.label)+'</span>'+
+      '<span style="color:var(--lux-emerald,#0a8f5c);font-size:20px">+</span></div>';
+  }).join(''):'<div style="text-align:center;padding:30px;color:var(--mt)">✅ كل الإكسسوارات مضافة</div>';
+  pShowModal('🧩 اختر إكسسوار',
+    '<div style="background:#0a8f5c15;border:1px solid #0a8f5c33;border-radius:10px;padding:10px;margin-bottom:12px;color:var(--lux-emerald,#0a8f5c);font-size:12px;font-weight:700">💡 الإكسسوارات معفاة من الخصم — تحدد سعرها بعد الإضافة</div>'+
+    '<div style="max-height:55vh;overflow:auto">'+rows+'</div>');
+}
+
+function addAccessory(key){
+  var preset=PRICING_ACCESSORIES.find(function(p){return p.key===key;});
+  if(!preset)return;
+  if(_accessories.some(function(a){return a.key===key;})){toast('ℹ️ مضاف مسبقاً','err');return;}
+  _accessories.push({key:preset.key,label:preset.label,icon:preset.icon,price:0,qty:1});
+  pCloseModal();
+  toast('✅ أُضيف: '+preset.label,'ok');
+  renderAccessoriesList();
+  recalcPricingUI();
+}
+
+function removeAccessory(i){
+  _accessories.splice(i,1);
+  renderAccessoriesList();
+  recalcPricingUI();
+}
+
 function loadClientPricing(){
   var id=+document.getElementById('pricing-client').value||null;
   _pricingState.clientId=id;
@@ -5380,6 +5479,8 @@ function loadClientPricing(){
   renderCustomAddonsList();
   _sinks=(p.sinks||[]).map(function(s){return {label:s.label||'',price:s.price||0,qty:s.qty||0};});
   renderSinksList();
+  _accessories=(p.accessories||[]).map(function(a){return {key:a.key,label:a.label,icon:a.icon,price:a.price||0,qty:a.qty||0};});
+  renderAccessoriesList();
   syncDiscount(p.discountPct||0);
   toast('✅ تم تحميل تسعير '+c.name,'ok');
 }
@@ -5433,8 +5534,8 @@ function savePricingToClient(){
   // حفظ مباشر
   c.pricing={
     fullMeters:res.fullMeters,lowerMeters:res.lowerMeters,upperMeters:res.upperMeters,
-    addons:data.addons,customAddons:_customAddons,sinks:_sinks,discountPct:res.discountPct,
-    base:res.base,addonsTotal:res.addonsTotal,customTotal:res.customTotal,sinksTotal:res.sinksTotal,
+    addons:data.addons,customAddons:_customAddons,sinks:_sinks,accessories:_accessories,discountPct:res.discountPct,
+    base:res.base,addonsTotal:res.addonsTotal,customTotal:res.customTotal,sinksTotal:res.sinksTotal,accTotal:res.accTotal,
     standardPrice:res.standardPrice,finalPrice:res.finalPrice,
     savedBy:currentUser?currentUser.name:'',savedAt:new Date().toISOString()
   };
@@ -8576,12 +8677,6 @@ const APPLIANCES=[
   {id:'FL02',n:'فلتر مياه RO 7 مراحل',c:'فلاتر وسخانات',brand:'',p:0,stock:0,showroom:true,img:'💧',sup:'',upd:''},
   {id:'FL03',n:'سخان مياه كهربائي فوري',c:'فلاتر وسخانات',brand:'',p:0,stock:0,showroom:true,img:'💧',sup:'',upd:''},
   // إكسسوارات معرض
-  {id:'AX01',n:'سلة نفايات سحب مزدوجة',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'🗑️',sup:'',upd:''},
-  {id:'AX02',n:'رف دوار زاوية كامل',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'🔄',sup:'',upd:''},
-  {id:'AX03',n:'منظّم أدراج خشب/بامبو',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'📐',sup:'',upd:''},
-  {id:'AX04',n:'حامل أطباق داخلي ألمنيوم',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'🍽️',sup:'',upd:''},
-  {id:'AX05',n:'سلة توابل سحب ضيقة 15 سم',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'🧂',sup:'',upd:''},
-  {id:'AX06',n:'رافع باب (Aventos) هيدروليك',c:'إكسسوارات',brand:'',p:0,stock:0,showroom:true,img:'⬆️',sup:'',upd:''},
 ];
 
 let appSrch='',appCF='all';
