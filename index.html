@@ -314,6 +314,16 @@ tbody tr:hover .ab{opacity:1}
 .modal{background:rgba(255,255,255,.95);backdrop-filter:blur(32px) saturate(1.3);-webkit-backdrop-filter:blur(32px) saturate(1.3);border:1px solid rgba(130,185,255,.5);border-radius:18px;width:100%;max-width:720px;max-height:93vh;overflow-y:auto;transform:translateY(20px) scale(.97);transition:transform .28s cubic-bezier(.4,0,.2,1),opacity .25s;opacity:0;box-shadow:0 30px 80px rgba(40,100,190,.28),0 0 0 1px rgba(255,255,255,.5) inset}
 body.dark .modal{background:rgba(20,36,62,.96);border-color:rgba(120,180,255,.2);box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(120,180,255,.1) inset}
 .ov.open .modal{transform:translateY(0) scale(1);opacity:1}
+/* نموذج تعديل العميل — أوسع وأوضح */
+#ov-form .modal{max-width:920px}
+#ov-form .m-body{padding:8px 4px}
+#ov-form .fs{background:linear-gradient(135deg,rgba(10,143,92,.04),rgba(212,175,55,.02));border:1px solid var(--bd);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+#ov-form .fs-t{font-size:15px;font-weight:900;color:var(--accent);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid rgba(10,143,92,.15);display:flex;align-items:center;gap:8px}
+#ov-form .fl{font-size:12.5px;font-weight:700;color:var(--mt);margin-bottom:5px}
+#ov-form .fi,#ov-form .fsl{font-size:14px;padding:11px 13px;border-radius:11px;transition:all .2s}
+#ov-form .fi:focus,#ov-form .fsl:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,143,92,.1)}
+#ov-form .fg{margin-bottom:4px}
+@media(max-width:900px){#ov-form .modal{max-width:96vw}}
 .m-hdr{padding:20px 24px 16px;border-bottom:1px solid rgba(130,185,255,.22);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px 18px 0 0;z-index:1}
 body.dark .m-hdr{background:rgba(20,36,62,.96);border-bottom-color:rgba(120,180,255,.15)}
 .m-title{font-family:var(--font-display);font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px;color:var(--tx);letter-spacing:-.3px}
@@ -1254,6 +1264,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   <div class="m-hdr">
     <div class="m-title" id="form-title">➕ إضافة عميل جديد</div>
     <span id="auto-save-indicator" style="font-size:11px;color:var(--g);opacity:0;transition:opacity .5s;margin-left:8px">✅ حُفظ تلقائياً</span>
+    <button id="form-pricing-btn" onclick="pricingFromForm()" style="display:none;background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;border:none;padding:8px 16px;border-radius:11px;font-weight:800;font-size:13px;cursor:pointer;margin-left:auto;box-shadow:0 4px 14px rgba(10,143,92,.3)">💲 تسعير المطبخ</button>
     <button class="m-close" onclick="closeForm()">✕</button>
   </div>
   <div class="m-body">
@@ -3120,6 +3131,7 @@ const KWD='د.ك';
 function dbToClient(r){
   return {
     id:r.id, name:r.name, phone:r.phone||'', phone2:r.phone2||'',
+    createdAt:r.created_at||null,
     civilId:r.civil_id||'',
     email:r.email||'', whatsapp:r.whatsapp||'', city:r.city||'',
     address:r.address||'', lat:r.lat||'', lng:r.lng||'',
@@ -3454,6 +3466,8 @@ async function initApp(){
     [clients,team]=await Promise.all([dbFetchClients(),dbFetchTeam()]);
     subscribeRealtime();
     go('dashboard');
+    // فحص التسعيرات المنتهية بعد ثوانٍ من التحميل
+    setTimeout(function(){if(typeof checkExpiredQuotes==='function')checkExpiredQuotes();},5000);
   }catch(e){
     document.getElementById('pg-dashboard').innerHTML=`
       <div style="text-align:center;padding:60px;color:var(--re)">
@@ -4098,6 +4112,28 @@ function renderClientPricingTab(c){
       '</div>';
   }
   var p=c.pricing;
+  // شارة حالة صلاحية التسعيرة (20 يوم عمل)
+  var validityBanner='';
+  if(!p.approvedAt&&!c.stage&&c.status!=='منتهي'){
+    var left=quoteWorkdaysLeft(c);
+    if(left!==null){
+      if(left<=0){
+        validityBanner='<div style="background:#e74c3c15;border:1.5px solid #e74c3c55;border-radius:12px;padding:14px;margin-bottom:14px;text-align:center">'+
+          '<div style="font-weight:900;color:#e74c3c;font-size:15px">⏳ انتهت صلاحية التسعيرة</div>'+
+          '<div style="font-size:12px;color:var(--mt);margin-top:4px">صار '+QUOTE_VALIDITY_WORKDAYS+' يوم عمل وما تم الاعتماد — الملف غير مفيد، يُنصح بمراجعته</div>'+
+          '<button class="btn-ghost btn-sm" style="margin-top:10px;color:#e74c3c;border-color:#e74c3c55" onclick="delClient('+c.id+')">🗑️ مسح ملف العميل</button></div>';
+      }else if(left<=5){
+        validityBanner='<div style="background:#f39c1215;border:1.5px solid #f39c1255;border-radius:12px;padding:12px;margin-bottom:14px;text-align:center">'+
+          '<div style="font-weight:800;color:#f39c12;font-size:14px">⚠️ باقي '+left+' أيام عمل على انتهاء صلاحية التسعيرة</div></div>';
+      }else{
+        validityBanner='<div style="background:#27ae6015;border:1.5px solid #27ae6055;border-radius:12px;padding:10px;margin-bottom:14px;text-align:center">'+
+          '<div style="font-weight:700;color:#27ae60;font-size:13px">✅ التسعيرة سارية — باقي '+left+' يوم عمل</div></div>';
+      }
+    }
+  }else if(p.approvedAt){
+    validityBanner='<div style="background:#27ae6015;border:1.5px solid #27ae6055;border-radius:12px;padding:10px;margin-bottom:14px;text-align:center">'+
+      '<div style="font-weight:800;color:#27ae60;font-size:13px">✅ تسعيرة معتمدة</div></div>';
+  }
   var rows='';
   rows+='<div class="doc-info-row"><span class="doc-label">📐 الأمتار</span><span class="doc-val">كامل: '+(p.fullMeters||0)+' / سفلي: '+(p.lowerMeters||0)+' / علوي: '+(p.upperMeters||0)+'</span></div>';
   rows+='<div class="doc-info-row"><span class="doc-label">📦 سعر الأمتار</span><span class="doc-val">'+(+(p.base||0)).toFixed(0)+' د.ك</span></div>';
@@ -4123,7 +4159,7 @@ function renderClientPricingTab(c){
     savedInfo='<div style="font-size:11px;color:var(--mt);text-align:left;margin-top:8px">حُفظت بواسطة '+pEsc(p.savedBy)+' • '+when+'</div>';
   }
 
-  return '<div class="doc-info-grid">'+rows+'</div>'+customDetail+
+  return validityBanner+'<div class="doc-info-grid">'+rows+'</div>'+customDetail+
     '<div style="background:linear-gradient(135deg,#0a2e22,#0a8f5c);border-radius:14px;padding:18px;text-align:center;margin-top:14px">'+
       '<div style="font-size:12px;color:rgba(255,255,255,.85)">💵 السعر النهائي</div>'+
       '<div style="font-size:30px;font-weight:900;color:#fff;margin-top:4px">'+(+p.finalPrice).toFixed(0)+' <span style="font-size:16px;color:#d4af37">د.ك</span></div>'+
@@ -4747,9 +4783,20 @@ function openForm(id){
   s('f-signed',c?.signed);s('f-contact',c?.contact);s('f-start',c?.start);s('f-delivery',c?.delivery);
   s('f-notes',c?.notes);
   document.getElementById('ov-form').classList.add('open');
+  // إظهار زر التسعير فقط عند تعديل عميل موجود
+  var pBtn=document.getElementById('form-pricing-btn');
+  if(pBtn)pBtn.style.display=editId?'inline-block':'none';
   if(editId)_initAutoSave();
 }
 function closeForm(e){if(e&&e.target!==document.getElementById('ov-form'))return;document.getElementById('ov-form').classList.remove('open')}
+
+// فتح نظام التسعير للعميل الجاري تعديله
+function pricingFromForm(){
+  if(!editId){toast('احفظ العميل أولاً','err');return;}
+  var cid=editId;
+  document.getElementById('ov-form').classList.remove('open');
+  if(typeof goToPricingForClient==='function')goToPricingForClient(cid);
+}
 async function saveClient(){
   const g=id=>(document.getElementById(id)?.value.trim()||'');
   if(!g('f-name')){toast('أدخل اسم العميل','err');return}
@@ -4933,6 +4980,85 @@ function pShowModal(title,bodyHtml){
 function pCloseModal(){
   var ov=document.getElementById('ov-pricing');
   if(ov)ov.classList.remove('open');
+}
+
+// ══════════════════════════════════════
+// ⏳ نظام صلاحية التسعيرة (20 يوم عمل)
+// ══════════════════════════════════════
+var QUOTE_VALIDITY_WORKDAYS=20; // أيام عمل (الجمعة عطلة)
+
+// حساب عدد أيام العمل المنقضية من تاريخ معين (نستثني الجمعة)
+function workdaysSince(dateStr){
+  if(!dateStr)return 0;
+  var start=new Date(dateStr);
+  if(isNaN(start.getTime()))return 0;
+  var now=new Date();
+  start.setHours(0,0,0,0);
+  var end=new Date(now); end.setHours(0,0,0,0);
+  if(end<start)return 0;
+  var count=0;
+  var d=new Date(start);
+  while(d<end){
+    d.setDate(d.getDate()+1);
+    if(d.getDay()!==5)count++; // 5 = الجمعة
+  }
+  return count;
+}
+
+// إضافة أيام عمل لتاريخ (لإيجاد تاريخ الانتهاء)
+function addWorkdays(dateStr,workdays){
+  var d=new Date(dateStr||Date.now());
+  var added=0;
+  while(added<workdays){
+    d.setDate(d.getDate()+1);
+    if(d.getDay()!==5)added++;
+  }
+  return d;
+}
+
+// فحص: هل العميل له تسعيرة منتهية الصلاحية؟
+function isQuoteExpired(c){
+  if(!c.pricing||!c.pricing.finalPrice)return false; // ما له تسعيرة
+  if(c.pricing.approvedAt||c.status==='منتهي'||c.stage)return false; // معتمد أو تقدّم
+  if(c.pricing.expiryHandled)return false; // عولج مسبقاً
+  var baseDate=c.createdAt||c.pricing.savedAt;
+  if(!baseDate)return false;
+  return workdaysSince(baseDate)>=QUOTE_VALIDITY_WORKDAYS;
+}
+
+// عدد أيام العمل المتبقية على انتهاء التسعيرة
+function quoteWorkdaysLeft(c){
+  var baseDate=c.createdAt||(c.pricing&&c.pricing.savedAt);
+  if(!baseDate)return null;
+  return Math.max(0,QUOTE_VALIDITY_WORKDAYS-workdaysSince(baseDate));
+}
+
+// فحص دوري لكل العملاء اللي لهم تسعيرة وإرسال تذكيرات
+var _quoteCheckDone={};
+async function checkExpiredQuotes(){
+  if(typeof sb==='undefined'||!sb)return;
+  if(!currentUser)return;
+  var expired=clients.filter(function(c){return isQuoteExpired(c)&&!_quoteCheckDone[c.id];});
+  for(var i=0;i<expired.length;i++){
+    var c=expired[i];
+    _quoteCheckDone[c.id]=true;
+    var seller=c.resp||c.pricing.savedBy||'';
+    var msg='⏳ العميل "'+c.name+'" (📞 '+(c.phone||'')+') صار له '+QUOTE_VALIDITY_WORKDAYS+' يوم عمل وما اعتمد التسعيرة. الملف غير مفيد — يُنصح بمراجعته ومسحه من النظام.';
+    // إشعار للبياع المسؤول
+    if(seller&&typeof dbInsertNotification==='function'){
+      await dbInsertNotification('🗑️ تسعيرة منتهية — راجع الملف',msg,'warning',seller,'النظام');
+    }
+    // إشعار للإدارة (للعلم)
+    if(typeof dbInsertNotification==='function'){
+      await dbInsertNotification('⏳ تسعيرة منتهية ('+c.name+')',msg,'warning','صالح الجاسم','النظام');
+    }
+    // نعلّم العميل إنه عولج (نحفظه)
+    c.pricing.expiryHandled=true;
+    if(typeof dbUpdateClient==='function')dbUpdateClient(c.id,c);
+  }
+  if(expired.length>0){
+    if(typeof refreshMyNotifs==='function')refreshMyNotifs();
+  }
 }
 
 var PRICING_CONFIG = {
