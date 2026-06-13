@@ -1347,27 +1347,27 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           <div style="display:flex;flex-direction:column;gap:8px;padding:10px;background:var(--bg2);border-radius:10px;border:1px solid var(--bd2)">
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-main" value="رئيسي" style="width:16px;height:16px;accent-color:var(--g)"> 🍳 رئيسي</label>
-              <input class="fi" id="fkt-main-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
+              <input class="fi" id="fkt-main-count" type="number" min="0" placeholder="العدد" style="width:75px" oninput="calcTotalCost()"><span style="font-size:12px;color:var(--mt)">عدد</span><input class="fi" id="fkt-main-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-dirty" value="ديرتي" style="width:16px;height:16px;accent-color:var(--am)"> 🧹 ديرتي</label>
-              <input class="fi" id="fkt-dirty-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
+              <input class="fi" id="fkt-dirty-count" type="number" min="0" placeholder="العدد" style="width:75px" oninput="calcTotalCost()"><span style="font-size:12px;color:var(--mt)">عدد</span><input class="fi" id="fkt-dirty-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-flat" value="شقة" style="width:16px;height:16px;accent-color:var(--accent)"> 🏠 شقة</label>
-              <input class="fi" id="fkt-flat-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
+              <input class="fi" id="fkt-flat-count" type="number" min="0" placeholder="العدد" style="width:75px" oninput="calcTotalCost()"><span style="font-size:12px;color:var(--mt)">عدد</span><input class="fi" id="fkt-flat-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-prep" value="تحضيري" style="width:16px;height:16px;accent-color:#a78bfa"> 🔪 تحضيري</label>
-              <input class="fi" id="fkt-prep-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
+              <input class="fi" id="fkt-prep-count" type="number" min="0" placeholder="العدد" style="width:75px" oninput="calcTotalCost()"><span style="font-size:12px;color:var(--mt)">عدد</span><input class="fi" id="fkt-prep-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
             <div style="display:flex;align-items:center;gap:10px">
               <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;font-weight:600;min-width:140px"><input type="checkbox" id="fkt-laundry" value="غرفة غسيل" style="width:16px;height:16px;accent-color:#06b6d4"> 👕 غرفة غسيل</label>
-              <input class="fi" id="fkt-laundry-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
+              <input class="fi" id="fkt-laundry-count" type="number" min="0" placeholder="العدد" style="width:75px" oninput="calcTotalCost()"><span style="font-size:12px;color:var(--mt)">عدد</span><input class="fi" id="fkt-laundry-meters" type="number" min="0" step="0.5" placeholder="الأمتار" style="width:90px" oninput="calcTotalCost()">
               <span style="font-size:12px;color:var(--mt)">متر</span>
             </div>
           </div>
@@ -4784,7 +4784,7 @@ function openForm(id){
   s('f-contract',c?.contract);s('f-collected',c?.collected);
   s('f-meter-price',c?.meterPrice||'');
   if(c?.meterPrice||c?.kitTypes?.length)setTimeout(calcTotalCost,100);
-  ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const kt=(c?.kitTypes||[]).find(k=>typeof k==='object'?k.type===el.value:k===el.value);el.checked=!!kt;const mEl=document.getElementById(id+'-meters');if(mEl)mEl.value=kt?.meters||'';});
+  ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const kt=(c?.kitTypes||[]).find(k=>typeof k==='object'?k.type===el.value:k===el.value);el.checked=!!kt;const mEl=document.getElementById(id+'-meters');if(mEl)mEl.value=kt?.meters||'';const cEl=document.getElementById(id+'-count');if(cEl)cEl.value=kt?.count||'';});
   s('f-kit-brown',c?.kitBrown||'');s('f-kit-brown-qty',c?.kitBrownQty||'');
   s('f-kit-yellow',c?.kitYellow||'');s('f-kit-yellow-qty',c?.kitYellowQty||'');
   s('f-kit-lgreen',c?.kitLgreen||'');s('f-kit-lgreen-qty',c?.kitLgreenQty||'');
@@ -4824,7 +4824,7 @@ async function saveClient(){
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
     pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
     meterPrice:+g('f-meter-price')||0,
-    kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>({type:document.getElementById(id).value,meters:+document.getElementById(id+'-meters')?.value||0})),
+    kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>({type:document.getElementById(id).value,meters:+document.getElementById(id+'-meters')?.value||0,count:+document.getElementById(id+'-count')?.value||0})),
     kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
     kitYellow:g('f-kit-yellow'),kitYellowQty:+g('f-kit-yellow-qty')||0,
     kitLgreen:g('f-kit-lgreen'),kitLgreenQty:+g('f-kit-lgreen-qty')||0,
