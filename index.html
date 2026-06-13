@@ -315,15 +315,20 @@ tbody tr:hover .ab{opacity:1}
 body.dark .modal{background:rgba(20,36,62,.96);border-color:rgba(120,180,255,.2);box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(120,180,255,.1) inset}
 .ov.open .modal{transform:translateY(0) scale(1);opacity:1}
 /* نموذج تعديل العميل — أوسع وأوضح */
-#ov-form .modal{max-width:920px}
-#ov-form .m-body{padding:8px 4px}
-#ov-form .fs{background:linear-gradient(135deg,rgba(10,143,92,.04),rgba(212,175,55,.02));border:1px solid var(--bd);border-radius:16px;padding:18px 20px;margin-bottom:16px}
-#ov-form .fs-t{font-size:15px;font-weight:900;color:var(--accent);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid rgba(10,143,92,.15);display:flex;align-items:center;gap:8px}
+#ov-form .modal{max-width:1140px}
+#ov-form .m-body{padding:10px 6px}
+#ov-form .fs{background:linear-gradient(135deg,rgba(10,143,92,.04),rgba(212,175,55,.02));border:1px solid var(--bd);border-radius:16px;padding:20px 24px;margin-bottom:18px}
+#ov-form .fs-t{font-size:16px;font-weight:900;color:var(--accent);margin-bottom:16px;padding-bottom:11px;border-bottom:2px solid rgba(10,143,92,.15);display:flex;align-items:center;gap:8px}
 #ov-form .fl{font-size:12.5px;font-weight:700;color:var(--mt);margin-bottom:5px}
-#ov-form .fi,#ov-form .fsl{font-size:14px;padding:11px 13px;border-radius:11px;transition:all .2s}
+#ov-form .fi,#ov-form .fsl{font-size:14px;padding:11px 13px;border-radius:11px;transition:all .2s;width:100%}
 #ov-form .fi:focus,#ov-form .fsl:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(10,143,92,.1)}
 #ov-form .fg{margin-bottom:4px}
-@media(max-width:900px){#ov-form .modal{max-width:96vw}}
+/* شبكة الحقول: 3 أعمدة على الشاشات الواسعة */
+#ov-form .fg2{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 18px}
+#ov-form .fg2 .full{grid-column:1/-1}
+#ov-form .fg2 .half{grid-column:span 2}
+@media(max-width:1000px){#ov-form .modal{max-width:96vw}#ov-form .fg2{grid-template-columns:repeat(2,1fr)}#ov-form .fg2 .half{grid-column:1/-1}}
+@media(max-width:600px){#ov-form .fg2{grid-template-columns:1fr}#ov-form .fg2 .full,#ov-form .fg2 .half{grid-column:1/-1}}
 .m-hdr{padding:20px 24px 16px;border-bottom:1px solid rgba(130,185,255,.22);display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px 18px 0 0;z-index:1}
 body.dark .m-hdr{background:rgba(20,36,62,.96);border-bottom-color:rgba(120,180,255,.15)}
 .m-title{font-family:var(--font-display);font-size:16px;font-weight:800;display:flex;align-items:center;gap:9px;color:var(--tx);letter-spacing:-.3px}
