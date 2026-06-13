@@ -1069,6 +1069,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     <div class="ni" id="nav-clients" onclick="go(&#39;clients&#39;)"><span class="ni-ico">👥</span> العملاء</div>
     <div class="nav-sec">المتابعة</div>
     <div class="ni" id="nav-alerts" onclick="go(&#39;alerts&#39;)"><span class="ni-ico">🔔</span> الإشعارات <span id="alert-badge" style="background: var(--re); color: rgb(255, 255, 255); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-right: auto; display: inline;">350</span></div>
+    <div class="ni" id="nav-mynotifs" onclick="renderMyNotifs()" style="color:#0a8f5c"><span class="ni-ico">📬</span> إشعاراتي <span id="my-notif-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
     <div class="ni" id="nav-editreqs" onclick="renderEditRequests()" style="color:var(--am)"><span class="ni-ico">📋</span> طلبات التعديل <span id="editreq-badge" style="background:var(--am);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
     <div class="ni" id="nav-adminnotifs" onclick="renderAdminNotifs()" style="color:var(--g)"><span class="ni-ico">📡</span> إشعارات الإدارة <span id="admin-notif-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
     <div class="ni" id="nav-seclog" onclick="viewSecurityLog()" style="color:var(--re)"><span class="ni-ico">🛡️</span> سجل الأمان</div>
@@ -1111,6 +1112,9 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
 
 <!-- PAGES -->
 <main class="main">
+  <button id="floating-notif-bell" onclick="renderMyNotifs()" style="position:fixed;top:16px;left:16px;z-index:900;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#0a8f5c,#0d7a50);border:none;cursor:pointer;box-shadow:0 6px 20px rgba(10,143,92,.4);display:flex;align-items:center;justify-content:center;font-size:20px;transition:all .25s" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" title="إشعاراتي">🔔
+    <span id="topbar-notif-badge" style="position:absolute;top:-4px;right:-4px;min-width:20px;height:20px;border-radius:10px;background:#e74c3c;color:#fff;font-size:11px;font-weight:900;display:none;align-items:center;justify-content:center;padding:0 5px;border:2px solid var(--bg,#fff)">0</span>
+  </button>
   <div id="pg-dashboard" style="display: block;">
   <div class="ph">
     <div>
@@ -2360,6 +2364,7 @@ function applyRoleVisibility(){
   if(secLogNav){secLogNav.style.display=currentUser.role==='super_admin'?'':'none';}
   updateEditReqBadge();
   updateAdminNotifBadge();
+  updateMyNotifBadge();
   if(typeof refreshPricingApprovalBadge==='function')refreshPricingApprovalBadge();
 }
 
@@ -2551,7 +2556,9 @@ function requireSalesOrAbove(action){
 
 // ── Admin Notification System ──
 let adminNotifications=[];
-adminNotifications=[];(async()=>{try{adminNotifications=await dbFetchNotifications();}catch(e){adminNotifications=[];}})();
+adminNotifications=[];(async()=>{try{adminNotifications=await dbFetchNotifications();updateMyNotifBadge();updateAdminNotifBadge();}catch(e){adminNotifications=[];}})();
+// تحديث دوري لشارة الإشعارات كل 60 ثانية
+setInterval(function(){if(currentUser&&typeof refreshMyNotifs==='function')refreshMyNotifs();},60000);
 function saveAdminNotifs(){/* saved via Supabase */}
 
 function notifyAdmins(action,byName,byRole){
@@ -2581,6 +2588,80 @@ function updateAdminNotifBadge(){
   const count=getUnreadNotifCount();
   if(count>0){badge.textContent=count;badge.style.display='inline';}
   else{badge.style.display='none';}
+}
+
+// ── إشعارات الموظف (الموجّهة له) ──
+function myNotifications(){
+  if(!currentUser)return [];
+  // الإدارة تشوف الكل، الموظف يشوف الموجّه له فقط
+  if(['super_admin','manager'].includes(currentUser.role))return adminNotifications;
+  return adminNotifications.filter(function(n){return n.target===currentUser.name;});
+}
+
+function getMyUnreadCount(){
+  return myNotifications().filter(function(n){return !n.read;}).length;
+}
+
+function updateMyNotifBadge(){
+  var badge=document.getElementById('my-notif-badge');
+  if(!badge)return;
+  var count=getMyUnreadCount();
+  if(count>0){badge.textContent=count;badge.style.display='inline';}
+  else{badge.style.display='none';}
+  // جرس التوب بار
+  var tb=document.getElementById('topbar-notif-badge');
+  if(tb){if(count>0){tb.textContent=count;tb.style.display='flex';}else{tb.style.display='none';}}
+}
+
+async function refreshMyNotifs(){
+  try{adminNotifications=await dbFetchNotifications();}catch(e){}
+  updateMyNotifBadge();
+  updateAdminNotifBadge();
+}
+
+function renderMyNotifs(){
+  // نجيب أحدث الإشعارات من القاعدة أول
+  if(typeof dbFetchNotifications==='function'){
+    dbFetchNotifications().then(function(data){
+      if(data)adminNotifications=data;
+      _doRenderMyNotifs();
+    }).catch(function(){_doRenderMyNotifs();});
+  }else{
+    _doRenderMyNotifs();
+  }
+}
+
+function _doRenderMyNotifs(){
+  var list=myNotifications();
+  var ov=document.getElementById('ov-mynotifs');
+  if(!ov){
+    ov=document.createElement('div');ov.className='ov';ov.id='ov-mynotifs';
+    ov.onclick=function(e){if(e.target===ov)ov.classList.remove('open');};
+    var m=document.createElement('div');m.className='modal';m.id='mod-mynotifs';m.style.maxWidth='560px';
+    ov.appendChild(m);document.body.appendChild(ov);
+  }
+  // تعليم الكل كمقروء
+  list.forEach(function(n){if(!n.read){n.read=true;if(n.id&&typeof dbMarkNotifRead==='function')dbMarkNotifRead(n.id);}});
+  updateMyNotifBadge();
+
+  var rows=list.length?list.map(function(n){
+    var color=n.type==='success'?'#27ae60':n.type==='error'?'#e74c3c':n.type==='warning'?'#f39c12':'#0f4c9f';
+    var icon=n.type==='success'?'✅':n.type==='error'?'❌':n.type==='warning'?'⚠️':'🔔';
+    var when='';try{when=new Date(n.date).toLocaleString('ar-KW',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){when=n.date||'';}
+    return '<div style="padding:14px;background:var(--sf,var(--card));border:1px solid var(--bd);border-right:4px solid '+color+';border-radius:12px;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
+        '<div style="font-weight:800;color:'+color+';font-size:14px">'+icon+' '+pEsc(n.title||n.action||'إشعار')+'</div>'+
+        '<span style="font-size:10px;color:var(--mt);white-space:nowrap">'+when+'</span></div>'+
+      (n.message?'<div style="font-size:13px;color:var(--tx);margin-top:6px;line-height:1.7">'+pEsc(n.message)+'</div>':'')+
+    '</div>';
+  }).join(''):'<div style="text-align:center;padding:40px;color:var(--mt)"><div style="font-size:44px;margin-bottom:10px;opacity:.4">📭</div>ما عندك إشعارات</div>';
+
+  document.getElementById('mod-mynotifs').innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'+
+    '<div style="font-weight:800;font-size:17px">📬 إشعاراتي</div>'+
+    '<button onclick="document.getElementById(\'ov-mynotifs\').classList.remove(\'open\')" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--mt)">×</button></div>'+
+    '<div style="max-height:65vh;overflow:auto">'+rows+'</div>';
+  ov.classList.add('open');
 }
 
 function renderAdminNotifs(){
