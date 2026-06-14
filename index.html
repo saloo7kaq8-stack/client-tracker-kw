@@ -9737,31 +9737,16 @@ function updateMicBtn(){
 // ── START ──
 initApp();
 
-// ═══ TIME-BASED THEME ENGINE ═══
+// ═══ TIME-BASED THEME ENGINE — مُلغى (النظام ثابت على الوضع الليلي) ═══
 (function(){
   function updateTimeTheme(){
-    const h=new Date().getHours();
-    const b=document.body;
-    b.classList.remove('time-morning','time-noon','time-sunset','dark');
+    // أُلغي التبديل التلقائي — نُبقي الوضع الليلي فقط
+    document.body.classList.remove('time-morning','time-noon','time-sunset','dark');
     const stars=document.getElementById('bg-stars');
-    if(h>=6 && h<12){
-      b.classList.add('time-morning');
-      if(stars)stars.style.opacity='0.25';
-    }else if(h>=12 && h<17){
-      b.classList.add('time-noon');
-      if(stars)stars.style.opacity='0.15';
-    }else if(h>=17 && h<20){
-      b.classList.add('time-sunset');
-      if(stars)stars.style.opacity='0.45';
-    }else{
-      if(stars)stars.style.opacity='0.6';
-    }
+    if(stars)stars.style.opacity='0.6';
   }
-  // Run on load and every 5 minutes
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateTimeTheme)}
   else{updateTimeTheme()}
-  setInterval(updateTimeTheme,300000);
-  // Expose for manual override
   window.updateTimeTheme=updateTimeTheme;
 })();
 
