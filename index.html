@@ -1086,7 +1086,11 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
         <div class="logo-divider"></div>
         <div class="logo-company">مطابخ العيسى • الكويت</div>
       </div>
-      <div id="theme-switcher" style="display:none"></div></div>
+      <div id="theme-switcher" style="display:flex;background:rgba(0,0,0,0.3);border:1px solid rgba(201,168,76,0.2);border-radius:10px;overflow:hidden;gap:0;margin-top:6px">
+        <button onclick="setThemeMode('morning')" id="btn-morning" title="وضع الصباح" style="background:transparent;border:none;padding:5px 9px;cursor:pointer;font-size:14px;transition:all 0.2s;border-radius:0">☀️</button>
+        <button onclick="setThemeMode('noon')" id="btn-noon" title="وضع ما بعد الظهر" style="background:transparent;border:none;padding:5px 9px;cursor:pointer;font-size:14px;transition:all 0.2s;border-left:1px solid rgba(201,168,76,0.2);border-right:1px solid rgba(201,168,76,0.2);border-radius:0">🌤️</button>
+        <button onclick="setThemeMode('night')" id="btn-night" title="الوضع الليلي" style="background:transparent;border:none;padding:5px 9px;cursor:pointer;font-size:14px;transition:all 0.2s;border-radius:0">🌙</button>
+      </div></div>
   </div>
   <nav class="nav">
     <div class="nav-sec">الرئيسية</div>
@@ -3407,21 +3411,54 @@ const THEME_MODES = {
 let currentThemeMode = 'night';
 
 function setThemeMode(mode){
-  // ثُبّت النظام على الوضع الليلي فقط
-  mode='night';
-  currentThemeMode='night';
-  const m=THEME_MODES.night;
+  if(!THEME_MODES[mode]) mode='night';
+  currentThemeMode = mode;
+  const m = THEME_MODES[mode];
+
+  // Remove all theme classes
   document.body.classList.remove('time-morning','time-noon','time-sunset','dark');
+  if(m.bodyClass) document.body.classList.add(m.bodyClass);
+
+  // Apply CSS vars
   Object.entries(m.vars).forEach(([k,v])=>{
     document.documentElement.style.setProperty(k,v);
   });
+
+  // تحديث حالة الزر النشط
+  ['morning','noon','night'].forEach(n=>{
+    const btn=document.getElementById('btn-'+n);
+    if(!btn)return;
+    if(n===mode){
+      btn.style.background='rgba(201,168,76,0.2)';
+      btn.style.filter='brightness(1.2)';
+    } else {
+      btn.style.background='transparent';
+      btn.style.filter='brightness(0.7)';
+    }
+  });
+
+  // حفظ التفضيل (يدوي)
+  try{localStorage.setItem('slkr_theme_mode',mode);}catch(e){}
+
+  // إعادة الرسم عند الحاجة
+  if(typeof curPg!=='undefined'){
+    if(curPg==='dashboard')setTimeout(()=>{if(typeof renderDash==='function')renderDash();},50);
+    else if(curPg==='reports')setTimeout(()=>{if(typeof renderReports==='function')renderReports();},50);
+  }
 }
 
-function toggleTheme(){ /* أُلغي تبديل الأوضاع */ }
+function toggleTheme(){
+  const modes=['night','morning','noon'];
+  const idx=modes.indexOf(currentThemeMode);
+  setThemeMode(modes[(idx+1)%modes.length]);
+}
 
 (function initTheme(){
-  document.addEventListener('DOMContentLoaded',()=>setThemeMode('night'));
-  if(document.readyState!=='loading') setThemeMode('night');
+  try{
+    const saved=localStorage.getItem('slkr_theme_mode')||'night';
+    document.addEventListener('DOMContentLoaded',()=>setThemeMode(saved));
+    if(document.readyState!=='loading') setThemeMode(saved);
+  }catch(e){ setThemeMode('night'); }
 })();
 
 // ── LOADING SCREEN ──
@@ -9737,17 +9774,10 @@ function updateMicBtn(){
 // ── START ──
 initApp();
 
-// ═══ TIME-BASED THEME ENGINE — مُلغى (النظام ثابت على الوضع الليلي) ═══
+// ═══ TIME-BASED THEME ENGINE — مُلغى تماماً (التبديل يدوي فقط عبر الأزرار) ═══
 (function(){
-  function updateTimeTheme(){
-    // أُلغي التبديل التلقائي — نُبقي الوضع الليلي فقط
-    document.body.classList.remove('time-morning','time-noon','time-sunset','dark');
-    const stars=document.getElementById('bg-stars');
-    if(stars)stars.style.opacity='0.6';
-  }
-  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',updateTimeTheme)}
-  else{updateTimeTheme()}
-  window.updateTimeTheme=updateTimeTheme;
+  // لا تبديل تلقائي — الوضع يتحكم فيه المستخدم يدوياً عبر أزرار الإضاءة
+  window.updateTimeTheme=function(){};
 })();
 
 // ══ عقد العيسى الاحترافي ══
