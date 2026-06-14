@@ -1446,7 +1446,16 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
         </div>
       </div>
     </div>
-    </div><div class="ftab-panel" data-ftab-panel="2" style="display:none"><div class="fs"><div class="fs-t">💵 جدول الدفعات التفصيلي</div>
+    </div><div class="ftab-panel" data-ftab-panel="2" style="display:none"><div class="fs"><div class="fs-t">💰 المعلومات المالية (بالدينار الكويتي)</div>
+      <div class="fg2">
+        <div class="fg"><div class="fl">حالة الدفع</div>
+          <select class="fsl" id="f-pay"><option>مدفوع</option><option>دفعة أولى</option><option>غير مدفوع</option><option>متأخر</option></select>
+        </div>
+        <div class="fg"><div class="fl">قيمة العقد الإجمالية (د.ك)</div><input class="fi" id="f-contract" placeholder="0.000" type="number" step="0.001" dir="ltr"></div>
+      </div>
+      <div style="font-size:11px;color:var(--mt);margin-top:6px">💡 المبلغ المحصّل يُحسب تلقائياً من جدول الدفعات أدناه</div>
+    </div>
+    <div class="fs"><div class="fs-t">💵 جدول الدفعات التفصيلي</div>
       <div id="payments-section">
         <div class="fg2" style="margin-bottom:8px">
           <div class="fg"><div class="fl">الدفعة الأولى (د.ك)</div><input class="fi" id="f-pay1-amt" type="number" step="0.001" placeholder="0.000" dir="ltr"></div>
@@ -1457,17 +1466,6 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
           <div class="fg"><div class="fl">📅 تاريخ دفعة التسليم</div><input class="fi" id="f-pay3-date" type="date"></div>
         </div>
       </div>
-    </div>
-    <div class="fs"><div class="fs-t">💰 المعلومات المالية (بالدينار الكويتي)</div>
-      <div class="fg2">
-        <div class="fg"><div class="fl">حالة الدفع</div>
-          <select class="fsl" id="f-pay"><option>مدفوع</option><option>دفعة أولى</option><option>غير مدفوع</option><option>متأخر</option></select>
-        </div>
-        <div class="fg"><div class="fl">قيمة العقد الإجمالية (د.ك)</div><input class="fi" id="f-contract" placeholder="0.000" type="number" step="0.001" dir="ltr"></div>
-
-      </div>
-
-      <div style="font-size:11px;color:var(--mt);margin-top:6px">💡 المبلغ المحصّل يُحسب تلقائياً من جدول الدفعات أعلاه</div>
     </div>
     </div><div class="ftab-panel" data-ftab-panel="3" style="display:none"><div class="fs"><div class="fs-t">📅 التواريخ</div>
       <div class="fg2">
@@ -4828,7 +4826,12 @@ function openForm(id){
   toggleMfgOrderBtn(c?.priority||'متوسطة');
   fillResp('f-resp',c?.resp);
   s('f-pay',c?.pay||'غير مدفوع');
-  s('f-contract',c?.contract);s('f-collected',c?.collected);
+  s('f-contract',c?.contract);
+  // تحميل الدفعات الثلاثة من مصفوفة payments
+  var _pmts=(c&&c.payments)||[];
+  s('f-pay1-amt',_pmts[0]?_pmts[0].amount:'');s('f-pay1-date',_pmts[0]?_pmts[0].date:'');
+  s('f-pay2-amt',_pmts[1]?_pmts[1].amount:'');s('f-pay2-date',_pmts[1]?_pmts[1].date:'');
+  s('f-pay3-amt',_pmts[2]?_pmts[2].amount:'');s('f-pay3-date',_pmts[2]?_pmts[2].date:'');
   s('f-meter-price',c?.meterPrice||'');
   if(c?.meterPrice||c?.kitTypes?.length)setTimeout(calcTotalCost,100);
   ['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const kt=(c?.kitTypes||[]).find(k=>typeof k==='object'?k.type===el.value:k===el.value);el.checked=!!kt;const mEl=document.getElementById(id+'-meters');if(mEl)mEl.value=kt?.meters||'';const cEl=document.getElementById(id+'-count');if(cEl)cEl.value=kt?.count||'';});
@@ -4880,7 +4883,7 @@ async function saveClient(){
     email:g('f-email'),whatsapp:g('f-whatsapp'),
     city:g('f-city'),area:g('f-area'),address:g('f-address'),lat:g('f-lat'),lng:g('f-lng'),
     status:g('f-status'),site:g('f-site'),stage:g('f-stage'),type:g('f-type'),priority:g('f-priority'),resp:g('f-resp'),
-    pay:g('f-pay'),contract:+g('f-contract')||0,collected:+g('f-collected')||0,
+    pay:g('f-pay'),contract:+g('f-contract')||0,
     meterPrice:+g('f-meter-price')||0,
     kitTypes:['fkt-main','fkt-dirty','fkt-flat','fkt-prep','fkt-laundry'].filter(id=>document.getElementById(id)?.checked).map(id=>({type:document.getElementById(id).value,meters:+document.getElementById(id+'-meters')?.value||0,count:+document.getElementById(id+'-count')?.value||0})),
     kitBrown:g('f-kit-brown'),kitBrownQty:+g('f-kit-brown-qty')||0,
