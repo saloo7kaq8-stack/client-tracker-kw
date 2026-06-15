@@ -4288,14 +4288,16 @@ function printClientQuote(id){
 }
 
 // قائمة كل الإضافات بالأسماء فقط (بدون أسعار) — للعرض في عرض السعر
-function _quoteAddonNames(c){
-  var p=c.pricing||{};
+function _quoteAddonNames(c,live){
+  // لو فيه بيانات حية (تسعيرة تحت الإنشاء) نقرأ منها، وإلا من المحفوظ
+  var p=live||c.pricing||{};
+  var _cl=c||null;
   var names=[];
   // الإضافات الثابتة
   if(p.addons&&typeof PRICING_ADDONS!=='undefined'){
     PRICING_ADDONS.forEach(function(a){
       var qty=+(p.addons[a.key])||0;
-      if(qty>0)names.push((a.icon?a.icon+' ':'')+a.label+(qty>1?' ×'+qty:''));
+      if(qty>0)names.push((a.icon?a.icon+' ':'')+addonLabel(a,_cl)+(qty>1?' ×'+qty:''));
     });
   }
   // البنود المخصصة
@@ -6486,7 +6488,7 @@ function printQuote(){
 
   '<div class="sec"><h2>ملخص المطبخ</h2><div class="info">'+
     (kitSummary?'<div style="grid-column:1/3"><b>الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
-    (_quoteAddonNames(c).length?'<div style="grid-column:1/3"><b>الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
+    (_quoteAddonNames(c,data).length?'<div style="grid-column:1/3"><b>الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c,data).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
   '</div></div>'+
 
   (res.discountPct>0?
@@ -6523,7 +6525,7 @@ function printQuote(){
 }
 
 // ── بناء HTML عرض السعر (مشترك للطباعة و PDF) ──
-function _buildQuoteHTML(c,res){
+function _buildQuoteHTML(c,res,liveData){
   var today=new Date();
   var expiry=new Date(today.getTime()+PRICING_CONFIG.quoteValidityDays*86400000);
   var fmt=function(d){return d.toLocaleDateString('ar-KW',{year:'numeric',month:'long',day:'numeric'});};
@@ -6544,7 +6546,7 @@ function _buildQuoteHTML(c,res){
     '<div style="margin-bottom:20px;position:relative;z-index:1"><h2 style="font-size:16px;color:#c9a84c;border-right:4px solid #c9a84c;padding-right:10px;margin-bottom:10px">ملخص المطبخ</h2>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
         (kitSummary?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الأنواع:</b> '+pEsc(kitSummary)+'</div>':'')+
-        (_quoteAddonNames(c).length?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
+        (_quoteAddonNames(c,liveData).length?'<div style="grid-column:1/3;padding:6px 0"><b style="color:#555">الإضافات والمحتويات:</b><br><span style="line-height:2">'+_quoteAddonNames(c,liveData).map(function(n){return pEsc(n);}).join(' • ')+'</span></div>':'')+
       '</div></div>'+
     (res.discountPct>0?'<div style="margin-bottom:20px;position:relative;z-index:1"><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:14px">'+
         '<div style="padding:6px 0"><b style="color:#555">السعر قبل الخصم:</b> '+res.standardPrice.toFixed(0)+' د.ك</div>'+
@@ -6572,7 +6574,7 @@ function _getQuoteContext(){
   if(!c){toast('⚠️ العميل غير موجود','err');return null;}
   var data=_readPricingInputs();
   var res=calcPricing(data);
-  return {c:c,res:res};
+  return {c:c,res:res,data:data};
 }
 
 // ── حفظ عرض السعر PDF ──
@@ -6586,7 +6588,7 @@ function downloadQuotePDF(){
   toast('📄 جاري إنشاء ملف PDF...','ok');
   var wrap=document.createElement('div');
   wrap.style.cssText='font-family:Tajawal,sans-serif;direction:rtl';
-  wrap.innerHTML=_buildQuoteHTML(ctx.c,ctx.res);
+  wrap.innerHTML=_buildQuoteHTML(ctx.c,ctx.res,ctx.data);
   document.body.appendChild(wrap);
   var fname='عرض_سعر_'+(ctx.c.name||'عميل').replace(/[^\u0600-\u06FF a-zA-Z0-9]/g,'_')+'.pdf';
   var opt={margin:[5,5,5,5],filename:fname,image:{type:'jpeg',quality:0.98},
@@ -6605,7 +6607,7 @@ function downloadQuotePDF(){
 function sendQuoteWhatsapp(){
   var ctx=_getQuoteContext();
   if(!ctx)return;
-  var c=ctx.c, res=ctx.res;
+  var c=ctx.c, res=ctx.res, _liveData=ctx.data;
   var phone=(c.whatsapp||c.phone||'').replace(/[^0-9]/g,'');
   if(!phone){toast('⚠️ ما فيه رقم هاتف لهذا العميل','err');return;}
   // إضافة كود الكويت لو ما كان موجود
@@ -6616,7 +6618,7 @@ function sendQuoteWhatsapp(){
   var msg='🍳 *مطابخ العيسى*\n\n'+
     'عزيزنا '+c.name+' 🌟\n'+
     'يسعدنا تقديم عرض السعر لمطبخكم:\n\n'+
-    (_quoteAddonNames(c).length?'📋 المحتويات:\n'+_quoteAddonNames(c).map(function(n){return '• '+n;}).join('\n')+'\n\n':'')+
+    (_quoteAddonNames(c,_liveData).length?'📋 المحتويات:\n'+_quoteAddonNames(c,_liveData).map(function(n){return '• '+n;}).join('\n')+'\n\n':'')+
     (res.discountPct>0?'🏷️ خصم خاص: '+res.discountPct+'%\n':'')+
     '━━━━━━━━━━━━━\n'+
     '💵 *السعر النهائي: '+res.finalPrice.toFixed(0)+' د.ك*\n'+
