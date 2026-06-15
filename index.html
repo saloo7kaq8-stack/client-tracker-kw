@@ -4189,7 +4189,7 @@ function renderClientPricingTab(c){
   if(p.addons&&typeof PRICING_ADDONS!=='undefined'){
     PRICING_ADDONS.forEach(function(a){
       var qty=+(p.addons[a.key])||0;
-      if(qty>0)fixedItems.push({label:a.label,icon:a.icon,qty:qty,price:PRICING_CONFIG[a.cfgKey],unitTxt:'حبة'});
+      if(qty>0)fixedItems.push({label:addonLabel(a,c),icon:a.icon,qty:qty,price:addonPrice(a,c),unitTxt:(a.unit||'حبة')});
     });
   }
   var customItems=(p.customAddons||[]).filter(function(x){return (x.qty||0)>0;}).map(function(x){return {label:x.label,icon:'✨',qty:x.qty,price:x.price,unitTxt:(x.unit==='متر'?'م':'حبة')};});
@@ -5307,7 +5307,7 @@ var PRICING_ADDONS=[
   {key:'spicesBasket',label:'سلة بهارات',cfgKey:'spicesBasketPrice',icon:'🧂'},
   {key:'magicBasket',label:'سلة ماجيك',cfgKey:'magicBasketPrice',icon:'✨'},
   {key:'greenBasketSet',label:'طقم سلال خضر',cfgKey:'greenBasketSetPrice',icon:'🥬'},
-  {key:'extraHeight',label:'متر ارتفاع زائد',cfgKey:'extraHeightPerMeter',icon:'📏'}
+  {key:'extraHeight',label:'متر ارتفاع زائد',cfgKey:'extraHeightPerMeter',icon:'📏',unit:'متر'}
 ];
 
 // حساب السعر الأساسي + الإضافات
@@ -5464,7 +5464,7 @@ function renderPricingCalcTab(){
     return '<div class="lux-addon">'+
       '<div class="lux-addon-ico">'+a.icon+'</div>'+
       '<div style="flex:1"><div style="font-weight:800;font-size:14px">'+pEsc(lbl)+(isCustom?' <span style="font-size:9px;color:var(--lux-emerald,#0a8f5c);font-weight:700">★ مخصص</span>':'')+'</div>'+
-      '<div style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:800">'+prc+' \u062f.\u0643 / \u062d\u0628\u0629</div></div>'+
+      '<div style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:800">'+prc+' \u062f.\u0643 / '+(a.unit||'حبة')+'</div></div>'+
       '<button onclick="editAddon(\''+a.key+'\')" title="تعديل السعر والاسم" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">\u270f\ufe0f</button>'+
       '<input type="number" min="0" id="addon-'+a.key+'" value="0" oninput="recalcPricingUI()" class="lux-addon-qty">'+
       '</div>';
@@ -6250,7 +6250,7 @@ function editAddon(key){
     '<div style="display:grid;gap:12px">'+
       '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">اسم الإضافة</label>'+
         '<input type="text" id="ea-label" value="'+pEsc(curLabel)+'" class="lux-input"></div>'+
-      '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">السعر (د.ك / حبة)</label>'+
+      '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">السعر (د.ك / '+(a.unit||'حبة')+')</label>'+
         '<input type="number" min="0" step="0.5" id="ea-price" value="'+curPrice+'" class="lux-input"></div>'+
       '<div style="border:1.5px solid var(--bd);border-radius:12px;padding:14px">'+
         '<div style="font-weight:800;font-size:13px;margin-bottom:4px">🌐 تعديل عام (لكل العملاء)</div>'+
