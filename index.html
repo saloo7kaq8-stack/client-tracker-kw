@@ -1094,6 +1094,16 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   </div>
   <nav class="nav">
     <div class="nav-sec">الرئيسية</div>
+    <div style="padding:0 8px 10px">
+      <div style="position:relative">
+        <input type="text" id="sidebar-quick-search" placeholder="🔍 ابحث بالاسم أو الهاتف..." autocomplete="off"
+          oninput="sidebarQuickSearch(this.value)" onkeydown="sidebarSearchKeydown(event)"
+          style="width:100%;padding:10px 12px;border-radius:12px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);font-size:13px;font-weight:600;outline:none;transition:all .2s"
+          onfocus="this.style.borderColor='var(--accent)';this.style.boxShadow='0 0 0 3px rgba(10,143,92,.12)'"
+          onblur="this.style.borderColor='var(--bd)';this.style.boxShadow='none';setTimeout(function(){var r=document.getElementById('sidebar-search-results');if(r)r.style.display='none';},200)">
+        <div id="sidebar-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:500;background:var(--card);border:1.5px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);max-height:340px;overflow-y:auto"></div>
+      </div>
+    </div>
     <div class="ni on" id="nav-dashboard" onclick="go(&#39;dashboard&#39;)"><span class="ni-ico">📊</span> لوحة التحكم</div>
     <div class="ni" id="nav-clients" onclick="go(&#39;clients&#39;)"><span class="ni-ico">👥</span> العملاء</div>
     <div class="nav-sec">المتابعة</div>
@@ -4353,6 +4363,107 @@ function printQuoteFromData(c,p){
   '</body></html>';
   w.document.write(html);w.document.close();
   logSecurityEvent('quote','طباعة عرض سعر من ملف العميل — '+c.name);
+}
+
+// ═══ البحث السريع من السايدبار (بالاسم/الهاتف/المنطقة/رقم العقد) ═══
+var _sidebarSearchSel=-1;
+var _sidebarSearchResults=[];
+
+// تطبيع النص العربي (همزات + تطبيع المسافات)
+function _arNorm(s){
+  return (s||'').toString()
+    .replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه')
+    .replace(/[ًٌٍَُِّْ]/g,'').replace(/\s+/g,' ').trim().toLowerCase();
+}
+// تطبيع رقم الهاتف (نشيل كل شي غير رقم + نشيل كود الكويت 965)
+function _phNorm(s){
+  var d=(s||'').toString().replace(/[^0-9]/g,'');
+  if(d.length===11 && d.indexOf('965')===0)d=d.slice(3);
+  return d;
+}
+
+function sidebarQuickSearch(q){
+  var box=document.getElementById('sidebar-search-results');
+  if(!box)return;
+  q=(q||'').trim();
+  if(!q){box.style.display='none';box.innerHTML='';_sidebarSearchResults=[];return;}
+
+  var qn=_arNorm(q);
+  var qd=_phNorm(q); // لو المستخدم كاتب أرقام
+  var isNum=/^[0-9\s+]+$/.test(q);
+
+  var matches=clients.filter(function(c){
+    // بحث بالهاتف (الأساسي + البديل + واتساب)
+    if(qd && isNum){
+      var phones=[_phNorm(c.phone),_phNorm(c.phone2),_phNorm(c.whatsapp)];
+      if(phones.some(function(p){return p && p.indexOf(qd)!==-1;}))return true;
+    }
+    // بحث بالاسم
+    if(_arNorm(c.name).indexOf(qn)!==-1)return true;
+    // بحث بالمنطقة
+    if(_arNorm(c.area||c.city).indexOf(qn)!==-1)return true;
+    // بحث برقم العقد
+    if(c.contractNo && _arNorm(c.contractNo).indexOf(qn)!==-1)return true;
+    return false;
+  }).slice(0,8);
+
+  _sidebarSearchResults=matches;
+  _sidebarSearchSel=-1;
+
+  if(!matches.length){
+    box.innerHTML='<div style="padding:16px;text-align:center;color:var(--mt);font-size:12px">لا يوجد عميل مطابق</div>';
+    box.style.display='block';
+    return;
+  }
+
+  box.innerHTML=matches.map(function(c,i){
+    var statusColor=c.status==='متأخر'?'#e74c3c':c.status==='جاهز للتنفيذ'?'#27ae60':'#f39c12';
+    return '<div class="sb-search-item" data-idx="'+i+'" onclick="openSidebarSearchResult('+c.id+')" '+
+      'style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--bd);transition:background .15s" '+
+      'onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'transparent\'">'+
+      '<div style="width:34px;height:34px;border-radius:9px;background:'+statusColor+'22;color:'+statusColor+';display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0">'+(c.name||'؟').charAt(0)+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-weight:700;font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+_hl(c.name||'',q)+'</div>'+
+        '<div style="font-size:11px;color:var(--mt);display:flex;gap:8px"><span>📞 '+(c.phone||'—')+'</span>'+(c.area||c.city?'<span>📍 '+(c.area||c.city)+'</span>':'')+'</div>'+
+      '</div>'+
+      '<span style="font-size:9px;color:'+statusColor+';font-weight:700;white-space:nowrap">'+(c.status||'')+'</span>'+
+    '</div>';
+  }).join('');
+  box.style.display='block';
+}
+
+// تظليل جزء المطابقة (اسم)
+function _hl(text,q){
+  if(!q)return text;
+  var qn=_arNorm(q), tn=_arNorm(text);
+  var idx=tn.indexOf(qn);
+  if(idx===-1)return text;
+  return text.slice(0,idx)+'<mark style="background:rgba(212,175,55,.4);color:inherit;border-radius:3px;padding:0 1px">'+text.slice(idx,idx+q.length)+'</mark>'+text.slice(idx+q.length);
+}
+
+function openSidebarSearchResult(id){
+  var box=document.getElementById('sidebar-search-results');
+  var inp=document.getElementById('sidebar-quick-search');
+  if(box)box.style.display='none';
+  if(inp)inp.value='';
+  viewClient(id);
+}
+
+function sidebarSearchKeydown(e){
+  var box=document.getElementById('sidebar-search-results');
+  if(!box||box.style.display==='none'||!_sidebarSearchResults.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();_sidebarSearchSel=Math.min(_sidebarSearchSel+1,_sidebarSearchResults.length-1);_updateSidebarSel();}
+  else if(e.key==='ArrowUp'){e.preventDefault();_sidebarSearchSel=Math.max(_sidebarSearchSel-1,0);_updateSidebarSel();}
+  else if(e.key==='Enter'){e.preventDefault();var sel=_sidebarSearchSel>=0?_sidebarSearchSel:0;if(_sidebarSearchResults[sel])openSidebarSearchResult(_sidebarSearchResults[sel].id);}
+  else if(e.key==='Escape'){box.style.display='none';e.target.blur();}
+}
+
+function _updateSidebarSel(){
+  var items=document.querySelectorAll('.sb-search-item');
+  items.forEach(function(it,i){
+    it.style.background=(i===_sidebarSearchSel)?'var(--accent)22':'transparent';
+  });
+  if(items[_sidebarSearchSel])items[_sidebarSearchSel].scrollIntoView({block:'nearest'});
 }
 
 function viewClient(id){
