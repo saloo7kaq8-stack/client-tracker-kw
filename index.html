@@ -4495,18 +4495,18 @@ function renderProfile(id){
     <div class="prof-section" style="margin-top:20px">
       <div class="prof-section-title">📁 مستندات ومرفقات العميل</div>
       <div class="doc-tabs" id="doc-tabs-${c.id}">
-        <button class="doc-tab active" onclick="switchDocTab(${c.id},'contract',this)">📋 العقد</button>
+        <button class="doc-tab active" onclick="switchDocTab(${c.id},'pricing',this)">💲 التسعيرة</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'contract',this)">📋 العقد</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'approval',this)">✅ الاعتماد</button>
-        <button class="doc-tab" onclick="switchDocTab(${c.id},'mfg',this)">🏭 أمر التصنيع</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'design',this)">📐 الرسومات</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'mfg',this)">🏭 أمر التصنيع</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'followup',this)">📞 المتابعة</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'calendar',this)">📅 الكالندر</button>
-        <button class="doc-tab" onclick="switchDocTab(${c.id},'pricing',this)">💲 التسعيرة</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'files',this)">📁 المستندات</button>
       </div>
 
       <!-- العقد -->
-      <div class="doc-tab-content active" id="doctab-${c.id}-contract">
+      <div class="doc-tab-content" id="doctab-${c.id}-contract">
         <div class="doc-tab-inner">
           <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
             <button class="btn-ghost btn-sm" onclick="printContract(${c.id})" style="color:var(--g);border-color:var(--gbd)">🖨️ طباعة العقد</button>
@@ -4587,7 +4587,7 @@ function renderProfile(id){
       </div>
 
       <!-- التسعيرة -->
-      <div class="doc-tab-content" id="doctab-${c.id}-pricing">
+      <div class="doc-tab-content active" id="doctab-${c.id}-pricing">
         <div class="doc-tab-inner">
           ${renderClientPricingTab(c)}
         </div>
