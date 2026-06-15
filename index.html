@@ -5398,7 +5398,7 @@ function classifyDiscount(pct,base){
   pct=+pct||0;
   var tierMax=maxDiscountForMeters(base);
   if(pct<=tierMax)return {level:'free',color:'#27ae60',icon:'✅',label:'مسموح تلقائياً (ضمن شريحة '+tierMax+'%)',needsApproval:false,tierMax:tierMax};
-  if(pct<=30)return {level:'approval',color:'#f39c12',icon:'⚠️',label:'يتجاوز شريحة '+tierMax+'% — يحتاج موافقة الإدارة',needsApproval:true,tierMax:tierMax};
+  if(pct<=21)return {level:'approval',color:'#f39c12',icon:'⚠️',label:'يتجاوز شريحة '+tierMax+'% — يحتاج موافقة الإدارة',needsApproval:true,tierMax:tierMax};
   return {level:'rejected',color:'#e74c3c',icon:'❌',label:'مرفوض — تواصل مع الإدارة',needsApproval:false,rejected:true,tierMax:tierMax};
 }
 
