@@ -5362,10 +5362,10 @@ function calcPricing(data){
   });
   var standardPrice=base+addonsTotal+customTotal+sinksTotal+accTotal;
   var discountPct=+data.discountPct||0;
-  // الخصم ينطبق فقط على (الأمتار + الإضافات الثابتة) — البنود المخصصة والمغاسل والإكسسوارات معفاة
-  var discountableBase=base+addonsTotal;
+  // الخصم ينطبق على الأمتار فقط — الإضافات والبنود والمغاسل والإكسسوارات معفاة
+  var discountableBase=base;
   var discountAmount=discountableBase*(discountPct/100);
-  var finalPrice=(discountableBase-discountAmount)+customTotal+sinksTotal+accTotal;
+  var finalPrice=(discountableBase-discountAmount)+addonsTotal+customTotal+sinksTotal+accTotal;
   return {
     base:base, addonsTotal:addonsTotal, addonsBreakdown:addonsBreakdown,
     customTotal:customTotal, customBreakdown:customBreakdown,
@@ -5379,11 +5379,22 @@ function calcPricing(data){
 }
 
 // تصنيف الخصم
-function classifyDiscount(pct){
-  var c=PRICING_CONFIG;
-  if(pct<=c.freeDiscountMax)return {level:'free',color:'#27ae60',icon:'✅',label:'مسموح تلقائياً',needsApproval:false};
-  if(pct<=c.approvalDiscountMax)return {level:'approval',color:'#f39c12',icon:'⚠️',label:'يحتاج موافقة صالح',needsApproval:true};
-  return {level:'rejected',color:'#e74c3c',icon:'❌',label:'مرفوض — تواصل مع الإدارة',needsApproval:false,rejected:true};
+// الحد الأقصى للخصم التلقائي حسب شريحة سعر الأمتار
+function maxDiscountForMeters(base){
+  base=+base||0;
+  if(base<700)return 0;          // أقل من 700 = لا خصم
+  if(base<=1000)return 10;       // 700–1000 = 10%
+  if(base<=2000)return 15;       // 1001–2000 = 15%
+  return 20;                     // أكثر من 2000 = حتى 20%
+}
+
+// تصنيف الخصم: ضمن الشريحة = تلقائي | فوقها لين 20% أو 30% = موافقة | فوق ذلك = مرفوض
+function classifyDiscount(pct,base){
+  pct=+pct||0;
+  var tierMax=maxDiscountForMeters(base);
+  if(pct<=tierMax)return {level:'free',color:'#27ae60',icon:'✅',label:'مسموح تلقائياً (ضمن شريحة '+tierMax+'%)',needsApproval:false,tierMax:tierMax};
+  if(pct<=30)return {level:'approval',color:'#f39c12',icon:'⚠️',label:'يتجاوز شريحة '+tierMax+'% — يحتاج موافقة الإدارة',needsApproval:true,tierMax:tierMax};
+  return {level:'rejected',color:'#e74c3c',icon:'❌',label:'مرفوض — تواصل مع الإدارة',needsApproval:false,rejected:true,tierMax:tierMax};
 }
 
 function isPricingAdmin(){
@@ -5625,7 +5636,7 @@ function recalcPricingUI(){
     (accRows?'<div style="padding:8px 0;border-bottom:1px solid var(--bd)">'+accRows+'</div>':'')+
     '<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:16px"><span style="font-weight:800">السعر القياسي</span><span style="font-weight:800;color:var(--accent)">'+res.standardPrice.toFixed(0)+' د.ك</span></div>';
 
-  var cls=classifyDiscount(res.discountPct);
+  var cls=classifyDiscount(res.discountPct,res.base);
   var statusEl=document.getElementById('discount-status');
   if(statusEl){
     statusEl.style.background=cls.color+'22';
@@ -5636,8 +5647,9 @@ function recalcPricingUI(){
 
   var finalEl=document.getElementById('pricing-final');
   if(finalEl){
-    var customNote=(res.customTotal>0||res.sinksTotal>0||res.accTotal>0)?
-      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">✨ بنود + مغاسل + إكسسوارات <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+(res.customTotal+res.sinksTotal+res.accTotal).toFixed(0)+' د.ك</span></div>':'';
+    var _exemptTotal=(res.addonsTotal||0)+(res.customTotal||0)+(res.sinksTotal||0)+(res.accTotal||0);
+    var customNote=(_exemptTotal>0)?
+      '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">➕ الإضافات والبنود <span style="font-size:10px;color:var(--lux-gold,#d4af37)">(بدون خصم)</span></span><span style="font-weight:700;color:var(--lux-gold,#d4af37)">+ '+_exemptTotal.toFixed(0)+' د.ك</span></div>':'';
     finalEl.innerHTML=''+
       '<div style="display:flex;justify-content:space-between;padding:5px 0;font-size:13px"><span style="color:var(--mt)">قيمة الخصم ('+res.discountPct+'%)</span><span style="font-weight:700;color:#e74c3c">- '+res.discountAmount.toFixed(0)+' د.ك</span></div>'+
       customNote+
@@ -5902,7 +5914,7 @@ function savePricingToClient(){
   if(!c){toast('⚠️ العميل غير موجود','err');return;}
   var data=_readPricingInputs();
   var res=calcPricing(data);
-  var cls=classifyDiscount(res.discountPct);
+  var cls=classifyDiscount(res.discountPct,res.base);
 
   if(cls.rejected&&!isPricingAdmin()){
     toast('❌ الخصم أكثر من '+PRICING_CONFIG.approvalDiscountMax+'% — تواصل مع الإدارة','err');
