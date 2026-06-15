@@ -5266,8 +5266,26 @@ var PRICING_CONFIG = {
   freeDiscountMax: 20,        // 0-20% تلقائي
   approvalDiscountMax: 30,    // 20-30% يحتاج موافقة
   quoteValidityDays: 7,       // مدة صلاحية عرض السعر
-  approvalWhatsapp: '96555844888'  // رقم واتساب صالح لطلبات الموافقة
+  approvalWhatsapp: '96555844888',  // رقم واتساب صالح لطلبات الموافقة
+  // أسماء الإضافات (قابلة للتعديل الدائم)
+  longCabinetLabel:'كبت طويل', fullCornerLabel:'زاوية كاملة', drawerLabel:'درج عادي',
+  glassDrawerLabel:'دراج جام', fixBasketLabel:'سلة فكس', spicesBasketLabel:'سلة بهارات',
+  magicBasketLabel:'سلة ماجيك', greenBasketSetLabel:'طقم سلال خضر', extraHeightLabel:'متر ارتفاع زائد'
 };
+
+// اسم الإضافة: تخصيص العميل > الإعدادات > الافتراضي
+function addonLabel(a,client){
+  if(client&&client.pricing&&client.pricing.addonOverrides&&client.pricing.addonOverrides[a.key]&&client.pricing.addonOverrides[a.key].label)
+    return client.pricing.addonOverrides[a.key].label;
+  var cfgLabel=PRICING_CONFIG[a.key+'Label'];
+  return cfgLabel||a.label;
+}
+// سعر الإضافة: تخصيص العميل > الإعدادات
+function addonPrice(a,client){
+  if(client&&client.pricing&&client.pricing.addonOverrides&&client.pricing.addonOverrides[a.key]&&client.pricing.addonOverrides[a.key].price!=null)
+    return +client.pricing.addonOverrides[a.key].price;
+  return +PRICING_CONFIG[a.cfgKey]||0;
+}
 
 // تحميل الإعدادات المحفوظة (يقدر صالح يعدلها)
 try{
@@ -5298,12 +5316,13 @@ function calcPricing(data){
   var fullM=+data.fullMeters||0, lowM=+data.lowerMeters||0, upM=+data.upperMeters||0;
   var base=(fullM*c.baseMeterPrice)+(lowM*c.lowerMeterPrice)+(upM*c.upperMeterPrice);
   var addonsTotal=0, addonsBreakdown=[];
+  var _client=data.client||null;
   PRICING_ADDONS.forEach(function(a){
     var qty=+(data.addons&&data.addons[a.key])||0;
     if(qty>0){
-      var price=c[a.cfgKey], sub=qty*price;
+      var price=addonPrice(a,_client), sub=qty*price;
       addonsTotal+=sub;
-      addonsBreakdown.push({key:a.key,label:a.label,icon:a.icon,qty:qty,price:price,sub:sub});
+      addonsBreakdown.push({key:a.key,label:addonLabel(a,_client),icon:a.icon,qty:qty,price:price,sub:sub});
     }
   });
   // البنود المخصصة (رخام/كورين...)
@@ -5438,11 +5457,15 @@ function switchPricingTab(tab){
 
 function renderPricingCalcTab(){
   var clientOpts=clients.map(function(c){return '<option value="'+c.id+'">'+pEsc(c.name)+(c.area?' \u2014 '+pEsc(c.area):'')+'</option>';}).join('');
+  var _curClient=clients.find(function(x){return x.id===_pricingState.clientId;})||null;
   var addonsHtml=PRICING_ADDONS.map(function(a){
+    var lbl=addonLabel(a,_curClient), prc=addonPrice(a,_curClient);
+    var isCustom=_curClient&&_curClient.pricing&&_curClient.pricing.addonOverrides&&_curClient.pricing.addonOverrides[a.key];
     return '<div class="lux-addon">'+
       '<div class="lux-addon-ico">'+a.icon+'</div>'+
-      '<div style="flex:1"><div style="font-weight:800;font-size:14px">'+a.label+'</div>'+
-      '<div style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:800">'+PRICING_CONFIG[a.cfgKey]+' \u062f.\u0643 / \u062d\u0628\u0629</div></div>'+
+      '<div style="flex:1"><div style="font-weight:800;font-size:14px">'+pEsc(lbl)+(isCustom?' <span style="font-size:9px;color:var(--lux-emerald,#0a8f5c);font-weight:700">★ مخصص</span>':'')+'</div>'+
+      '<div style="font-size:11px;color:var(--lux-gold,#d4af37);font-weight:800">'+prc+' \u062f.\u0643 / \u062d\u0628\u0629</div></div>'+
+      '<button onclick="editAddon(\''+a.key+'\')" title="تعديل السعر والاسم" style="background:none;border:none;cursor:pointer;font-size:15px;padding:4px;opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6">\u270f\ufe0f</button>'+
       '<input type="number" min="0" id="addon-'+a.key+'" value="0" oninput="recalcPricingUI()" class="lux-addon-qty">'+
       '</div>';
   }).join('');
@@ -5564,6 +5587,7 @@ function _readPricingInputs(){
     customAddons:_customAddons,
     sinks:_sinks,
     accessories:_accessories,
+    client:clients.find(function(x){return x.id===_pricingState.clientId;})||null,
     discountPct:+(document.getElementById('p-discount-num')||{}).value||0
   };
 }
@@ -5890,11 +5914,13 @@ function savePricingToClient(){
   }
 
   // حفظ مباشر
+  var _prevOverrides=(c.pricing&&c.pricing.addonOverrides)||{};
   c.pricing={
     fullMeters:res.fullMeters,lowerMeters:res.lowerMeters,upperMeters:res.upperMeters,
     addons:data.addons,customAddons:_customAddons,sinks:_sinks,accessories:_accessories,discountPct:res.discountPct,
     base:res.base,addonsTotal:res.addonsTotal,customTotal:res.customTotal,sinksTotal:res.sinksTotal,accTotal:res.accTotal,
     standardPrice:res.standardPrice,finalPrice:res.finalPrice,
+    addonOverrides:_prevOverrides,
     savedBy:currentUser?currentUser.name:'',savedAt:new Date().toISOString()
   };
   dbUpdateClient(c.id,c).then(function(ok){
@@ -6199,6 +6225,109 @@ function printApproval(id){
 }
 
 // ── إعدادات الأسعار (لصالح وعيسى) ──
+// ── تعديل سعر/اسم الإضافة (دائم أو لعميل) ──
+function editAddon(key){
+  var a=PRICING_ADDONS.find(function(x){return x.key===key;});
+  if(!a)return;
+  var client=clients.find(function(x){return x.id===_pricingState.clientId;})||null;
+  var curLabel=addonLabel(a,client), curPrice=addonPrice(a,client);
+  var hasClient=!!client;
+  var isAdmin=isPricingAdmin();
+
+  var clientSection=hasClient?
+    '<div style="border:1.5px solid var(--lux-emerald,#0a8f5c)55;border-radius:12px;padding:14px;margin-top:12px;background:#0a8f5c0d">'+
+      '<div style="font-weight:800;color:var(--lux-emerald,#0a8f5c);font-size:13px;margin-bottom:4px">★ تخصيص لـ '+pEsc(client.name)+' فقط</div>'+
+      '<div style="font-size:11px;color:var(--mt);margin-bottom:10px">يطبّق على هذا العميل فقط بدون التأثير على الباقي</div>'+
+      '<button class="lux-btn lux-btn-primary" style="width:100%" onclick="saveAddonEdit(\''+key+'\',\'client\')">★ خصّص لهذا العميل</button>'+
+      (client.pricing&&client.pricing.addonOverrides&&client.pricing.addonOverrides[key]?
+        '<button class="lux-btn lux-btn-ghost" style="width:100%;margin-top:6px;color:#e74c3c" onclick="removeAddonOverride(\''+key+'\')">🗑️ إزالة التخصيص (رجوع للسعر العام)</button>':'')+
+    '</div>':
+    '<div style="font-size:11px;color:var(--mt);margin-top:10px;text-align:center">💡 اختر عميلاً أولاً لتخصيص سعر خاص له</div>';
+
+  var permLabel=isAdmin?'💾 حفظ دائم (لكل العملاء)':'📤 إرسال طلب تعديل دائم للإدارة';
+
+  pShowModal('✏️ تعديل: '+pEsc(a.label),
+    '<div style="display:grid;gap:12px">'+
+      '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">اسم الإضافة</label>'+
+        '<input type="text" id="ea-label" value="'+pEsc(curLabel)+'" class="lux-input"></div>'+
+      '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">السعر (د.ك / حبة)</label>'+
+        '<input type="number" min="0" step="0.5" id="ea-price" value="'+curPrice+'" class="lux-input"></div>'+
+      '<div style="border:1.5px solid var(--bd);border-radius:12px;padding:14px">'+
+        '<div style="font-weight:800;font-size:13px;margin-bottom:4px">🌐 تعديل عام (لكل العملاء)</div>'+
+        '<div style="font-size:11px;color:var(--mt);margin-bottom:10px">'+(isAdmin?'يطبّق فوراً على جميع التسعيرات الجديدة':'يحتاج موافقة الإدارة قبل التطبيق')+'</div>'+
+        '<button class="lux-btn lux-btn-gold" style="width:100%" onclick="saveAddonEdit(\''+key+'\',\'global\')">'+permLabel+'</button>'+
+      '</div>'+
+      clientSection+
+    '</div>');
+}
+
+function saveAddonEdit(key,scope){
+  var a=PRICING_ADDONS.find(function(x){return x.key===key;});
+  if(!a)return;
+  var newLabel=(document.getElementById('ea-label')||{}).value||'';
+  var newPrice=+(document.getElementById('ea-price')||{}).value||0;
+  newLabel=newLabel.trim();
+  if(!newLabel){toast('⚠️ اكتب اسم الإضافة','err');return;}
+  if(newPrice<0){toast('⚠️ السعر غير صحيح','err');return;}
+
+  if(scope==='client'){
+    // تخصيص لعميل
+    var client=clients.find(function(x){return x.id===_pricingState.clientId;});
+    if(!client){toast('⚠️ اختر عميلاً','err');return;}
+    if(!client.pricing)client.pricing={};
+    if(!client.pricing.addonOverrides)client.pricing.addonOverrides={};
+    client.pricing.addonOverrides[key]={label:newLabel,price:newPrice};
+    if(typeof dbUpdateClient==='function')dbUpdateClient(client.id,client);
+    pCloseModal();
+    toast('★ خُصّص لـ '+client.name,'ok');
+    renderPricingPage();
+  }else{
+    // تعديل دائم
+    var changes=[];
+    if(newLabel!==(PRICING_CONFIG[key+'Label']||a.label))changes.push('الاسم: '+newLabel);
+    if(newPrice!==(+PRICING_CONFIG[a.cfgKey]))changes.push('السعر: '+PRICING_CONFIG[a.cfgKey]+' ← '+newPrice);
+    if(!changes.length){toast('ℹ️ ما فيه تغيير','err');return;}
+
+    if(isPricingAdmin()){
+      PRICING_CONFIG[key+'Label']=newLabel;
+      PRICING_CONFIG[a.cfgKey]=newPrice;
+      a.label=newLabel; // تحديث فوري
+      savePricingConfig();
+      logSecurityEvent('pricing_config','تعديل إضافة '+a.label+': '+changes.join('، '));
+      pCloseModal();
+      toast('✅ حُفظ التعديل الدائم','ok');
+      renderPricingPage();
+    }else{
+      // طلب موافقة للبياع
+      if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
+      var newConfig=Object.assign({},PRICING_CONFIG);
+      newConfig[key+'Label']=newLabel; newConfig[a.cfgKey]=newPrice;
+      sb.from('pricing_config_requests').insert([{
+        requested_by:currentUser?currentUser.name:'', old_config:PRICING_CONFIG, new_config:newConfig,
+        changes_summary:'إضافة "'+a.label+'" — '+changes.join('، '), status:'pending'
+      }]).then(function(r){
+        if(r.error){toast('⚠️ خطأ بالإرسال','err');return;}
+        if(typeof dbInsertNotification==='function'){
+          dbInsertNotification('⚙️ طلب تعديل إضافة',(currentUser?currentUser.name:'موظف')+' يطلب تعديل "'+a.label+'": '+changes.join('، '),'warning','صالح الجاسم',currentUser?currentUser.name:'');
+        }
+        pCloseModal();
+        toast('📤 أُرسل طلب التعديل للإدارة','ok');
+        if(typeof refreshPricingApprovalBadge==='function')refreshPricingApprovalBadge();
+      });
+    }
+  }
+}
+
+function removeAddonOverride(key){
+  var client=clients.find(function(x){return x.id===_pricingState.clientId;});
+  if(!client||!client.pricing||!client.pricing.addonOverrides)return;
+  delete client.pricing.addonOverrides[key];
+  if(typeof dbUpdateClient==='function')dbUpdateClient(client.id,client);
+  pCloseModal();
+  toast('🗑️ أُزيل التخصيص','ok');
+  renderPricingPage();
+}
+
 function openPricingConfig(){
   var fields=[
     ['baseMeterPrice','متر كامل'],['lowerMeterPrice','متر سفلي'],['upperMeterPrice','متر علوي'],
