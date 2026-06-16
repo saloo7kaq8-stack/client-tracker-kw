@@ -4381,8 +4381,7 @@ function printQuoteFromData(c,p){
     '• القياس النهائي بعد اكتمال الأرضيات والبياض والتمديدات.<br>• تأخر جاهزية الموقع مسؤولية العميل.</div></div>'+
   '<div class="ft">© '+today.getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>تم الإصدار بواسطة: '+pEsc(currentUser?currentUser.name:'النظام')+'</div>'+
   '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-  '</body>
-</html>';
+  '</body></html>';
   w.document.write(html);w.document.close();
   logSecurityEvent('quote','طباعة عرض سعر من ملف العميل — '+c.name);
 }
@@ -6251,8 +6250,7 @@ function printApproval(id){
       '<div class="ft">© '+new Date().getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>هذه الوثيقة معتمدة إلكترونياً عبر نظام SLKR — مرجع: '+refNo+'</div>'+
     '</div>'+
     '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-    '</body>
-</html>';
+    '</body></html>';
     w.document.write(html);
     w.document.close();
     logSecurityEvent('print','طباعة شهادة موافقة خصم — '+cname);
@@ -6551,8 +6549,7 @@ function printQuote(){
   '<div class="ft">© '+today.getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>تم الإصدار بواسطة: '+pEsc(currentUser?currentUser.name:'النظام')+'</div>'+
 
   '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-  '</body>
-</html>';
+  '</body></html>';
   w.document.write(html);
   w.document.close();
   logSecurityEvent('quote','طباعة عرض سعر لـ '+c.name+' — '+res.finalPrice.toFixed(0)+' د.ك');
@@ -8794,14 +8791,11 @@ function removeApprFile(clientId,category,index){
 function previewApprFile(data,name,type){
   var w=window.open('','_blank','width=900,height=700');
   if(type&&type.startsWith('image')){
-    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title><style>body{margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}</style></head><body><img src="'+data+'"></body>
-</html>');
+    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title><style>body{margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}</style></head><body><img src="'+data+'"></body></html>');
   } else if(type==='application/pdf'){
-    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title></head><body style="margin:0"><iframe src="'+data+'" style="width:100%;height:100vh;border:none"></iframe></body>
-</html>');
+    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title></head><body style="margin:0"><iframe src="'+data+'" style="width:100%;height:100vh;border:none"></iframe></body></html>');
   } else {
-    w.document.write('<!DOCTYPE html><html dir="rtl"><head><title>'+name+'</title><style>body{font-family:Tahoma;padding:40px;text-align:center;background:#f5f7fa}a{display:inline-block;margin-top:20px;padding:12px 30px;background:#0f4c9f;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}</style></head><body><h2>📄 '+name+'</h2><p>هذا النوع من الملفات لا يمكن عرضه مباشرة</p><a href="'+data+'" download="'+name+'">⬇️ تحميل الملف</a></body>
-</html>');
+    w.document.write('<!DOCTYPE html><html dir="rtl"><head><title>'+name+'</title><style>body{font-family:Tahoma;padding:40px;text-align:center;background:#f5f7fa}a{display:inline-block;margin-top:20px;padding:12px 30px;background:#0f4c9f;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}</style></head><body><h2>📄 '+name+'</h2><p>هذا النوع من الملفات لا يمكن عرضه مباشرة</p><a href="'+data+'" download="'+name+'">⬇️ تحميل الملف</a></body></html>');
   }
   w.document.close();
 }
@@ -8935,8 +8929,7 @@ function printAppr(id){
 '<div class="notes">'+(a.notes||'')+'</div>'+
 '<div class="ft"><div>مسؤول المبيعات: <b>'+(sg.sales||'..............................')+'</b></div><div>توقيع العميل: <b>'+(sg.client||'..............................')+'</b></div></div>'+
 '<div style="text-align:center;margin-top:12px"><button onclick="window.print()" style="padding:7px 28px;background:#1a7a3a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px">🖨️ طباعة</button></div>'+
-'</div></body>
-</html>');w.document.close();
+'</div></body></html>');w.document.close();
   addAuditLog('print','🖨️ طباعة نموذج اعتماد: '+c.name+' بواسطة '+(currentUser?.name||'—'));
 }
 
@@ -9568,8 +9561,7 @@ function printEndOfDay(){
     rows+='<tr><td>'+name+'</td><td>'+u.title+'</td><td style="text-align:center">'+count+'</td></tr>';
   });
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير نهاية اليوم</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:30px;font-size:13px;direction:rtl;color:#333}h1{text-align:center;color:#0f4c9f;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{padding:7px 10px;border:1px solid #ddd;text-align:right;font-size:12px}th{background:#f0f6ff}.sub{text-align:center;color:#666;margin-bottom:18px}@media print{button{display:none!important}}</style></head><body><h1>📊 تقرير نهاية اليوم</h1><div class="sub">'+new Date().toLocaleDateString('ar-KW',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' — SLKR Follow Up System</div><table><tr><th>الموظف</th><th>الدور</th><th>عدد العمليات</th></tr>'+rows+'</table><div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:8px 24px;background:#0f4c9f;color:#fff;border:none;border-radius:6px;cursor:pointer">🖨️ طباعة</button></div></body>
-</html>');
+  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير نهاية اليوم</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:30px;font-size:13px;direction:rtl;color:#333}h1{text-align:center;color:#0f4c9f;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{padding:7px 10px;border:1px solid #ddd;text-align:right;font-size:12px}th{background:#f0f6ff}.sub{text-align:center;color:#666;margin-bottom:18px}@media print{button{display:none!important}}</style></head><body><h1>📊 تقرير نهاية اليوم</h1><div class="sub">'+new Date().toLocaleDateString('ar-KW',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' — SLKR Follow Up System</div><table><tr><th>الموظف</th><th>الدور</th><th>عدد العمليات</th></tr>'+rows+'</table><div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:8px 24px;background:#0f4c9f;color:#fff;border:none;border-radius:6px;cursor:pointer">🖨️ طباعة</button></div></body></html>');
   w.document.close();
 }
 
