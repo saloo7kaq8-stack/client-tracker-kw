@@ -2447,8 +2447,8 @@ function csGoToLogin(){
 function csInitLoginButtons(){
   var container=document.getElementById('cs-login-users');
   if(!container||container.children.length>0)return;
-  var roleColors={'super_admin':'rgba(212,168,83,.2)','manager':'rgba(52,152,219,.2)','factory_manager':'rgba(155,89,182,.2)','data_entry':'rgba(127,140,141,.2)','sales':'rgba(46,204,113,.2)'};
-  var roleBorders={'super_admin':'rgba(212,168,83,.3)','manager':'rgba(52,152,219,.3)','factory_manager':'rgba(155,89,182,.3)','data_entry':'rgba(127,140,141,.3)','sales':'rgba(46,204,113,.3)'};
+  var roleColors={'super_admin':'rgba(212,168,83,.2)','manager':'rgba(52,152,219,.2)','factory_manager':'rgba(155,89,182,.2)','data_entry':'rgba(127,140,141,.2)','sales':'rgba(46,204,113,.2)','measurer':'rgba(230,126,34,.2)'};
+  var roleBorders={'super_admin':'rgba(212,168,83,.3)','manager':'rgba(52,152,219,.3)','factory_manager':'rgba(155,89,182,.3)','data_entry':'rgba(127,140,141,.3)','sales':'rgba(46,204,113,.3)','measurer':'rgba(230,126,34,.3)'};
   Object.entries(USERS).forEach(function(entry){
     var name=entry[0],u=entry[1];
     var btn=document.createElement('button');
