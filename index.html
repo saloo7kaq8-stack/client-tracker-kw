@@ -1106,6 +1106,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     </div>
     <div class="ni on" id="nav-dashboard" onclick="go(&#39;dashboard&#39;)"><span class="ni-ico">📊</span> لوحة التحكم</div>
     <div class="ni" id="nav-clients" onclick="go(&#39;clients&#39;)"><span class="ni-ico">👥</span> العملاء</div>
+    <div class="ni" id="nav-measurements" onclick="go(&#39;measurements&#39;)"><span class="ni-ico">📐</span> القياسات</div>
     <div class="nav-sec">المتابعة</div>
     <div class="ni" id="nav-alerts" onclick="go(&#39;alerts&#39;)"><span class="ni-ico">🔔</span> الإشعارات <span id="alert-badge" style="background: var(--re); color: rgb(255, 255, 255); border-radius: 10px; padding: 1px 6px; font-size: 10px; font-weight: 700; margin-right: auto; display: inline;">350</span></div>
     <div class="ni" id="nav-mynotifs" onclick="renderMyNotifs()" style="color:#0a8f5c"><span class="ni-ico">📬</span> إشعاراتي <span id="my-notif-badge" style="background:var(--re);color:#fff;border-radius:10px;padding:1px 6px;font-size:10px;font-weight:700;margin-right:auto;display:none">0</span></div>
@@ -1262,6 +1263,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     </div>
   </div></div>
   <div id="pg-clients" style="display:none"></div>
+  <div id="pg-measurements" style="display:none"></div>
   <div id="pg-daily" style="display:none"></div>
   <div id="pg-reports" style="display:none"></div>
   <div id="pg-accounting" style="display:none"></div>
@@ -2163,7 +2165,7 @@ ${mats.length>0?`<div class="section"><div class="section-title">📦 قائمة
 <tr style="background:#fff3f3"><td colspan="4" style="font-weight:700">الإجمالي</td><td style="text-align:center;font-weight:700;color:#0a8f5c">${mats.reduce((s,mt)=>s+(mt.total||0),0).toFixed(3)} د.ك</td></tr>
 </tbody></table></div></div>`:''}
 <div class="signatures"><div class="sig-box"><div class="sig-line"></div><div class="sig-label">مسؤول التصنيع</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">مراقبة الجودة</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">نائب المدير</div></div></div>
-</div><div style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:10px 30px;background:linear-gradient(135deg,#c0392b,#962d22);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة</button></div></body><!-- redeploy 1781171986.8956382 --><!-- rebuild -->
+</div><div style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:10px 30px;background:linear-gradient(135deg,#c0392b,#962d22);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة</button></div></body><!-- redeploy 1781171986.8956382 -->
 </html>`);w.document.close();
 }
 
@@ -2260,7 +2262,7 @@ table{width:100%;border-collapse:collapse;margin-top:16px}th,td{padding:10px 14p
 <div style="text-align:center"><div style="border-bottom:2px solid #333;height:50px;margin-bottom:6px"></div><div style="font-size:12px;font-weight:700">العميل</div></div>
 <div style="text-align:center"><div style="border-bottom:2px solid #333;height:50px;margin-bottom:6px"></div><div style="font-size:12px;font-weight:700">نائب المدير</div></div></div>
 <div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:10px 30px;background:#0f4c9f;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة</button></div>
-</body><!-- rebuild -->
+</body>
 </html>`);w.document.close();
 }
 
@@ -2321,7 +2323,7 @@ h1{font-family:'Cairo',serif;font-size:28px;color:#b8860b;text-align:center;font
 <div class="signatures"><div class="sig-box"><div class="sig-line"></div><div class="sig-label">${c.name}</div><div style="font-size:10px;color:#888">العميل</div></div>
 <div class="sig-box"><div class="sig-line"></div><div class="sig-label">شركة المطابخ والتجهيزات</div><div style="font-size:10px;color:#888">ختم وتوقيع</div></div></div>
 <div style="text-align:center;margin-top:30px;font-size:10px;color:#999">SLKR — Follow Up System | تم إصدار هذه الشهادة إلكترونياً بتاريخ ${today()}</div>
-</div><div style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:10px 30px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة شهادة الضمان</button></div></body><!-- rebuild -->
+</div><div style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:10px 30px;background:linear-gradient(135deg,#b8860b,#8b6508);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة شهادة الضمان</button></div></body>
 </html>`);w.document.close();
 }
 
@@ -2336,15 +2338,15 @@ const PHASE_MAX_DAYS={1:3,2:7,3:3,4:30,5:14,6:7,7:3,8:28,9:5,10:5,11:5,12:3};
 const USERS={
   'صالح الجاسم':{id:'002',pin:'5678',role:'super_admin',title:'نائب المدير العام',avatar:'ص',
     permissions:{clients:{view:true,add:true,edit:true,delete:true},payments:{view:true,add:true,edit:true,delete:true},contracts:{view:true,print:true,amend:true},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:true},passwords:{view:true,change:true},reports:{view:true,export:true},settings:{view:true,edit:true}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'عيسى العيسى':{id:'001',pin:'1234',role:'manager',title:'المدير العام',avatar:'ع',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:true,add:false,edit:false,delete:false},contracts:{view:true,print:true,amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:true,create:false,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:false},passwords:{view:false,change:false},reports:{view:true,export:true},settings:{view:true,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'بشار دياب عيسى':{id:'K100',pin:'1100',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
     permissions:{clients:{view:true,add:false,edit:false,delete:false,requestEdit:true},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,upload:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:false,profitreport:false,materialcost:true}
+    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
   },
   'حاتم':{id:'K103',pin:'0000',role:'data_entry',title:'إدخال بيانات',avatar:'ح',
     permissions:{clients:{view:true,add:true,edit:true,delete:false},payments:{view:true,add:true,edit:false,delete:false},contracts:{view:true,print:false,amend:false},materials:{view:true,add:true,edit:false},manufacturing:{view:true,create:false,approve:false},invoices:{view:true,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
@@ -2352,11 +2354,23 @@ const USERS={
   },
   'محمود':{id:'K102',pin:'1020',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
   'محمد':{id:'K101',pin:'1010',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
+  },
+  'عامل قياس 1':{id:'M201',pin:'2001',role:'measurer',title:'فني قياسات',avatar:'📐',
+    permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+  },
+  'عامل قياس 2':{id:'M202',pin:'2002',role:'measurer',title:'فني قياسات',avatar:'📐',
+    permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+  },
+  'عامل قياس 3':{id:'M203',pin:'2003',role:'measurer',title:'فني قياسات',avatar:'📐',
+    permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   }
 };
 var currentUser=null;
@@ -3094,7 +3108,7 @@ ${data.notes?`<div class="section"><div class="section-title">📝 ملاحظا�
 <div class="signatures"><div class="sig-box"><div class="sig-line"></div><div class="sig-label">الفني</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">العميل</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">نائب المدير</div></div></div>
 </div>
 <div style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:10px 30px;background:linear-gradient(135deg,#1260cc,#0a4aaa);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:Tajawal">🖨️ طباعة</button></div>
-</body><!-- rebuild -->
+</body>
 </html>`);w.document.close();
 }
 
@@ -3545,7 +3559,7 @@ function go(name){
     return;
   }
   curPg=name;
-  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports','pricing','profitreport'].forEach(p=>{
+  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports','pricing','profitreport','measurements'].forEach(p=>{
     const el=document.getElementById('pg-'+p);
     if(el) el.style.display=p===name?'block':'none';
     const nav=document.getElementById('nav-'+p);
@@ -3576,6 +3590,7 @@ function go(name){
     else if(name==='cutting')renderCutting();
     else if(name==='factory')renderFactory();
     else if(name==='factoryreports')renderFactoryReports();
+    else if(name==='measurements')renderMeasurements();
     else if(name==='profile'){}// rendered by viewClient
   }catch(e){
     console.error('Render error on page '+name+':',e);
@@ -4366,7 +4381,7 @@ function printQuoteFromData(c,p){
     '• القياس النهائي بعد اكتمال الأرضيات والبياض والتمديدات.<br>• تأخر جاهزية الموقع مسؤولية العميل.</div></div>'+
   '<div class="ft">© '+today.getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>تم الإصدار بواسطة: '+pEsc(currentUser?currentUser.name:'النظام')+'</div>'+
   '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-  '</body><!-- rebuild -->
+  '</body>
 </html>';
   w.document.write(html);w.document.close();
   logSecurityEvent('quote','طباعة عرض سعر من ملف العميل — '+c.name);
@@ -6236,7 +6251,7 @@ function printApproval(id){
       '<div class="ft">© '+new Date().getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>هذه الوثيقة معتمدة إلكترونياً عبر نظام SLKR — مرجع: '+refNo+'</div>'+
     '</div>'+
     '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-    '</body><!-- rebuild -->
+    '</body>
 </html>';
     w.document.write(html);
     w.document.close();
@@ -6536,7 +6551,7 @@ function printQuote(){
   '<div class="ft">© '+today.getFullYear()+' مطابخ العيسى — جميع الحقوق محفوظة<br>تم الإصدار بواسطة: '+pEsc(currentUser?currentUser.name:'النظام')+'</div>'+
 
   '<div class="no-print" style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:12px 30px;background:#0a8f5c;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer">🖨️ طباعة</button></div>'+
-  '</body><!-- rebuild -->
+  '</body>
 </html>';
   w.document.write(html);
   w.document.close();
@@ -7027,7 +7042,7 @@ function printAccountingReport(){
         }).join('')}
       </tbody>
     </table>
-  </body><!-- rebuild -->
+  </body>
 </html>`);
   w.document.close();
   w.print();
@@ -7305,7 +7320,7 @@ function printMfgOrder(clientId){
     شركة مطابخ العيسى للمطابخ المصنّعة · الكويت · رقم الأمر: ${orderNo} · © ${new Date().getFullYear()} جميع الحقوق محفوظة
   </div>
 </div>
-</body><!-- rebuild -->
+</body>
 </html>`);
   w.document.close();
 }
@@ -8349,7 +8364,7 @@ td{color:#1a1a1a;font-weight:500}
 </div>
 
 <div class="no-print" style="text-align:center;padding:20px"><button onclick="window.print()" style="padding:12px 36px;background:linear-gradient(135deg,#0f4c9f,#083a7f);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;box-shadow:0 6px 20px rgba(15,76,159,.3)">🖨️ طباعة العقد</button></div>
-</body><!-- rebuild -->
+</body>
 </html>`);w.document.close();
 }
 
@@ -8779,13 +8794,13 @@ function removeApprFile(clientId,category,index){
 function previewApprFile(data,name,type){
   var w=window.open('','_blank','width=900,height=700');
   if(type&&type.startsWith('image')){
-    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title><style>body{margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}</style></head><body><img src="'+data+'"></body><!-- rebuild -->
+    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title><style>body{margin:0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;min-height:100vh}img{max-width:95vw;max-height:95vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.5)}</style></head><body><img src="'+data+'"></body>
 </html>');
   } else if(type==='application/pdf'){
-    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title></head><body style="margin:0"><iframe src="'+data+'" style="width:100%;height:100vh;border:none"></iframe></body><!-- rebuild -->
+    w.document.write('<!DOCTYPE html><html><head><title>'+name+'</title></head><body style="margin:0"><iframe src="'+data+'" style="width:100%;height:100vh;border:none"></iframe></body>
 </html>');
   } else {
-    w.document.write('<!DOCTYPE html><html dir="rtl"><head><title>'+name+'</title><style>body{font-family:Tahoma;padding:40px;text-align:center;background:#f5f7fa}a{display:inline-block;margin-top:20px;padding:12px 30px;background:#0f4c9f;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}</style></head><body><h2>📄 '+name+'</h2><p>هذا النوع من الملفات لا يمكن عرضه مباشرة</p><a href="'+data+'" download="'+name+'">⬇️ تحميل الملف</a></body><!-- rebuild -->
+    w.document.write('<!DOCTYPE html><html dir="rtl"><head><title>'+name+'</title><style>body{font-family:Tahoma;padding:40px;text-align:center;background:#f5f7fa}a{display:inline-block;margin-top:20px;padding:12px 30px;background:#0f4c9f;color:#fff;border-radius:8px;text-decoration:none;font-weight:700}</style></head><body><h2>📄 '+name+'</h2><p>هذا النوع من الملفات لا يمكن عرضه مباشرة</p><a href="'+data+'" download="'+name+'">⬇️ تحميل الملف</a></body>
 </html>');
   }
   w.document.close();
@@ -8920,7 +8935,7 @@ function printAppr(id){
 '<div class="notes">'+(a.notes||'')+'</div>'+
 '<div class="ft"><div>مسؤول المبيعات: <b>'+(sg.sales||'..............................')+'</b></div><div>توقيع العميل: <b>'+(sg.client||'..............................')+'</b></div></div>'+
 '<div style="text-align:center;margin-top:12px"><button onclick="window.print()" style="padding:7px 28px;background:#1a7a3a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px">🖨️ طباعة</button></div>'+
-'</div></body><!-- rebuild -->
+'</div></body>
 </html>');w.document.close();
   addAuditLog('print','🖨️ طباعة نموذج اعتماد: '+c.name+' بواسطة '+(currentUser?.name||'—'));
 }
@@ -8958,7 +8973,7 @@ function printMfg(id){
 <div class="section"><div class="section-title">📐 المقاسات</div><table>${a.measurements.map((m,i)=>'<tr><th>مقاس '+(i+1)+'</th><td>'+m+'</td></tr>').join('')||'<tr><td colspan="2">—</td></tr>'}</table></div>
 <div class="section"><div class="section-title">📦 المواد</div>${mats.length>0?'<table><thead><tr><th>المادة</th><th>الكمية</th><th>الوحدة</th></tr></thead><tbody>'+mats.map(m=>'<tr><td>'+m.name+'</td><td style="text-align:center">'+m.qty+'</td><td style="text-align:center">'+m.unit+'</td></tr>').join('')+'</tbody></table>':'<p style="color:#999">لم تُخصص مواد</p>'}</div>
 <div class="signatures"><div class="sig-box"><div class="sig-line"></div><div class="sig-label">مسؤول التصنيع</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">الجودة</div></div><div class="sig-box"><div class="sig-line"></div><div class="sig-label">المدير</div></div></div>
-<div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:8px 24px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨️ طباعة</button></div></body><!-- rebuild -->
+<div style="text-align:center;margin-top:20px"><button onclick="window.print()" style="padding:8px 24px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer">🖨️ طباعة</button></div></body>
 </html>`);w.document.close();
 }
 
@@ -9553,7 +9568,7 @@ function printEndOfDay(){
     rows+='<tr><td>'+name+'</td><td>'+u.title+'</td><td style="text-align:center">'+count+'</td></tr>';
   });
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير نهاية اليوم</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:30px;font-size:13px;direction:rtl;color:#333}h1{text-align:center;color:#0f4c9f;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{padding:7px 10px;border:1px solid #ddd;text-align:right;font-size:12px}th{background:#f0f6ff}.sub{text-align:center;color:#666;margin-bottom:18px}@media print{button{display:none!important}}</style></head><body><h1>📊 تقرير نهاية اليوم</h1><div class="sub">'+new Date().toLocaleDateString('ar-KW',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' — SLKR Follow Up System</div><table><tr><th>الموظف</th><th>الدور</th><th>عدد العمليات</th></tr>'+rows+'</table><div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:8px 24px;background:#0f4c9f;color:#fff;border:none;border-radius:6px;cursor:pointer">🖨️ طباعة</button></div></body><!-- rebuild -->
+  w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>تقرير نهاية اليوم</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Tahoma,Arial,sans-serif;padding:30px;font-size:13px;direction:rtl;color:#333}h1{text-align:center;color:#0f4c9f;margin-bottom:6px}table{width:100%;border-collapse:collapse;margin:18px 0}th,td{padding:7px 10px;border:1px solid #ddd;text-align:right;font-size:12px}th{background:#f0f6ff}.sub{text-align:center;color:#666;margin-bottom:18px}@media print{button{display:none!important}}</style></head><body><h1>📊 تقرير نهاية اليوم</h1><div class="sub">'+new Date().toLocaleDateString('ar-KW',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' — SLKR Follow Up System</div><table><tr><th>الموظف</th><th>الدور</th><th>عدد العمليات</th></tr>'+rows+'</table><div style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:8px 24px;background:#0f4c9f;color:#fff;border:none;border-radius:6px;cursor:pointer">🖨️ طباعة</button></div></body>
 </html>');
   w.document.close();
 }
@@ -10741,6 +10756,314 @@ function renderFactoryReports(){
   frRender();
 }
 
+
+// ═══════════════════════════════════════════════
+// 📐 صفحة القياسات — SLKR Measurements
+// ═══════════════════════════════════════════════
+var _measState={clientId:null};
+
+// هل المستخدم الحالي إداري (يقدر يدير موظفي القياس)؟
+function isMeasAdmin(){
+  return currentUser && (currentUser.role==='super_admin'||currentUser.role==='manager');
+}
+// هل هو عامل قياس؟
+function isMeasurer(){
+  return currentUser && currentUser.role==='measurer';
+}
+
+// قائمة موظفي القياس (من USERS + إضافات مخزّنة)
+function getMeasurers(){
+  var list=[];
+  Object.keys(USERS).forEach(function(name){
+    if(USERS[name].role==='measurer')list.push(name);
+  });
+  // أسماء إضافية يضيفها المدير (localStorage)
+  try{
+    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
+    extra.forEach(function(n){if(list.indexOf(n)===-1)list.push(n);});
+  }catch(e){}
+  return list;
+}
+
+function renderMeasurements(){
+  var el=document.getElementById('pg-measurements');
+  if(!el)return;
+  var adminBtns=isMeasAdmin()?
+    '<button class="btn-p" onclick="openMeasurersManager()" style="white-space:nowrap">👷 إدارة موظفي القياس</button>':'';
+
+  el.innerHTML=
+    '<div class="ph"><div><div class="ph-t">📐 القياسات</div>'+
+      '<div class="ph-s">تسجيل قياسات المواقع — مطابخ العيسى</div></div>'+
+      adminBtns+'</div>'+
+    // مربع البحث
+    '<div class="card" style="margin-bottom:16px">'+
+      '<div style="font-weight:800;margin-bottom:10px;font-size:14px">🔍 ابحث عن العميل</div>'+
+      '<div style="position:relative">'+
+        '<input type="text" id="meas-search" placeholder="اكتب اسم العميل أو رقم الهاتف..." autocomplete="off" '+
+          'oninput="measSearch(this.value)" '+
+          'style="width:100%;padding:13px 16px;border-radius:12px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx);font-size:14px;font-weight:600;outline:none">'+
+        '<div id="meas-search-results" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;background:var(--card);border:1.5px solid var(--bd);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.18);max-height:320px;overflow-y:auto"></div>'+
+      '</div>'+
+    '</div>'+
+    // منطقة نموذج القياس
+    '<div id="meas-form-area"></div>';
+}
+
+// بحث العميل
+function measSearch(q){
+  var box=document.getElementById('meas-search-results');
+  if(!box)return;
+  q=(q||'').trim();
+  if(!q){box.style.display='none';return;}
+  var qn=_arNorm(q), qd=_phNorm(q), isNum=/^[0-9\s+]+$/.test(q);
+  var matches=clients.filter(function(c){
+    if(qd&&isNum){var ph=[_phNorm(c.phone),_phNorm(c.phone2),_phNorm(c.whatsapp)];if(ph.some(function(p){return p&&p.indexOf(qd)!==-1;}))return true;}
+    if(_arNorm(c.name).indexOf(qn)!==-1)return true;
+    if(_arNorm(c.area||c.city).indexOf(qn)!==-1)return true;
+    return false;
+  }).slice(0,8);
+  if(!matches.length){box.innerHTML='<div style="padding:16px;text-align:center;color:var(--mt);font-size:13px">لا يوجد عميل مطابق</div>';box.style.display='block';return;}
+  box.innerHTML=matches.map(function(c){
+    return '<div onclick="openMeasForClient('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--bd)" onmouseover="this.style.background=\'var(--bg)\'" onmouseout="this.style.background=\'transparent\'">'+
+      '<div style="width:36px;height:36px;border-radius:9px;background:var(--accent)22;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800">'+(c.name||'؟').charAt(0)+'</div>'+
+      '<div style="flex:1"><div style="font-weight:700;font-size:14px">'+pEsc(c.name||'')+'</div>'+
+      '<div style="font-size:12px;color:var(--mt)">📞 '+(c.phone||'—')+(c.area||c.city?' • 📍 '+(c.area||c.city):'')+'</div></div></div>';
+  }).join('');
+  box.style.display='block';
+}
+
+// فتح نموذج القياس لعميل
+function openMeasForClient(id){
+  _measState.clientId=id;
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c)return;
+  var box=document.getElementById('meas-search-results');if(box)box.style.display='none';
+  var s=document.getElementById('meas-search');if(s)s.value=c.name;
+  var m=(c.measurement)||{};
+  var measurers=getMeasurers();
+  var measurerOpts=measurers.map(function(n){return '<option value="'+pEsc(n)+'"'+(m.measurer===n?' selected':'')+'>'+pEsc(n)+'</option>';}).join('');
+
+  var area=document.getElementById('meas-form-area');
+  area.innerHTML=
+    '<div class="card">'+
+      // رأس العميل
+      '<div style="display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:2px solid var(--bd);margin-bottom:16px">'+
+        '<div style="width:48px;height:48px;border-radius:12px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">'+(c.name||'؟').charAt(0)+'</div>'+
+        '<div style="flex:1"><div style="font-weight:800;font-size:18px">'+pEsc(c.name||'')+'</div>'+
+        '<div style="font-size:13px;color:var(--mt)">📞 '+(c.phone||'—')+(c.area||c.city?' • 📍 '+(c.area||c.city):'')+'</div></div>'+
+        '<button class="btn-p btn-sm" onclick="viewClient('+id+')">📂 ملف العميل</button>'+
+      '</div>'+
+
+      // موظف القياس
+      '<div class="fs"><div class="fs-t">👷 موظف القياس</div>'+
+        '<div class="fg2">'+
+          '<div class="fg"><div class="fl">الموظف الذي أخذ القياس</div>'+
+            '<select class="fsl" id="m-measurer"><option value="">— اختر —</option>'+measurerOpts+'</select></div>'+
+          '<div class="fg"><div class="fl">📅 تاريخ القياس</div><input class="fi" id="m-date" type="date" value="'+(m.date||'')+'"></div>'+
+        '</div>'+
+      '</div>'+
+
+      // الشفاط المركزي
+      '<div class="fs"><div class="fs-t">🔥 الشفاط المركزي</div>'+
+        '<div class="meas-hint">💡 المعيار: غاز 60–76سم فوق الطبخ | كهرباء 50–60سم | الشفاط أعرض من الطبخ 5–7سم كل جهة</div>'+
+        '<div class="fg2">'+
+          '<div class="fg"><div class="fl">مكان فتحة الشفاط</div><input class="fi" id="m-hood-loc" value="'+(m.hoodLoc||'')+'" placeholder="مثال: وسط الجدار الشمالي فوق الطبخ"></div>'+
+          '<div class="fg"><div class="fl">ارتفاع الشفاط عن الطبخ (سم)</div><input class="fi" id="m-hood-h" type="number" value="'+(m.hoodH||'')+'" placeholder="60-76"></div>'+
+        '</div>'+
+        '<div class="fg full"><div class="fl">ملاحظات الشفاط</div><input class="fi" id="m-hood-note" value="'+(m.hoodNote||'')+'" placeholder="أي ملاحظات إضافية"></div>'+
+      '</div>'+
+
+      // التكييف
+      '<div class="fs"><div class="fs-t">❄️ فتحات التكييف (الديفيوزر)</div>'+
+        '<div class="meas-hint">💡 الراجع يكون مقابل الدافع (مو جنبه) لتفادي قصر الدائرة، وبعيد ≥3م عن الطبخ. الديفيوزر بالزاوية، بعيد عن الخزائن وفوق الباب وفوق الثرموستات</div>'+
+        '<div class="fg2">'+
+          '<div class="fg"><div class="fl">مكان الدافع (Supply)</div><input class="fi" id="m-supply" value="'+(m.supply||'')+'" placeholder="مثال: زاوية بعيدة عن الخزائن"></div>'+
+          '<div class="fg"><div class="fl">مكان الراجع (Return)</div><input class="fi" id="m-return" value="'+(m.return||'')+'" placeholder="مثال: مقابل الدافع"></div>'+
+        '</div>'+
+        '<div class="fg full"><div class="fl">مكان الديفيوزر</div><input class="fi" id="m-diffuser" value="'+(m.diffuser||'')+'" placeholder="بالزاوية، بعيد عن الخزائن/الباب/الثرموستات"></div>'+
+      '</div>'+
+
+      // الشباك والإضاءة
+      '<div class="fs"><div class="fs-t">🪟 الشباك والإضاءة</div>'+
+        '<div class="meas-hint">💡 السبوت لايت يُؤخّر عن الديكور 80سم (وليس 60) لأن عمق الخزانة 60سم حتى لا يتعارض معها</div>'+
+        '<div class="fg2">'+
+          '<div class="fg"><div class="fl">ارتفاع جلسة الشباك من الأرض (سم)</div><input class="fi" id="m-window-h" type="number" value="'+(m.windowH||'')+'" placeholder="من الأرض لبداية الشباك"></div>'+
+          '<div class="fg"><div class="fl">يوجد سبوت لايت؟</div>'+
+            '<select class="fsl" id="m-spot" onchange="measToggleSpot()"><option value="no"'+(m.spot==='yes'?'':' selected')+'>لا</option><option value="yes"'+(m.spot==='yes'?' selected':'')+'>نعم</option></select></div>'+
+        '</div>'+
+        '<div class="fg full" id="m-spot-box" style="display:'+(m.spot==='yes'?'block':'none')+'"><div class="fl">تأخير السبوت لايت عن الديكور (سم) — يجب 80سم</div><input class="fi" id="m-spot-setback" type="number" value="'+(m.spotSetback||'80')+'" placeholder="80"></div>'+
+      '</div>'+
+
+      // قياسات عامة
+      '<div class="fs"><div class="fs-t">📏 القياسات العامة</div>'+
+        '<div class="fg full"><div class="fl">أبعاد وملاحظات القياس (جدران، زوايا، فتحات، سباكة، كهرباء، غاز)</div>'+
+          '<textarea class="fta" id="m-general" rows="4" placeholder="سجّل كل القياسات والملاحظات بالتفصيل...">'+(m.general||'')+'</textarea></div>'+
+      '</div>'+
+
+      // إقرار العميل
+      '<div class="fs"><div class="fs-t">✍️ إقرار العميل (اختياري)</div>'+
+        '<div class="meas-hint">⚠️ يُستخدم عند رفض العميل تعديل خطأ نبّهناه عليه — يوقّع على مسؤوليته</div>'+
+        '<div class="fg full"><div class="fl">نوع الإقرار</div>'+
+          '<select class="fsl" id="m-waiver-type" onchange="measToggleWaiver()">'+
+            '<option value="none"'+(!m.waiverType||m.waiverType==='none'?' selected':'')+'>بدون إقرار</option>'+
+            '<option value="fixed"'+(m.waiverType==='fixed'?' selected':'')+'>إقرار بنص ثابت + توقيع</option>'+
+            '<option value="notes"'+(m.waiverType==='notes'?' selected':'')+'>إقرار بملاحظات حرة + توقيع</option>'+
+          '</select></div>'+
+        '<div id="m-waiver-box" style="display:'+(m.waiverType&&m.waiverType!=='none'?'block':'none')+'">'+
+          '<div id="m-waiver-fixed" style="display:'+(m.waiverType==='fixed'?'block':'none')+';background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:14px;margin:8px 0;font-size:13px;line-height:1.8">'+
+            'أقر أنا العميل بأن فريق مطابخ العيسى نبّهني إلى وجود أخطاء/ملاحظات فنية في الموقع تحتاج تعديلاً (تخص مواقع الشفاط/التكييف/الكهرباء/الأبعاد)، وأنني اخترت عدم تعديلها، وأتحمّل كامل المسؤولية عن أي نتائج تترتب على ذلك دون أدنى مسؤولية على الشركة.'+
+          '</div>'+
+          '<div class="fg full" id="m-waiver-notes-box" style="display:'+(m.waiverType==='notes'?'block':'none')+'"><div class="fl">ملاحظات الإقرار</div>'+
+            '<textarea class="fta" id="m-waiver-notes" rows="3" placeholder="اكتب تفاصيل ما تم تنبيه العميل عليه ورفضه...">'+(m.waiverNotes||'')+'</textarea></div>'+
+          '<div class="fg full"><div class="fl">اسم العميل الموقّع</div><input class="fi" id="m-waiver-name" value="'+(m.waiverName||c.name||'')+'"></div>'+
+          '<div class="fg full"><div class="fl">التوقيع (بالإصبع أو الماوس)</div>'+
+            '<canvas id="m-sign-canvas" width="600" height="160" style="width:100%;max-width:600px;border:1.5px dashed var(--bd);border-radius:10px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
+            '<div style="margin-top:6px"><button class="btn-c btn-sm" onclick="measClearSign()">🗑️ مسح التوقيع</button></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'+
+
+      // حفظ
+      '<div style="display:flex;gap:10px;margin-top:16px">'+
+        '<button class="btn-sv" style="flex:1" onclick="saveMeasurement()">💾 حفظ القياس</button>'+
+        '<button class="btn-c" onclick="printMeasurement()">🖨️ طباعة</button>'+
+      '</div>'+
+    '</div>';
+
+  // تفعيل لوحة التوقيع لو الإقرار مفعّل
+  setTimeout(function(){if(m.waiverType&&m.waiverType!=='none')_initSignPad(m.signature);},100);
+}
+
+function measToggleSpot(){
+  var v=(document.getElementById('m-spot')||{}).value;
+  var box=document.getElementById('m-spot-box');
+  if(box)box.style.display=v==='yes'?'block':'none';
+}
+function measToggleWaiver(){
+  var v=(document.getElementById('m-waiver-type')||{}).value;
+  document.getElementById('m-waiver-box').style.display=v!=='none'?'block':'none';
+  document.getElementById('m-waiver-fixed').style.display=v==='fixed'?'block':'none';
+  document.getElementById('m-waiver-notes-box').style.display=v==='notes'?'block':'none';
+  if(v!=='none')setTimeout(function(){_initSignPad();},50);
+}
+
+// ── لوحة التوقيع ──
+var _signCtx=null,_signing=false;
+function _initSignPad(existing){
+  var cv=document.getElementById('m-sign-canvas');
+  if(!cv)return;
+  _signCtx=cv.getContext('2d');
+  _signCtx.strokeStyle='#0a2e22';_signCtx.lineWidth=2.5;_signCtx.lineCap='round';
+  if(existing){var img=new Image();img.onload=function(){_signCtx.drawImage(img,0,0);};img.src=existing;}
+  function pos(e){var r=cv.getBoundingClientRect();var x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;var y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;return {x:x*(cv.width/r.width),y:y*(cv.height/r.height)};}
+  function start(e){_signing=true;var p=pos(e);_signCtx.beginPath();_signCtx.moveTo(p.x,p.y);e.preventDefault();}
+  function move(e){if(!_signing)return;var p=pos(e);_signCtx.lineTo(p.x,p.y);_signCtx.stroke();e.preventDefault();}
+  function end(){_signing=false;}
+  cv.onmousedown=start;cv.onmousemove=move;cv.onmouseup=end;cv.onmouseleave=end;
+  cv.ontouchstart=start;cv.ontouchmove=move;cv.ontouchend=end;
+}
+function measClearSign(){var cv=document.getElementById('m-sign-canvas');if(cv&&_signCtx)_signCtx.clearRect(0,0,cv.width,cv.height);}
+
+// ── حفظ القياس ──
+function saveMeasurement(){
+  var id=_measState.clientId;
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c){toast('⚠️ اختر عميلاً','err');return;}
+  function g(k){var e=document.getElementById(k);return e?e.value:'';}
+  var waiverType=g('m-waiver-type');
+  var signature='';
+  if(waiverType&&waiverType!=='none'){var cv=document.getElementById('m-sign-canvas');if(cv)signature=cv.toDataURL('image/png');}
+
+  c.measurement={
+    measurer:g('m-measurer'),date:g('m-date'),
+    hoodLoc:g('m-hood-loc'),hoodH:g('m-hood-h'),hoodNote:g('m-hood-note'),
+    supply:g('m-supply'),'return':g('m-return'),diffuser:g('m-diffuser'),
+    windowH:g('m-window-h'),spot:g('m-spot'),spotSetback:g('m-spot-setback'),
+    general:g('m-general'),
+    waiverType:waiverType,waiverNotes:g('m-waiver-notes'),waiverName:g('m-waiver-name'),signature:signature,
+    savedBy:currentUser?currentUser.name:'',savedAt:new Date().toISOString()
+  };
+  if(!c.log)c.log=[];
+  c.log.push({date:today(),text:'📐 تم تسجيل قياسات الموقع'+(g('m-measurer')?' — الفني: '+g('m-measurer'):'')});
+  if(typeof dbUpdateClient==='function')dbUpdateClient(c.id,c);
+  toast('✅ حُفظ القياس لـ '+c.name,'ok');
+  if(typeof logSecurityEvent==='function')logSecurityEvent('measurement','تسجيل قياس: '+c.name);
+}
+
+// ── طباعة القياس ──
+function printMeasurement(){
+  var c=clients.find(function(x){return x.id===_measState.clientId;});
+  if(!c){toast('⚠️ اختر عميلاً','err');return;}
+  function g(k){var e=document.getElementById(k);return e?e.value:'';}
+  var rows=[
+    ['موظف القياس',g('m-measurer')],['تاريخ القياس',g('m-date')],
+    ['مكان فتحة الشفاط',g('m-hood-loc')],['ارتفاع الشفاط (سم)',g('m-hood-h')],
+    ['مكان الدافع',g('m-supply')],['مكان الراجع',g('m-return')],['مكان الديفيوزر',g('m-diffuser')],
+    ['ارتفاع جلسة الشباك (سم)',g('m-window-h')],['تأخير السبوت لايت (سم)',g('m-spot')==='yes'?g('m-spot-setback'):'لا يوجد'],
+    ['القياسات العامة',g('m-general')]
+  ];
+  var w=window.open('','_blank');
+  w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>تقرير قياس</title>'+
+    '<style>body{font-family:Tajawal,Arial,sans-serif;padding:30px;color:#222}h1{color:#0a8f5c;border-bottom:3px solid #d4af37;padding-bottom:10px}table{width:100%;border-collapse:collapse;margin-top:16px}td{border:1px solid #ddd;padding:10px;font-size:14px}td:first-child{background:#f5f5f5;font-weight:700;width:35%}</style></head><body>'+
+    '<h1>📐 تقرير قياس الموقع — مطابخ العيسى</h1>'+
+    '<p><b>العميل:</b> '+pEsc(c.name||'')+' &nbsp;|&nbsp; <b>الهاتف:</b> '+(c.phone||'—')+'</p>'+
+    '<table>'+rows.map(function(r){return '<tr><td>'+r[0]+'</td><td>'+pEsc(r[1]||'—')+'</td></tr>';}).join('')+'</table>');
+  if(g('m-waiver-type')&&g('m-waiver-type')!=='none'){
+    w.document.write('<div style="margin-top:24px;border:2px solid #e74c3c;border-radius:10px;padding:16px"><h3 style="color:#e74c3c;margin-top:0">إقرار العميل</h3>'+
+      '<p style="font-size:13px;line-height:1.8">'+(g('m-waiver-type')==='fixed'?'أقر أنا العميل بأن فريق مطابخ العيسى نبّهني إلى وجود أخطاء/ملاحظات فنية تحتاج تعديلاً، واخترت عدم تعديلها، وأتحمّل كامل المسؤولية.':pEsc(g('m-waiver-notes')))+'</p>'+
+      '<p><b>الاسم:</b> '+pEsc(g('m-waiver-name'))+'</p>');
+    var cv=document.getElementById('m-sign-canvas');
+    if(cv)w.document.write('<p><b>التوقيع:</b></p><img src="'+cv.toDataURL()+'" style="max-width:300px;border:1px solid #ddd">');
+    w.document.write('</div>');
+  }
+  w.document.write('<p style="margin-top:24px;color:#888;font-size:12px">طُبع: '+new Date().toLocaleString('ar-KW')+'</p></body></html>');
+  w.document.close();w.print();
+}
+
+// ── إدارة موظفي القياس (للإدارة فقط) ──
+function openMeasurersManager(){
+  if(!isMeasAdmin()){toast('🛡️ هذه الميزة للإدارة فقط','err');return;}
+  var measurers=getMeasurers();
+  var list=measurers.map(function(n){
+    var isBuiltin=USERS[n]&&USERS[n].role==='measurer';
+    return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px">'+
+      '<span style="font-size:18px">📐</span><span style="flex:1;font-weight:700">'+pEsc(n)+'</span>'+
+      (isBuiltin?'<span style="font-size:11px;color:var(--mt)">حساب أساسي</span>':'<button class="btn-c btn-sm" onclick="removeMeasurer(\''+pEsc(n)+'\')" style="color:#e74c3c">🗑️</button>')+
+    '</div>';
+  }).join('');
+  pShowModal('👷 إدارة موظفي القياس',
+    '<div style="margin-bottom:14px">'+list+'</div>'+
+    '<div style="border-top:1px solid var(--bd);padding-top:14px">'+
+      '<div style="font-weight:700;margin-bottom:8px;font-size:13px">➕ إضافة موظف جديد</div>'+
+      '<div style="display:flex;gap:8px"><input type="text" id="new-measurer-name" placeholder="اسم الموظف" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx)">'+
+      '<button class="btn-sv" onclick="addMeasurer()">إضافة</button></div>'+
+    '</div>');
+}
+function addMeasurer(){
+  if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  var name=(document.getElementById('new-measurer-name')||{}).value||'';
+  name=name.trim();
+  if(!name){toast('⚠️ اكتب الاسم','err');return;}
+  try{
+    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
+    if(extra.indexOf(name)===-1)extra.push(name);
+    localStorage.setItem('slkr_measurers',JSON.stringify(extra));
+  }catch(e){}
+  toast('✅ أُضيف '+name,'ok');
+  openMeasurersManager();
+}
+function removeMeasurer(name){
+  if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  try{
+    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
+    extra=extra.filter(function(n){return n!==name;});
+    localStorage.setItem('slkr_measurers',JSON.stringify(extra));
+  }catch(e){}
+  toast('🗑️ أُزيل '+name,'ok');
+  openMeasurersManager();
+}
+
+
 function frRender(){
   const month=document.getElementById('fr-month')?.value||today().slice(0,7);
   const logs=factoryLogs.filter(l=>l.date?.startsWith(month));
@@ -10868,5 +11191,5 @@ function frRender(){
 </script>
 
 
-<div id="_slkr_fp" data-owner="SALEH-AL-JASEM-KW-2026" data-license="PROPRIETARY — ALL RIGHTS RESERVED" style="display: none;">{"system":"SLKR Follow Up System","version":"1.0.0","owner":"صالح الجاسم (بو صقر)","ownerId":"SALEH-AL-JASEM-KW-2026","company":"شركة مطابخ العيسى","country":"الكويت","created":"2026-04-22","license":"PROPRIETARY — ALL RIGHTS RESERVED","hash":"U0xLUi1CT1NBUVItMjAyNg==","legal":"Protected by intellectual property laws. Unauthorized copying prohibited.","legalAr":"هذا النظام محمي بموجب قوانين حماية الملكية الفكرية. أي نسخ أو تعديل بدون إذن يعرّض صاحبه للمساءلة القانونية."}</div><div id="notif-ring" class="notif-ring"><div class="notif-ring-ico">🔔</div><div class="notif-ring-body"><div class="notif-ring-title"></div><div class="notif-ring-sub"></div></div><button class="notif-close" onclick="this.parentElement.classList.remove(&#39;show&#39;)">✕</button></div></body><div data-slkr-serial="KW2026SLKR001" data-slkr-owner="Saleh Al-Jasem (صالح الجاسم) Bo Sager" data-slkr-company="Al-Essa Kitchens Co. (شركة العيسى للمطابخ)" data-slkr-country="Kuwait (الكويت)" data-slkr-created="2026-04-19" data-slkr-hash="7f3a9b2e4d1c6f8a0e2b4d6c" data-slkr-protected="true" data-slkr-license="PROPRIETARY — ALL RIGHTS RESERVED" style="position: absolute; width: 0px; height: 0px; overflow: hidden; opacity: 0; pointer-events: none;">SLKR Follow Up System © 2026 Saleh Al-Jasem. Unauthorized copying, distribution, or modification is strictly prohibited and subject to legal action under Kuwait and international intellectual property laws. Serial: KW2026SLKR001</div><!-- rebuild -->
+<div id="_slkr_fp" data-owner="SALEH-AL-JASEM-KW-2026" data-license="PROPRIETARY — ALL RIGHTS RESERVED" style="display: none;">{"system":"SLKR Follow Up System","version":"1.0.0","owner":"صالح الجاسم (بو صقر)","ownerId":"SALEH-AL-JASEM-KW-2026","company":"شركة مطابخ العيسى","country":"الكويت","created":"2026-04-22","license":"PROPRIETARY — ALL RIGHTS RESERVED","hash":"U0xLUi1CT1NBUVItMjAyNg==","legal":"Protected by intellectual property laws. Unauthorized copying prohibited.","legalAr":"هذا النظام محمي بموجب قوانين حماية الملكية الفكرية. أي نسخ أو تعديل بدون إذن يعرّض صاحبه للمساءلة القانونية."}</div><div id="notif-ring" class="notif-ring"><div class="notif-ring-ico">🔔</div><div class="notif-ring-body"><div class="notif-ring-title"></div><div class="notif-ring-sub"></div></div><button class="notif-close" onclick="this.parentElement.classList.remove(&#39;show&#39;)">✕</button></div></body><div data-slkr-serial="KW2026SLKR001" data-slkr-owner="Saleh Al-Jasem (صالح الجاسم) Bo Sager" data-slkr-company="Al-Essa Kitchens Co. (شركة العيسى للمطابخ)" data-slkr-country="Kuwait (الكويت)" data-slkr-created="2026-04-19" data-slkr-hash="7f3a9b2e4d1c6f8a0e2b4d6c" data-slkr-protected="true" data-slkr-license="PROPRIETARY — ALL RIGHTS RESERVED" style="position: absolute; width: 0px; height: 0px; overflow: hidden; opacity: 0; pointer-events: none;">SLKR Follow Up System © 2026 Saleh Al-Jasem. Unauthorized copying, distribution, or modification is strictly prohibited and subject to legal action under Kuwait and international intellectual property laws. Serial: KW2026SLKR001</div>
 </html>
