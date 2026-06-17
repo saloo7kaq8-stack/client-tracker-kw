@@ -11037,8 +11037,21 @@ function saveMeasurement(){
   };
   if(!c.log)c.log=[];
   c.log.push({date:today(),text:'📐 تم تسجيل قياسات الموقع'+(g('m-measurer')?' — الفني: '+g('m-measurer'):'')});
+
+  // ═══ الربط التلقائي مع مراحل القياس في ملف العميل ═══
+  if(!c._siteCheck)c._siteCheck={};
+  var linked=[];
+  // المرحلة 2 — قياس البداية
+  if(g('m-measurer')){c._siteCheck['p2_tech']=true;linked.push('تعيين الفني');}
+  if(g('m-general')){c._siteCheck['p2_dims']=true;c._siteCheck['p2_doors_win']=true;linked.push('الأبعاد والفتحات');}
+  if(g('m-hood-loc')){c._siteCheck['p2_gas']=true;linked.push('نقطة الغاز/الشفاط');}
+  // المرحلة 3 — تقرير القياس
+  c._siteCheck['p3_received']=true; // القياس سُجّل بالنظام = استلام التقرير
+  if(g('m-general')){c._siteCheck['p3_infra_mm']=true;c._siteCheck['p3_issues_logged']=true;linked.push('تقرير القياس');}
+  if(linked.length)c.log.push({date:today(),text:'🔗 تحديث تلقائي لمراحل القياس: '+linked.join('، ')});
+
   if(typeof dbUpdateClient==='function')dbUpdateClient(c.id,c);
-  toast('✅ حُفظ القياس لـ '+c.name,'ok');
+  toast('✅ حُفظ القياس لـ '+c.name+(linked.length?' + تحديث المراحل':''),'ok');
   if(typeof logSecurityEvent==='function')logSecurityEvent('measurement','تسجيل قياس: '+c.name);
 }
 
