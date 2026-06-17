@@ -10842,9 +10842,51 @@ function renderMeasurements(){
         '<input type="text" id="meas-search" placeholder="اكتب اسم العميل أو رقم الهاتف..." autocomplete="off" oninput="measSearch(this.value)" class="meas-in" style="font-size:15px;padding:14px 16px">'+
         '<div id="meas-search-results" style="display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:100;background:var(--card);border:1.5px solid var(--bd);border-radius:14px;box-shadow:0 16px 40px rgba(0,0,0,.2);max-height:340px;overflow-y:auto"></div>'+
       '</div>'+
+      '<div style="margin-top:12px;padding-top:12px;border-top:1px dashed var(--bd);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">'+
+        '<span style="font-size:12px;color:var(--mt)">ما لقيت العميل؟ الملف يفتحه البياع — أرسل طلب فتح ملف</span>'+
+        '<button class="lux-btn lux-btn-ghost" onclick="openRequestFileModal()" style="padding:9px 16px;font-size:13px">📨 طلب فتح ملف</button>'+
+      '</div>'+
     '</div>'+
     '<div id="meas-form-area"></div>'+
     '</div>';
+}
+
+// ── طلب فتح ملف عميل (للفني عند عدم وجود الملف) ──
+function openRequestFileModal(){
+  pShowModal('📨 طلب فتح ملف عميل',
+    '<div style="display:grid;gap:14px">'+
+    '<div style="background:#f39c1215;border:1px solid #f39c1233;border-radius:10px;padding:11px;color:#b9770e;font-size:12px;font-weight:700">💡 سيصل الطلب للبياع/الإدارة لفتح الملف رسمياً، وبعدها تقدر تسجّل القياسات</div>'+
+    '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">اسم العميل *</label>'+
+      '<input type="text" id="rf-name" placeholder="اسم العميل" class="meas-in"></div>'+
+    '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">رقم الهاتف *</label>'+
+      '<input type="tel" id="rf-phone" placeholder="مثال: 99887766" class="meas-in"></div>'+
+    '<div><label style="font-size:13px;font-weight:800;display:block;margin-bottom:6px">ملاحظات (اختياري)</label>'+
+      '<input type="text" id="rf-note" placeholder="مثال: الموقع بالجهراء، مستعجل" class="meas-in"></div>'+
+    '<button class="lux-btn lux-btn-primary" style="width:100%" onclick="submitFileRequest()">📨 إرسال الطلب</button>'+
+    '</div>');
+  setTimeout(function(){var el=document.getElementById('rf-name');if(el)el.focus();},100);
+}
+
+async function submitFileRequest(){
+  var name=(document.getElementById('rf-name')||{}).value||'';
+  var phone=(document.getElementById('rf-phone')||{}).value||'';
+  var note=(document.getElementById('rf-note')||{}).value||'';
+  name=name.trim();phone=phone.trim();
+  if(!name){toast('⚠️ اكتب اسم العميل','err');return;}
+  if(!phone){toast('⚠️ اكتب رقم الهاتف','err');return;}
+  var who=currentUser?currentUser.name:'فني قياس';
+  var msg='طلب فتح ملف من '+who+': العميل "'+name+'" — هاتف '+phone+(note?' — '+note:'');
+  try{
+    if(typeof dbInsertNotification==='function'){
+      // إشعار للبياعين والإدارة
+      dbInsertNotification('📨 طلب فتح ملف للقياس',msg,'warning','محمود',who);
+      dbInsertNotification('📨 طلب فتح ملف للقياس',msg,'warning','محمد',who);
+      dbInsertNotification('📨 طلب فتح ملف للقياس',msg,'warning','صالح الجاسم',who);
+    }
+    pCloseModal();
+    toast('✅ أُرسل الطلب للبياع/الإدارة','ok');
+    if(typeof logSecurityEvent==='function')logSecurityEvent('meas_request','طلب فتح ملف: '+name+' — '+phone);
+  }catch(e){toast('⚠️ خطأ بالإرسال','err');}
 }
 
 function measSearch(q){
