@@ -10791,14 +10791,17 @@ function isMeasurer(){
 
 // قائمة موظفي القياس (من USERS + إضافات مخزّنة)
 function getMeasurers(){
+  var hidden=[];
+  try{hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');}catch(e){}
   var list=[];
+  // الموظفون الأساسيون (من USERS) ما لم يكونوا مخفيين
   Object.keys(USERS).forEach(function(name){
-    if(USERS[name].role==='measurer')list.push(name);
+    if(USERS[name].role==='measurer'&&hidden.indexOf(name)===-1)list.push(name);
   });
   // أسماء إضافية يضيفها المدير (localStorage)
   try{
     var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
-    extra.forEach(function(n){if(list.indexOf(n)===-1)list.push(n);});
+    extra.forEach(function(n){if(list.indexOf(n)===-1&&hidden.indexOf(n)===-1)list.push(n);});
   }catch(e){}
   return list;
 }
@@ -11089,20 +11092,36 @@ function printMeasurement(){
 function openMeasurersManager(){
   if(!isMeasAdmin()){toast('🛡️ هذه الميزة للإدارة فقط','err');return;}
   var measurers=getMeasurers();
-  var list=measurers.map(function(n){
+  var list=measurers.length?measurers.map(function(n){
     var isBuiltin=USERS[n]&&USERS[n].role==='measurer';
-    return '<div style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid var(--bd);border-radius:10px;margin-bottom:8px">'+
+    return '<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--bd);border-radius:11px;margin-bottom:8px;background:var(--bg)">'+
       '<span style="font-size:18px">📐</span><span style="flex:1;font-weight:700">'+pEsc(n)+'</span>'+
-      (isBuiltin?'<span style="font-size:11px;color:var(--mt)">حساب أساسي</span>':'<button class="btn-c btn-sm" onclick="removeMeasurer(\''+pEsc(n)+'\')" style="color:#e74c3c">🗑️</button>')+
+      (isBuiltin?'<span style="font-size:10px;color:var(--mt);background:var(--card);padding:2px 8px;border-radius:6px">أساسي</span>':'')+
+      '<button class="btn-c btn-sm" onclick="removeMeasurer(\''+pEsc(n).replace(/'/g,"\\'")+'\')" style="color:#e74c3c">🗑️</button>'+
     '</div>';
-  }).join('');
+  }).join(''):'<div style="text-align:center;color:var(--mt);font-size:13px;padding:14px">لا يوجد موظفو قياس — أضف موظفاً</div>';
+
+  // قسم المخفيين (للاسترجاع)
+  var hidden=[];
+  try{hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');}catch(e){}
+  var hiddenList=hidden.length?
+    '<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:14px">'+
+    '<div style="font-weight:700;margin-bottom:8px;font-size:13px;color:var(--mt)">🗑️ موظفون أساسيون محذوفون</div>'+
+    hidden.map(function(n){
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px dashed var(--bd);border-radius:11px;margin-bottom:6px;opacity:.7">'+
+        '<span style="flex:1;font-weight:600;font-size:13px;text-decoration:line-through">'+pEsc(n)+'</span>'+
+        '<button class="btn-c btn-sm" onclick="restoreMeasurer(\''+pEsc(n).replace(/'/g,"\\'")+'\')" style="color:#27ae60">↩️ استرجاع</button>'+
+      '</div>';
+    }).join('')+'</div>':'';
+
   pShowModal('👷 إدارة موظفي القياس',
     '<div style="margin-bottom:14px">'+list+'</div>'+
     '<div style="border-top:1px solid var(--bd);padding-top:14px">'+
       '<div style="font-weight:700;margin-bottom:8px;font-size:13px">➕ إضافة موظف جديد</div>'+
-      '<div style="display:flex;gap:8px"><input type="text" id="new-measurer-name" placeholder="اسم الموظف" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx)">'+
+      '<div style="display:flex;gap:8px"><input type="text" id="new-measurer-name" placeholder="اسم الموظف" onkeydown="if(event.key===\'Enter\')addMeasurer()" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--bd);background:var(--bg);color:var(--tx)">'+
       '<button class="btn-sv" onclick="addMeasurer()">إضافة</button></div>'+
-    '</div>');
+    '</div>'+
+    hiddenList);
 }
 function addMeasurer(){
   if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
@@ -11119,12 +11138,33 @@ function addMeasurer(){
 }
 function removeMeasurer(name){
   if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  var isBuiltin=USERS[name]&&USERS[name].role==='measurer';
   try{
-    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
-    extra=extra.filter(function(n){return n!==name;});
-    localStorage.setItem('slkr_measurers',JSON.stringify(extra));
+    if(isBuiltin){
+      // موظف أساسي → نخفيه عبر قائمة المخفيين
+      var hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');
+      if(hidden.indexOf(name)===-1)hidden.push(name);
+      localStorage.setItem('slkr_measurers_hidden',JSON.stringify(hidden));
+    }else{
+      // موظف مُضاف → نحذفه من القائمة
+      var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
+      extra=extra.filter(function(n){return n!==name;});
+      localStorage.setItem('slkr_measurers',JSON.stringify(extra));
+    }
   }catch(e){}
   toast('🗑️ أُزيل '+name,'ok');
+  openMeasurersManager();
+}
+
+// استرجاع موظف أساسي مخفي
+function restoreMeasurer(name){
+  if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  try{
+    var hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');
+    hidden=hidden.filter(function(n){return n!==name;});
+    localStorage.setItem('slkr_measurers_hidden',JSON.stringify(hidden));
+  }catch(e){}
+  toast('↩️ استُرجع '+name,'ok');
   openMeasurersManager();
 }
 
