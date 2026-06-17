@@ -10779,6 +10779,18 @@ function renderFactoryReports(){
 // 📐 صفحة القياسات — SLKR Measurements
 // ═══════════════════════════════════════════════
 var _measState={clientId:null};
+var _measurersCache=null; // كاش موظفي القياس من Supabase
+
+// تحميل موظفي القياس من قاعدة البيانات
+async function loadMeasurers(){
+  if(typeof sb==='undefined'||!sb){_measurersCache=[];return [];}
+  try{
+    var r=await sb.from('fu_measurers').select('*').eq('active',true).order('id');
+    if(r.error){console.error('measurers load:',r.error);_measurersCache=[];return [];}
+    _measurersCache=(r.data||[]).map(function(x){return x.name;});
+    return _measurersCache;
+  }catch(e){_measurersCache=[];return [];}
+}
 
 // هل المستخدم الحالي إداري (يقدر يدير موظفي القياس)؟
 function isMeasAdmin(){
@@ -10791,24 +10803,15 @@ function isMeasurer(){
 
 // قائمة موظفي القياس (من USERS + إضافات مخزّنة)
 function getMeasurers(){
-  var hidden=[];
-  try{hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');}catch(e){}
-  var list=[];
-  // الموظفون الأساسيون (من USERS) ما لم يكونوا مخفيين
-  Object.keys(USERS).forEach(function(name){
-    if(USERS[name].role==='measurer'&&hidden.indexOf(name)===-1)list.push(name);
-  });
-  // أسماء إضافية يضيفها المدير (localStorage)
-  try{
-    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
-    extra.forEach(function(n){if(list.indexOf(n)===-1&&hidden.indexOf(n)===-1)list.push(n);});
-  }catch(e){}
-  return list;
+  // يرجّع من الكاش (يُحمّل من Supabase عند فتح الصفحة)
+  return _measurersCache||[];
 }
 
 function renderMeasurements(){
   var el=document.getElementById('pg-measurements');
   if(!el)return;
+  // تحميل موظفي القياس من السحابة (للقائمة المنسدلة عند فتح ملف عميل)
+  if(_measurersCache===null)loadMeasurers();
   var adminBtns=isMeasAdmin()?
     '<button class="lux-btn lux-btn-gold" onclick="openMeasurersManager()" style="white-space:nowrap;padding:11px 18px">👷 إدارة موظفي القياس</button>':'';
 
@@ -10855,10 +10858,11 @@ function measSearch(q){
   box.style.display='block';
 }
 
-function openMeasForClient(id){
+async function openMeasForClient(id){
   _measState.clientId=id;
   var c=clients.find(function(x){return x.id===id;});
   if(!c)return;
+  if(_measurersCache===null)await loadMeasurers();
   var box=document.getElementById('meas-search-results');if(box)box.style.display='none';
   var s=document.getElementById('meas-search');if(s)s.value=c.name;
   var m=(c.measurement)||{};
@@ -11089,24 +11093,22 @@ function printMeasurement(){
 }
 
 // ── إدارة موظفي القياس (للإدارة فقط) ──
-function openMeasurersManager(){
+async function openMeasurersManager(){
   if(!isMeasAdmin()){toast('🛡️ هذه الميزة للإدارة فقط','err');return;}
+  await loadMeasurers();
   var measurers=getMeasurers();
   var list=measurers.length?measurers.map(function(n){
-    var isBuiltin=USERS[n]&&USERS[n].role==='measurer';
     return '<div style="display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--bd);border-radius:11px;margin-bottom:8px;background:var(--bg)">'+
       '<span style="font-size:18px">📐</span><span style="flex:1;font-weight:700">'+pEsc(n)+'</span>'+
-      (isBuiltin?'<span style="font-size:10px;color:var(--mt);background:var(--card);padding:2px 8px;border-radius:6px">أساسي</span>':'')+
       '<button class="btn-c btn-sm" onclick="removeMeasurer(\''+pEsc(n).replace(/'/g,"\\'")+'\')" style="color:#e74c3c">🗑️</button>'+
     '</div>';
   }).join(''):'<div style="text-align:center;color:var(--mt);font-size:13px;padding:14px">لا يوجد موظفو قياس — أضف موظفاً</div>';
 
-  // قسم المخفيين (للاسترجاع)
-  var hidden=[];
-  try{hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');}catch(e){}
+  // المحذوفون (للاسترجاع) من Supabase
+  var hidden=await getHiddenMeasurers();
   var hiddenList=hidden.length?
     '<div style="border-top:1px solid var(--bd);padding-top:14px;margin-top:14px">'+
-    '<div style="font-weight:700;margin-bottom:8px;font-size:13px;color:var(--mt)">🗑️ موظفون أساسيون محذوفون</div>'+
+    '<div style="font-weight:700;margin-bottom:8px;font-size:13px;color:var(--mt)">🗑️ موظفون محذوفون</div>'+
     hidden.map(function(n){
       return '<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px dashed var(--bd);border-radius:11px;margin-bottom:6px;opacity:.7">'+
         '<span style="flex:1;font-weight:600;font-size:13px;text-decoration:line-through">'+pEsc(n)+'</span>'+
@@ -11115,6 +11117,7 @@ function openMeasurersManager(){
     }).join('')+'</div>':'';
 
   pShowModal('👷 إدارة موظفي القياس',
+    '<div style="font-size:11px;color:var(--mt);background:#0a8f5c12;border-radius:8px;padding:8px 10px;margin-bottom:12px">☁️ متزامن بين كل الأجهزة عبر السحابة</div>'+
     '<div style="margin-bottom:14px">'+list+'</div>'+
     '<div style="border-top:1px solid var(--bd);padding-top:14px">'+
       '<div style="font-weight:700;margin-bottom:8px;font-size:13px">➕ إضافة موظف جديد</div>'+
@@ -11123,49 +11126,62 @@ function openMeasurersManager(){
     '</div>'+
     hiddenList);
 }
-function addMeasurer(){
+async function addMeasurer(){
   if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
   var name=(document.getElementById('new-measurer-name')||{}).value||'';
   name=name.trim();
   if(!name){toast('⚠️ اكتب الاسم','err');return;}
+  if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال بالإنترنت','err');return;}
+  // موجود مسبقاً؟
+  if((_measurersCache||[]).indexOf(name)!==-1){toast('ℹ️ الموظف موجود مسبقاً','err');return;}
+  toast('⏳ جاري الإضافة...','ok');
   try{
-    var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
-    if(extra.indexOf(name)===-1)extra.push(name);
-    localStorage.setItem('slkr_measurers',JSON.stringify(extra));
-  }catch(e){}
-  toast('✅ أُضيف '+name,'ok');
-  openMeasurersManager();
-}
-function removeMeasurer(name){
-  if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
-  var isBuiltin=USERS[name]&&USERS[name].role==='measurer';
-  try{
-    if(isBuiltin){
-      // موظف أساسي → نخفيه عبر قائمة المخفيين
-      var hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');
-      if(hidden.indexOf(name)===-1)hidden.push(name);
-      localStorage.setItem('slkr_measurers_hidden',JSON.stringify(hidden));
+    // لو كان محذوفاً سابقاً (active=false) نعيد تفعيله، وإلا ندخله جديد
+    var ex=await sb.from('fu_measurers').select('id').eq('name',name).maybeSingle();
+    if(ex.data&&ex.data.id){
+      await sb.from('fu_measurers').update({active:true}).eq('id',ex.data.id);
     }else{
-      // موظف مُضاف → نحذفه من القائمة
-      var extra=JSON.parse(localStorage.getItem('slkr_measurers')||'[]');
-      extra=extra.filter(function(n){return n!==name;});
-      localStorage.setItem('slkr_measurers',JSON.stringify(extra));
+      await sb.from('fu_measurers').insert([{name:name,created_by:currentUser?currentUser.name:''}]);
     }
-  }catch(e){}
-  toast('🗑️ أُزيل '+name,'ok');
-  openMeasurersManager();
+    await loadMeasurers();
+    toast('✅ أُضيف '+name,'ok');
+    if(typeof logSecurityEvent==='function')logSecurityEvent('measurer','إضافة موظف قياس: '+name);
+    openMeasurersManager();
+  }catch(e){toast('⚠️ خطأ بالإضافة','err');}
+}
+async function removeMeasurer(name){
+  if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
+  toast('⏳ جاري الحذف...','ok');
+  try{
+    // حذف ناعم (active=false) — عشان نقدر نسترجعه
+    await sb.from('fu_measurers').update({active:false}).eq('name',name);
+    await loadMeasurers();
+    toast('🗑️ أُزيل '+name,'ok');
+    if(typeof logSecurityEvent==='function')logSecurityEvent('measurer','حذف موظف قياس: '+name);
+    openMeasurersManager();
+  }catch(e){toast('⚠️ خطأ بالحذف','err');}
 }
 
 // استرجاع موظف أساسي مخفي
-function restoreMeasurer(name){
+async function restoreMeasurer(name){
   if(!isMeasAdmin()){toast('🛡️ للإدارة فقط','err');return;}
+  if(typeof sb==='undefined'||!sb){toast('⚠️ يحتاج اتصال','err');return;}
   try{
-    var hidden=JSON.parse(localStorage.getItem('slkr_measurers_hidden')||'[]');
-    hidden=hidden.filter(function(n){return n!==name;});
-    localStorage.setItem('slkr_measurers_hidden',JSON.stringify(hidden));
-  }catch(e){}
-  toast('↩️ استُرجع '+name,'ok');
-  openMeasurersManager();
+    await sb.from('fu_measurers').update({active:true}).eq('name',name);
+    await loadMeasurers();
+    toast('↩️ استُرجع '+name,'ok');
+    openMeasurersManager();
+  }catch(e){toast('⚠️ خطأ بالاسترجاع','err');}
+}
+
+// جلب المحذوفين (active=false) للاسترجاع
+async function getHiddenMeasurers(){
+  if(typeof sb==='undefined'||!sb)return [];
+  try{
+    var r=await sb.from('fu_measurers').select('name').eq('active',false).order('id');
+    return (r.data||[]).map(function(x){return x.name;});
+  }catch(e){return [];}
 }
 
 
