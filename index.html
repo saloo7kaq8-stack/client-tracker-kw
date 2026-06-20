@@ -10913,6 +10913,82 @@ function measSearch(q){
   box.style.display='block';
 }
 
+// تنسيق حجم الملف (بايت → KB/MB)
+function _fmtSize(bytes){
+  bytes=+bytes||0;
+  if(bytes>=1048576)return (bytes/1048576).toFixed(1)+'MB';
+  if(bytes>=1024)return Math.round(bytes/1024)+'KB';
+  return bytes+'B';
+}
+
+// ── رفع مرفقات القياس (صور/فيديو/رسومات) للسحابة ──
+async function uploadMeasFiles(clientId,inputEl,category){
+  if(!inputEl||!inputEl.files||!inputEl.files.length)return;
+  var files=inputEl.files;
+  var c=clients.find(function(x){return x.id===clientId;});
+  for(var i=0;i<files.length;i++){
+    var file=files[i];
+    if(file.size>50*1024*1024){toast('⚠️ '+file.name+' أكبر من 50MB','err');continue;}
+    var path='clients/'+clientId+'/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._\u0600-\u06FF]/g,'_');
+    toast('⏳ جاري رفع: '+file.name+'...','ok');
+    try{
+      var res=await fetch(SB_URL+'/storage/v1/object/client-files/'+path,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+SB_KEY,'Content-Type':file.type||'application/octet-stream','x-upsert':'true'},
+        body:file
+      });
+      if(!res.ok){var err=await res.json();throw new Error(err.message||'فشل الرفع');}
+      var publicUrl=SB_URL+'/storage/v1/object/public/client-files/'+path;
+      await sb.from('fu_files').insert([{
+        client_id:clientId,file_name:file.name,file_type:category,
+        file_url:publicUrl,file_path:path,
+        file_size:file.size,
+        notes:'من صفحة القياسات',
+        uploaded_by:currentUser?currentUser.name:'فني قياس'
+      }]);
+      toast('✅ تم رفع: '+file.name,'ok');
+    }catch(e){toast('❌ فشل رفع '+file.name,'err');console.error(e);}
+  }
+  inputEl.value='';
+  loadMeasFiles(clientId);
+}
+
+// ── عرض مرفقات القياس ──
+async function loadMeasFiles(clientId){
+  var box=document.getElementById('meas-files-list');
+  if(!box)return;
+  try{
+    var r=await sb.from('fu_files').select('*').eq('client_id',clientId).order('created_at',{ascending:false});
+    var files=(r.data||[]);
+    if(!files.length){box.innerHTML='';return;}
+    box.innerHTML='<div style="font-weight:800;font-size:13px;margin:8px 0 6px">📁 المرفقات المرفوعة ('+files.length+')</div>'+
+      files.map(function(f){
+        var isImg=/\.(jpg|jpeg|png|gif|webp)$/i.test(f.file_name||'');
+        var isVid=/\.(mp4|mov|avi|webm|3gp)$/i.test(f.file_name||'');
+        var isPdf=/\.pdf$/i.test(f.file_name||'');
+        var icon=isImg?'🖼️':isVid?'🎥':isPdf?'📄':'📎';
+        var isKD=(f.file_type||'').indexOf('KitchenDraw')!==-1;
+        return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--bd);border-radius:10px;margin-bottom:6px;background:var(--card)">'+
+          '<span style="font-size:20px">'+icon+'</span>'+
+          '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+pEsc(f.file_name||'')+(isKD?' <span style="font-size:9px;color:var(--m-gold,#d4af37);font-weight:700">📐 KD</span>':'')+'</div>'+
+          '<div style="font-size:10.5px;color:var(--mt)">'+_fmtSize(f.file_size)+' • '+(f.uploaded_by||'')+'</div></div>'+
+          '<a href="'+f.file_url+'" target="_blank" style="text-decoration:none"><button class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 12px">👁️ عرض</button></a>'+
+          '<button class="lux-btn lux-btn-ghost btn-sm" onclick="deleteMeasFile('+f.id+',\''+f.file_path+'\','+clientId+')" style="padding:6px 10px;color:#e74c3c">🗑️</button>'+
+        '</div>';
+      }).join('');
+  }catch(e){box.innerHTML='';}
+}
+
+async function deleteMeasFile(fileId,filePath,clientId){
+  if(!confirm('حذف هذا المرفق نهائياً؟'))return;
+  try{
+    if(filePath){await fetch(SB_URL+'/storage/v1/object/client-files/'+filePath,{method:'DELETE',headers:{'Authorization':'Bearer '+SB_KEY}});}
+    await sb.from('fu_files').delete().eq('id',fileId);
+    toast('🗑️ حُذف المرفق','ok');
+    loadMeasFiles(clientId);
+  }catch(e){toast('❌ فشل الحذف','err');}
+}
+
 async function openMeasForClient(id){
   _measState.clientId=id;
   var c=clients.find(function(x){return x.id===id;});
@@ -10983,6 +11059,29 @@ async function openMeasForClient(id){
       '<div class="meas-fg"><label class="meas-fl">أبعاد وملاحظات القياس (جدران، زوايا، فتحات، سباكة، كهرباء، غاز)</label>'+
         '<textarea class="meas-in" id="m-general" rows="4" placeholder="سجّل كل القياسات والملاحظات بالتفصيل...">'+pEsc(m.general||'')+'</textarea></div>')+
 
+    // ── المرفقات: صور/فيديو + رسمة KitchenDraw ──
+    sec('📎','الصور والفيديو والرسومات','📤 تُرفع للسحابة وتُحفظ في ملف العميل — تظهر لكل الأجهزة',
+      '<div style="display:grid;gap:14px">'+
+        // صور وفيديو
+        '<div style="border:1.5px dashed var(--bd);border-radius:12px;padding:16px;text-align:center;background:var(--bg)">'+
+          '<div style="font-size:32px;margin-bottom:6px">📸🎥</div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:4px">صور وفيديو الموقع</div>'+
+          '<div style="font-size:11px;color:var(--mt);margin-bottom:12px">صوّر الموقع من عدة زوايا — الحد الأقصى 50MB للملف</div>'+
+          '<input type="file" id="meas-media-input" accept="image/*,video/*" multiple style="display:none" onchange="uploadMeasFiles('+id+',this,\'صور/فيديو القياس\')">'+
+          '<button class="lux-btn lux-btn-primary" onclick="document.getElementById(\'meas-media-input\').click()" style="padding:10px 20px">📤 رفع صور / فيديو</button>'+
+        '</div>'+
+        // رسمة KitchenDraw
+        '<div style="border:1.5px dashed var(--m-gold,#d4af37);border-radius:12px;padding:16px;text-align:center;background:rgba(212,175,55,.06)">'+
+          '<div style="font-size:32px;margin-bottom:6px">📐</div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:4px">رسمة KitchenDraw</div>'+
+          '<div style="font-size:11px;color:var(--mt);margin-bottom:12px">صدّر الرسمة من برنامج KitchenDraw كصورة أو PDF وارفعها هنا</div>'+
+          '<input type="file" id="meas-kd-input" accept="image/*,application/pdf" multiple style="display:none" onchange="uploadMeasFiles('+id+',this,\'رسمة KitchenDraw\')">'+
+          '<button class="lux-btn lux-btn-gold" onclick="document.getElementById(\'meas-kd-input\').click()" style="padding:10px 20px">📐 رفع رسمة KitchenDraw</button>'+
+        '</div>'+
+        // قائمة المرفقات المرفوعة
+        '<div id="meas-files-list"></div>'+
+      '</div>')+
+
     sec('✍️','إقرار العميل (اختياري)','⚠️ يُستخدم عند رفض العميل تعديل خطأ نبّهناه عليه — يوقّع على مسؤوليته',
       '<div class="meas-fg"><label class="meas-fl">نوع الإقرار</label>'+
         '<select class="meas-in" id="m-waiver-type" onchange="measToggleWaiver()">'+
@@ -11011,6 +11110,7 @@ async function openMeasForClient(id){
   setTimeout(function(){
     if(m.waiverType&&m.waiverType!=='none')_initSignPad(m.signature);
     checkHoodH();checkSpotSetback();
+    loadMeasFiles(id);
   },100);
 }
 
