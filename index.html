@@ -10952,10 +10952,21 @@ function openDrawPad(clientId){
           toolBtn('door','🚪','باب')+
           toolBtn('window','🪟','نافذة')+
           toolBtn('appliance','🔲','جهاز')+
+          toolBtn('column','⬛','عمود')+
           toolBtn('measure','📐','قياس')+
           toolBtn('text','🔤','نص')+
           toolBtn('pen','✏️','حر')+
           toolBtn('eraser','🧽','ممحاة')+
+        '</div>'+
+        // أدوات التكييف المركزي والإضاءة
+        '<div style="font-size:11px;font-weight:800;color:var(--mt);margin:10px 0 7px">❄️ التكييف المركزي والإضاءة</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('supply','🔵','دافع')+
+          toolBtn('return','🔴','راجع')+
+          toolBtn('diffuser','❄️','ديفيوزر')+
+          toolBtn('thermostat','🌡️','ثرموستات')+
+          toolBtn('hood','🔥','شفاط')+
+          toolBtn('spotlight','💡','سبوت لايت')+
         '</div>'+
       '</div>'+
       // الخصائص
@@ -11004,7 +11015,14 @@ var TOOL_HINTS={
   measure:'📐 القياس: اسحب لرسم خط قياس مع المسافة بالسنتيمتر',
   text:'🔤 النص: انقر على اللوحة لكتابة نص',
   pen:'✏️ الرسم الحر: ارسم بإصبعك بحرية',
-  eraser:'🧽 الممحاة: امسح أجزاء من الرسم'
+  eraser:'🧽 الممحاة: امسح أجزاء من الرسم',
+  column:'⬛ العمود: انقر لوضع علامة عمود في هذا المكان',
+  supply:'🔵 الدافع: انقر لتحديد مكان فتحة الهواء الدافع (Supply)',
+  'return':'🔴 الراجع: انقر لتحديد مكان فتحة الهواء الراجع (Return) — يكون مقابل الدافع وبعيد ≥3م عن الطبخ',
+  diffuser:'❄️ الديفيوزر: انقر لتحديد مكانه — بالزاوية بعيد عن الخزائن وفوق الباب وفوق الثرموستات',
+  thermostat:'🌡️ الثرموستات: انقر لتحديد مكان منظّم الحرارة',
+  hood:'🔥 الشفاط: انقر لتحديد مكان فتحة الشفاط المركزي فوق الطبخ',
+  spotlight:'💡 السبوت لايت: انقر لوضعه — يجب أن يبعد 80سم عن الديكور (سيسألك النظام للتأكد)'
 };
 
 function _initDrawCanvas(){
@@ -11035,6 +11053,13 @@ function _initDrawCanvas(){
       if(txt){ctx.fillStyle=_drawState.color;ctx.font='bold 16px Tajawal,Arial';ctx.fillText(txt,p.x,p.y);_saveDrawHistory();}
       _drawState.drawing=false;return;
     }
+    // الأدوات النقطية (تُرسم بنقرة واحدة)
+    var pointTools=['column','supply','return','diffuser','thermostat','hood','spotlight'];
+    if(pointTools.indexOf(_drawState.tool)!==-1){
+      _drawSymbol(_drawState.tool,p.x,p.y);
+      _saveDrawHistory();
+      _drawState.drawing=false;return;
+    }
     if(_drawState.tool==='pen'||_drawState.tool==='eraser'){_drawState.lastX=p.x;_drawState.lastY=p.y;}
     // نحفظ snapshot للأشكال (preview)
     _drawState.snapshot=ctx.getImageData(0,0,cv.width,cv.height);
@@ -11063,7 +11088,7 @@ function _initDrawCanvas(){
   cv.ontouchstart=start;cv.ontouchmove=move;cv.ontouchend=end;
 }
 
-// رسم خلفية (شبكة)
+// رسم خلفية (شبكة + مسطرة)
 function _drawBg(){
   var cv=_drawState.cv,ctx=_drawState.ctx;
   ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
@@ -11071,11 +11096,86 @@ function _drawBg(){
     ctx.strokeStyle='#e8eef0';ctx.lineWidth=1;
     for(var x=0;x<=cv.width;x+=25){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();}
     for(var y=0;y<=cv.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}
-    // خطوط رئيسية كل 100px
     ctx.strokeStyle='#d5e0e3';
     for(var x2=0;x2<=cv.width;x2+=100){ctx.beginPath();ctx.moveTo(x2,0);ctx.lineTo(x2,cv.height);ctx.stroke();}
     for(var y2=0;y2<=cv.height;y2+=100){ctx.beginPath();ctx.moveTo(0,y2);ctx.lineTo(cv.width,y2);ctx.stroke();}
   }
+  // المسطرة (علوية + جانبية) بالسنتيمتر — كل 25px = 50سم
+  ctx.save();
+  ctx.fillStyle='#0a2e22';ctx.fillRect(0,0,cv.width,18); // شريط علوي
+  ctx.fillRect(0,0,18,cv.height); // شريط جانبي
+  ctx.fillStyle='#fff';ctx.font='9px Tajawal,Arial';ctx.textAlign='center';
+  for(var rx=100;rx<cv.width;rx+=100){
+    var cm=Math.round(rx*2); // 1px=2سم
+    ctx.fillText(cm+'',rx,12);
+    ctx.strokeStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.moveTo(rx,14);ctx.lineTo(rx,18);ctx.stroke();
+  }
+  ctx.save();
+  for(var ry=100;ry<cv.height;ry+=100){
+    var cmy=Math.round(ry*2);
+    ctx.save();ctx.translate(10,ry);ctx.rotate(-Math.PI/2);ctx.fillText(cmy+'',0,3);ctx.restore();
+  }
+  ctx.restore();
+  // زاوية المسطرة
+  ctx.fillStyle='#d4af37';ctx.fillRect(0,0,18,18);
+  ctx.fillStyle='#0a2e22';ctx.font='bold 8px Tajawal,Arial';ctx.fillText('سم',9,12);
+  ctx.restore();
+}
+
+// رسم الرموز النقطية (تكييف، إضاءة، عمود، ثرموستات)
+function _drawSymbol(tool,x,y){
+  var ctx=_drawState.ctx;
+  ctx.save();
+  ctx.lineWidth=2;ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
+  if(tool==='column'){
+    // عمود: مربع مملوء داكن
+    ctx.fillStyle='#444';ctx.fillRect(x-12,y-12,24,24);
+    ctx.strokeStyle='#000';ctx.strokeRect(x-12,y-12,24,24);
+    ctx.fillStyle='#fff';ctx.fillText('عمود',x,y+4);
+  }else if(tool==='supply'){
+    // الدافع: دائرة زرقاء بأسهم للخارج
+    ctx.fillStyle='#2980b9';ctx.beginPath();ctx.arc(x,y,14,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*4,y+d[1]*4);ctx.lineTo(x+d[0]*10,y+d[1]*10);ctx.stroke();});
+    ctx.fillStyle='#2980b9';ctx.fillText('دافع',x,y+26);
+  }else if(tool==='return'){
+    // الراجع: دائرة حمراء بأسهم للداخل
+    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(x,y,14,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*10,y+d[1]*10);ctx.lineTo(x+d[0]*4,y+d[1]*4);ctx.stroke();});
+    ctx.fillStyle='#e74c3c';ctx.fillText('راجع',x,y+26);
+  }else if(tool==='diffuser'){
+    // الديفيوزر: مربع بشبكة
+    ctx.strokeStyle='#16a085';ctx.lineWidth=2;ctx.strokeRect(x-13,y-13,26,26);
+    ctx.lineWidth=1;
+    for(var i=-13;i<=13;i+=6){ctx.beginPath();ctx.moveTo(x+i,y-13);ctx.lineTo(x+i,y+13);ctx.stroke();}
+    ctx.fillStyle='#16a085';ctx.fillText('ديفيوزر',x,y+27);
+  }else if(tool==='thermostat'){
+    // الثرموستات: دائرة صغيرة بحرف T
+    ctx.fillStyle='#f39c12';ctx.beginPath();ctx.arc(x,y,11,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('T',x,y+5);
+    ctx.fillStyle='#f39c12';ctx.font='bold 11px Tajawal,Arial';ctx.fillText('ثرموستات',x,y+24);
+  }else if(tool==='hood'){
+    // الشفاط: مستطيل بخطوط شفط
+    ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.strokeRect(x-18,y-10,36,20);
+    ctx.lineWidth=1;
+    for(var j=-12;j<=12;j+=6){ctx.beginPath();ctx.moveTo(x+j,y-10);ctx.lineTo(x+j,y+10);ctx.stroke();}
+    ctx.fillStyle='#8e44ad';ctx.fillText('شفاط',x,y+24);
+  }else if(tool==='spotlight'){
+    // السبوت لايت: دائرة صفراء بأشعة + سؤال 80سم
+    ctx.fillStyle='#f1c40f';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle='#f1c40f';ctx.lineWidth=1.5;
+    for(var a=0;a<8;a++){var ang=a*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*12,y+Math.sin(ang)*12);ctx.lineTo(x+Math.cos(ang)*16,y+Math.sin(ang)*16);ctx.stroke();}
+    // سؤال التأكد
+    setTimeout(function(){
+      var ok=confirm('💡 السبوت لايت:\n\nهل قياسه 80 سم من بداية الديكور؟\n\n⚠️ تذكير: يجب أن يبعد السبوت لايت (وجميع فتحات التكييف) 80سم عن الديكور — وليس 60سم — لأن عمق الخزانة 60سم.\n\nاضغط (موافق) إذا 80سم ✓\nاضغط (إلغاء) إذا غير مطابق ✗');
+      var ctx2=_drawState.ctx;ctx2.font='bold 10px Tajawal,Arial';ctx2.textAlign='center';
+      if(ok){ctx2.fillStyle='#27ae60';ctx2.fillText('💡80✓',x,y+28);}
+      else{ctx2.fillStyle='#e74c3c';ctx2.fillText('💡✗',x,y+28);}
+      _saveDrawHistory();
+    },50);
+  }
+  ctx.restore();
 }
 
 // رسم الأشكال الهندسية
@@ -11088,6 +11188,17 @@ function _drawShape(tool,x1,y1,x2,y2){
   }else if(tool==='wall'){
     ctx.lineWidth=Math.max(sz+5,8);ctx.strokeStyle=col;
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+    // إظهار طول الجدار بالسنتيمتر (1px ≈ 2سم)
+    var wallPx=Math.sqrt(dx*dx+dy*dy);
+    var wallCm=Math.round(wallPx*2/5)*5; // تقريب لأقرب 5سم
+    if(wallPx>15){
+      var wmx=(x1+x2)/2,wmy=(y1+y2)/2;
+      ctx.save();ctx.font='bold 13px Tajawal,Arial';ctx.textAlign='center';
+      ctx.fillStyle='#fff';ctx.fillRect(wmx-26,wmy-22,52,18);
+      ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(wmx-26,wmy-22,52,18);
+      ctx.fillStyle=col;ctx.fillText(wallCm+' سم',wmx,wmy-9);
+      ctx.restore();
+    }
   }else if(tool==='rect'||tool==='cabinet'){
     ctx.lineWidth=sz;
     ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(dx),Math.abs(dy));
@@ -11103,21 +11214,31 @@ function _drawShape(tool,x1,y1,x2,y2){
     // X بالوسط
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.moveTo(x2,y1);ctx.lineTo(x1,y2);ctx.lineWidth=1;ctx.stroke();
   }else if(tool==='door'){
-    // قوس باب
-    var r=Math.abs(dx)||40;
-    ctx.lineWidth=Math.max(sz+3,6);ctx.strokeStyle='#fff';
+    // فتحة باب دقيقة مع عرضها بالسم
+    var doorW=Math.abs(dx)||40;
+    var doorCm=Math.round(doorW*2/5)*5;
+    ctx.lineWidth=Math.max(sz+3,7);ctx.strokeStyle='#fff';
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y1);ctx.stroke(); // فتحة بيضاء بالجدار
     ctx.lineWidth=sz;ctx.strokeStyle=col;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1,y1+r);ctx.stroke(); // ورقة الباب
-    ctx.beginPath();ctx.arc(x1,y1,r,0,Math.PI/2);ctx.stroke(); // القوس
+    var dir=x2>=x1?1:-1;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1,y1+doorW);ctx.stroke(); // ورقة الباب
+    ctx.beginPath();ctx.arc(x1,y1,doorW,0,Math.PI/2*dir,dir<0);ctx.stroke(); // قوس الفتح
+    // العرض
+    ctx.save();ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
+    ctx.fillStyle='#fff';ctx.fillRect((x1+x2)/2-20,y1-16,40,14);
+    ctx.fillStyle=col;ctx.fillText('باب '+doorCm,(x1+x2)/2,y1-5);ctx.restore();
   }else if(tool==='window'){
-    ctx.lineWidth=Math.max(sz+3,6);ctx.strokeStyle='#fff';
+    // نافذة دقيقة مع عرضها بالسم
+    var winCm=Math.round((Math.abs(dx)||40)*2/5)*5;
+    ctx.lineWidth=Math.max(sz+3,7);ctx.strokeStyle='#fff';
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    ctx.lineWidth=2;ctx.strokeStyle=col;
+    ctx.lineWidth=2.5;ctx.strokeStyle=col;
     ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    // خط أوسط
     ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(x1,(y1+y2)/2);ctx.lineTo(x2,(y1+y2)/2);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1,(y1+y2)/2);ctx.lineTo(x2,(y1+y2)/2);ctx.stroke(); // خط أوسط
+    ctx.save();ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
+    ctx.fillStyle='#fff';ctx.fillRect((x1+x2)/2-24,(y1+y2)/2-16,48,14);
+    ctx.fillStyle=col;ctx.fillText('شباك '+winCm,(x1+x2)/2,(y1+y2)/2-5);ctx.restore();
   }else if(tool==='measure'){
     // خط قياس مع أسهم ومسافة
     ctx.lineWidth=1;ctx.strokeStyle=col;
