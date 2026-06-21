@@ -11562,7 +11562,16 @@ function dwInit(){
       e.preventDefault();
       var ddx=wInfo.x-DW.dragLastX, ddy=wInfo.y-DW.dragLastY;
       var o=DW.objects[DW.selected];
-      if(o){o.x1+=ddx; o.y1+=ddy; o.x2+=ddx; o.y2+=ddy;}
+      if(o){
+        if(o.group){
+          // تحريك كل المجموعة (الحرف كامل)
+          DW.objects.forEach(function(obj){
+            if(obj.group===o.group){obj.x1+=ddx;obj.y1+=ddy;obj.x2+=ddx;obj.y2+=ddy;}
+          });
+        }else{
+          o.x1+=ddx; o.y1+=ddy; o.x2+=ddx; o.y2+=ddy;
+        }
+      }
       DW.dragLastX=wInfo.x; DW.dragLastY=wInfo.y;
       dwRender();
       return;
@@ -11752,14 +11761,26 @@ function dwOpenShapeDialog(shape){
         '</div>'+
       '</div>';
   }
+  var styleSelector='';
+  if(shape==='lshape'||shape==='ushape'){
+    styleSelector=
+      '<div style="margin-top:14px">'+
+        '<label style="font-size:12px;font-weight:800;display:block;margin-bottom:7px;color:#1a2e26">النمط</label>'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+
+          '<button type="button" onclick="dwSetShapeStyle(\'filled\')" data-style="filled" class="dw-style-btn" style="padding:10px;border-radius:9px;border:2px solid #0a8f5c;background:rgba(10,143,92,.12);font-weight:800;font-size:12px;cursor:pointer;color:#1a2e26">▭ كاونتر بعرض</button>'+
+          '<button type="button" onclick="dwSetShapeStyle(\'single\')" data-style="single" class="dw-style-btn" style="padding:10px;border-radius:9px;border:2px solid #dce6e2;background:#fff;font-weight:800;font-size:12px;cursor:pointer;color:#1a2e26">📏 خط أحادي</button>'+
+        '</div>'+
+      '</div>';
+  }
   DW.shapeDir='br'; // الاتجاه الافتراضي
+  DW.shapeStyle='filled'; // النمط الافتراضي
   var modal=document.createElement('div');
   modal.id='dw-shape-dialog';
   modal.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
   modal.innerHTML=
     '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden">'+
       '<div style="background:linear-gradient(135deg,#0a2e22,#0a8f5c);color:#fff;padding:14px 20px;font-weight:900;font-size:16px">'+titles[shape]+'</div>'+
-      '<div style="padding:20px">'+fields+dirSelector+
+      '<div style="padding:20px">'+fields+dirSelector+styleSelector+
         '<div style="display:flex;gap:10px;margin-top:18px">'+
           '<button onclick="dwCreateShape(\''+shape+'\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#0a8f5c;color:#fff;font-weight:800;font-size:14px;cursor:pointer">✓ ارسم الشكل</button>'+
           '<button onclick="document.getElementById(\'dw-shape-dialog\').remove()" style="padding:12px 18px;border:1.5px solid #dce6e2;border-radius:10px;background:#fff;color:#1a2e26;font-weight:700;cursor:pointer">إلغاء</button>'+
@@ -11779,6 +11800,14 @@ function dwSetShapeDir(dir){
     b.style.background=on?'rgba(10,143,92,.12)':'#fff';
   });
 }
+function dwSetShapeStyle(style){
+  DW.shapeStyle=style;
+  document.querySelectorAll('.dw-style-btn').forEach(function(b){
+    var on=b.getAttribute('data-style')===style;
+    b.style.borderColor=on?'#0a8f5c':'#dce6e2';
+    b.style.background=on?'rgba(10,143,92,.12)':'#fff';
+  });
+}
 
 // إنشاء الشكل من الأبعاد المُدخلة
 function dwCreateShape(shape){
@@ -11786,32 +11815,41 @@ function dwCreateShape(shape){
   var p=DW.pxPerCm;
   var cx=400, cy=380; // نقطة الزاوية (الركن)
   var dir=DW.shapeDir||'br';
-  // معاملات الاتجاه: sx=+1 يمين/-1 يسار، sy=+1 تحت/-1 فوق
   var sx=(dir==='br'||dir==='tr')?1:-1;
   var sy=(dir==='br'||dir==='bl')?1:-1;
+  var gid='g'+Date.now(); // معرّف المجموعة (لتحريك الحرف كامل)
+  var single=(DW.shapeStyle==='single'); // خط أحادي بدل كاونتر بعرض
 
   if(shape==='rect'){
     var L=num('sh-len',300)*p, W=num('sh-wid',200)*p;
     DW.objects.push({type:'rect',x1:cx,y1:cy,x2:cx+L,y2:cy+W,color:DW.color,size:DW.size});
   }else if(shape==='lshape'){
     var lh=num('sh-len',300)*p, lv=num('sh-len2',250)*p, cw=num('sh-wid',60)*p;
-    // الضلع الأفقي (من الركن باتجاه sx)
-    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*lh,y2:cy+sy*cw,color:DW.color,size:DW.size});
-    // الضلع الرأسي (من الركن باتجاه sy)
-    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*cw,y2:cy+sy*lv,color:DW.color,size:DW.size});
+    if(single){
+      // خطوط جدران أحادية: ضلعان متعامدان
+      DW.objects.push({type:'wall',x1:cx,y1:cy,x2:cx+sx*lh,y2:cy,color:DW.color,size:DW.size,group:gid,lenCm:Math.round(lh/p)});
+      DW.objects.push({type:'wall',x1:cx,y1:cy,x2:cx,y2:cy+sy*lv,color:DW.color,size:DW.size,group:gid,lenCm:Math.round(lv/p)});
+    }else{
+      DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*lh,y2:cy+sy*cw,color:DW.color,size:DW.size,group:gid});
+      DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*cw,y2:cy+sy*lv,color:DW.color,size:DW.size,group:gid});
+    }
   }else if(shape==='ushape'){
     var um=num('sh-len',300)*p, ucw=num('sh-wid',60)*p, us1=num('sh-side1',250)*p, us2=num('sh-side2',250)*p;
     var maxSide=Math.max(us1,us2);
-    // الضلع الأوسط (القاعدة) — على الجهة البعيدة باتجاه sy
-    DW.objects.push({type:'cabinet',x1:cx,y1:cy+sy*maxSide,x2:cx+sx*um,y2:cy+sy*(maxSide+ucw),color:DW.color,size:DW.size});
-    // الضلع الجانبي 1 (عند الركن)
-    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*ucw,y2:cy+sy*(us1+ucw),color:DW.color,size:DW.size});
-    // الضلع الجانبي 2 (الطرف الآخر)
-    DW.objects.push({type:'cabinet',x1:cx+sx*(um-ucw),y1:cy,x2:cx+sx*um,y2:cy+sy*(us2+ucw),color:DW.color,size:DW.size});
+    if(single){
+      // خطوط جدران أحادية: ٣ أضلاع متصلة
+      DW.objects.push({type:'wall',x1:cx,y1:cy,x2:cx,y2:cy+sy*us1,color:DW.color,size:DW.size,group:gid,lenCm:Math.round(us1/p)}); // جانبي 1
+      DW.objects.push({type:'wall',x1:cx,y1:cy+sy*maxSide,x2:cx+sx*um,y2:cy+sy*maxSide,color:DW.color,size:DW.size,group:gid,lenCm:Math.round(um/p)}); // الأوسط
+      DW.objects.push({type:'wall',x1:cx+sx*um,y1:cy,x2:cx+sx*um,y2:cy+sy*us2,color:DW.color,size:DW.size,group:gid,lenCm:Math.round(us2/p)}); // جانبي 2
+    }else{
+      DW.objects.push({type:'cabinet',x1:cx,y1:cy+sy*maxSide,x2:cx+sx*um,y2:cy+sy*(maxSide+ucw),color:DW.color,size:DW.size,group:gid});
+      DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+sx*ucw,y2:cy+sy*(us1+ucw),color:DW.color,size:DW.size,group:gid});
+      DW.objects.push({type:'cabinet',x1:cx+sx*(um-ucw),y1:cy,x2:cx+sx*um,y2:cy+sy*(us2+ucw),color:DW.color,size:DW.size,group:gid});
+    }
   }
   var d=document.getElementById('dw-shape-dialog');if(d)d.remove();
   dwPushHistory(); dwRender();
-  toast('✅ رُسم الشكل — يمكنك سحبه أو تعديله','ok');
+  toast('✅ رُسم الشكل — اسحب أي جزء لتحريكه كامل','ok');
 }
 function dwSetColor(c){
   DW.color=c;
@@ -11855,35 +11893,42 @@ function dwDrawAngles(){
   if(!DW.showAngles)return;
   var ctx=DW.ctx;
   var walls=DW.objects.filter(function(o){return o.type==='wall';});
-  // نلقى الأركان: نقاط نهاية جدار قريبة من نقطة بداية/نهاية جدار آخر
+  var drawn={}; // لتفادي تكرار نفس الركن
   for(var i=0;i<walls.length;i++){
-    for(var j=0;j<walls.length;j++){
-      if(i===j)continue;
+    for(var j=i+1;j<walls.length;j++){
       var a=walls[i], b=walls[j];
-      // نقاط الاتصال المحتملة
-      var pts=[[a.x2,a.y2,a.x1,a.y1, b.x1,b.y1,b.x2,b.y2]];
-      pts.forEach(function(P){
-        var jx=P[0],jy=P[1]; // نقطة الالتقاء (نهاية a)
-        // هل بداية b قريبة من نهاية a؟
-        if(Math.abs(P[4]-jx)<10&&Math.abs(P[5]-jy)<10){
-          // الزاوية بين الجدارين عند هذا الركن
-          var ang1=Math.atan2(P[3]-jy,P[2]-jx); // اتجاه a للخلف
-          var ang2=Math.atan2(P[6]-jy,P[7]-jx); // اتجاه b للأمام
-          var deg=Math.abs((ang2-ang1)*180/Math.PI);
-          if(deg>180)deg=360-deg;
-          deg=Math.round(deg);
-          // نرسم القوس والرقم
-          ctx.save();
-          ctx.strokeStyle='#e74c3c'; ctx.fillStyle='#e74c3c'; ctx.lineWidth=1.5;
-          ctx.beginPath();ctx.arc(jx,jy,22,Math.min(ang1,ang2),Math.max(ang1,ang2));ctx.stroke();
-          ctx.font='bold 13px Tajawal,Arial'; ctx.textAlign='center';
-          var midAng=(ang1+ang2)/2;
-          var lx=jx+Math.cos(midAng)*36, ly=jy+Math.sin(midAng)*36;
-          ctx.fillStyle='#fff'; ctx.fillRect(lx-20,ly-10,40,18);
-          ctx.strokeStyle='#e74c3c'; ctx.strokeRect(lx-20,ly-10,40,18);
-          ctx.fillStyle='#e74c3c'; ctx.fillText(deg+'°',lx,ly+4);
-          ctx.restore();
-        }
+      // نقاط النهايات لكل جدار
+      var aEnds=[[a.x1,a.y1,a.x2,a.y2],[a.x2,a.y2,a.x1,a.y1]];
+      var bEnds=[[b.x1,b.y1,b.x2,b.y2],[b.x2,b.y2,b.x1,b.y1]];
+      aEnds.forEach(function(ae){
+        bEnds.forEach(function(be){
+          // هل النقطتان متطابقتان (ركن مشترك)؟
+          if(Math.abs(ae[0]-be[0])<12 && Math.abs(ae[1]-be[1])<12){
+            var jx=ae[0], jy=ae[1];
+            var key=Math.round(jx)+'_'+Math.round(jy);
+            if(drawn[key])return;
+            // الزاوية بين الجدارين (من الركن للطرف الآخر لكل جدار)
+            var ang1=Math.atan2(ae[3]-jy,ae[2]-jx);
+            var ang2=Math.atan2(be[3]-jy,be[2]-jx);
+            var deg=Math.abs((ang2-ang1)*180/Math.PI);
+            if(deg>180)deg=360-deg;
+            deg=Math.round(deg);
+            if(deg<1||deg>359)return; // تجاهل الزوايا التافهة
+            drawn[key]=true;
+            ctx.save();
+            ctx.strokeStyle='#e74c3c'; ctx.fillStyle='#e74c3c'; ctx.lineWidth=1.5;
+            var a1=Math.min(ang1,ang2), a2=Math.max(ang1,ang2);
+            ctx.beginPath();ctx.arc(jx,jy,24,a1,a2);ctx.stroke();
+            var midAng=(ang1+ang2)/2;
+            var lx=jx+Math.cos(midAng)*40, ly=jy+Math.sin(midAng)*40;
+            ctx.font='bold 13px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.fillStyle='#fff'; ctx.fillRect(lx-19,ly-10,38,20);
+            ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.2; ctx.strokeRect(lx-19,ly-10,38,20);
+            ctx.fillStyle='#e74c3c'; ctx.fillText(deg+'°',lx,ly+1);
+            ctx.textBaseline='alphabetic';
+            ctx.restore();
+          }
+        });
       });
     }
   }
