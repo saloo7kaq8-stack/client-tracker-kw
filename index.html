@@ -11419,6 +11419,13 @@ function openDrawPad(clientId){
         '<button onclick="dwEditSelected()" class="lux-btn lux-btn-gold btn-sm" style="padding:6px 10px">✏️ تعديل القياس</button>'+
         '<button onclick="dwDeleteSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">🗑️ حذف المحدد</button>'+
         '<button onclick="dwClearAll()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">مسح الكل</button>'+
+        '<div style="width:1px;height:20px;background:#dce6e2"></div>'+
+        '<div style="display:flex;align-items:center;gap:3px">'+
+          '<button onclick="dwZoom(-1)" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px;font-size:16px;font-weight:900">−</button>'+
+          '<span id="dw-zoom-label" style="font-size:11px;font-weight:800;min-width:42px;text-align:center;color:#1a2e26">100%</span>'+
+          '<button onclick="dwZoom(1)" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px;font-size:16px;font-weight:900">+</button>'+
+          '<button onclick="dwZoomReset()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 9px;font-size:11px">⊡ ملائمة</button>'+
+        '</div>'+
       '</div>'+
       '<div id="dw-hint" style="font-size:11px;color:#6b7d76;padding:6px 16px;background:rgba(10,143,92,.06)">💡 الجدار: اسحب لرسمه — الطول يظهر بالسم والزاوية تنطبق تلقائياً لقيم دقيقة (90/135/180)</div>'+
       // شريط المعلومات الحي (المؤشر الذكي)
@@ -11893,6 +11900,27 @@ function dwClearAll(){
   if(!DW.objects.length)return;
   if(!confirm('مسح كل الرسم؟'))return;
   DW.objects=[]; DW.selected=-1; dwPushHistory(); dwRender();
+}
+// تكبير/تصغير اللوحة
+function dwZoom(dir){
+  var step=0.15;
+  var newZoom=DW.view.zoom+(dir*step);
+  newZoom=Math.max(0.4,Math.min(3,newZoom));
+  // التكبير من مركز اللوحة
+  var cv=DW.cv;
+  var cx=cv.width/2, cy=cv.height/2;
+  var wx=(cx-DW.view.ox)/DW.view.zoom, wy=(cy-DW.view.oy)/DW.view.zoom;
+  DW.view.zoom=newZoom;
+  DW.view.ox=cx-wx*newZoom; DW.view.oy=cy-wy*newZoom;
+  dwUpdateZoomLabel(); dwRender();
+}
+function dwZoomReset(){
+  DW.view={ox:30,oy:30,zoom:1};
+  dwUpdateZoomLabel(); dwRender();
+}
+function dwUpdateZoomLabel(){
+  var l=document.getElementById('dw-zoom-label');
+  if(l)l.textContent=Math.round(DW.view.zoom*100)+'%';
 }
 function dwEscHandler(e){
   if(e.key==='Escape'&&DW.drawing){
