@@ -10925,6 +10925,8 @@ var DW={
   tool:'wall',
   color:'#0a2e22', size:3,
   showGrid:true, showRuler:true, showAngles:false,
+  cabDepth:60,      // عمق المخزن بالسم (يحدد المنطقة المحظورة)
+  safetyMargin:20,  // هامش الأمان بعد المخزن
   // المقياس: عدد البكسلات لكل متر (100px = 1م = 100سم)، فالـ 1px = 1سم
   pxPerCm:1,
   snapGrid:5,            // انطباق كل 5سم
@@ -11075,8 +11077,107 @@ function dwBuildObject(x1,y1,x2,y2,isPreview){
 // ═══════════════════════════════════════════════════════
 // رسم كائن واحد
 // ═══════════════════════════════════════════════════════
+// فحص المنطقة المحظورة — تحذير لو وُضعت فتحة قرب الخزائن
+function dwCheckForbiddenZone(tool, x, y){
+  var openings=['supply','return','diffuser','elec','elec_power','spotlight','hood'];
+  if(openings.indexOf(tool)===-1)return; // الفتحات فقط
+  if(DW.cabDepth<=0)return; // لا منطقة محظورة لو ما فيه مخازن
+  var safe=dwSafeDist();
+  // نبحث عن خزائن قريبة (داخل المسافة الآمنة)
+  var cabs=DW.objects.filter(function(o){return o.type==='cabinet';});
+  for(var i=0;i<cabs.length;i++){
+    var c=cabs[i];
+    var minx=Math.min(c.x1,c.x2)-safe*DW.pxPerCm, maxx=Math.max(c.x1,c.x2)+safe*DW.pxPerCm;
+    var miny=Math.min(c.y1,c.y2)-safe*DW.pxPerCm, maxy=Math.max(c.y1,c.y2)+safe*DW.pxPerCm;
+    var insideCab=(x>=Math.min(c.x1,c.x2)&&x<=Math.max(c.x1,c.x2)&&y>=Math.min(c.y1,c.y2)&&y<=Math.max(c.y1,c.y2));
+    var inZone=(x>=minx&&x<=maxx&&y>=miny&&y<=maxy);
+    if(insideCab){
+      toast('⛔ ممنوع! الفتحة فوق/تحت الخزانة مباشرة — ستنحجب خلفها','err');
+      return;
+    }
+    if(inZone){
+      toast('⚠️ تحذير: الفتحة ضمن منطقة الأمان ('+safe+'سم من الخزانة) — يُفضّل إبعادها','err');
+      return;
+    }
+  }
+}
+
+// رسم الرموز النقطية (تمديدات + تكييف + إضاءة)
+function dwDrawSymbol(o){
+  var ctx=DW.ctx, x=o.x1, y=o.y1, t=o.type;
+  ctx.save();
+  ctx.lineWidth=2; ctx.font='bold 9px Tajawal,Arial'; ctx.textAlign='center';
+  function lbl(text,col){ctx.fillStyle=col;ctx.fillText(text,x,y+22);}
+  if(t==='water_hot'){
+    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText('H',x,y+4);lbl('ماء حار','#e74c3c');
+  }else if(t==='water_cold'){
+    ctx.fillStyle='#2980b9';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText('C',x,y+4);lbl('ماء بارد','#2980b9');
+  }else if(t==='drain'){
+    ctx.strokeStyle='#555';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x-5,y);ctx.lineTo(x+5,y);ctx.moveTo(x,y-5);ctx.lineTo(x,y+5);ctx.stroke();lbl('صرف','#555');
+  }else if(t==='floor_drain'){
+    ctx.strokeStyle='#16a085';ctx.lineWidth=2;ctx.strokeRect(x-10,y-10,20,20);
+    ctx.lineWidth=1;for(var i=-7;i<=7;i+=3.5){ctx.beginPath();ctx.moveTo(x+i,y-10);ctx.lineTo(x+i,y+10);ctx.stroke();}
+    lbl('بالوعة أرضية','#16a085');
+  }else if(t==='elec'){
+    ctx.fillStyle='#f39c12';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText('⚡',x,y+4);lbl('كهرباء','#f39c12');
+  }else if(t==='elec_power'){
+    ctx.fillStyle='#d35400';ctx.beginPath();ctx.arc(x,y,10,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 10px Arial';ctx.fillText('380',x,y+3);lbl('مخرج جهاز','#d35400');
+  }else if(t==='gas'){
+    ctx.fillStyle='#e67e22';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText('G',x,y+4);lbl('غاز','#e67e22');
+  }else if(t==='supply'){
+    ctx.fillStyle='#2980b9';ctx.fillRect(x-12,y-12,24,24);
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*3,y+d[1]*3);ctx.lineTo(x+d[0]*9,y+d[1]*9);ctx.stroke();});
+    lbl('دافع','#2980b9');
+  }else if(t==='return'){
+    ctx.fillStyle='#e74c3c';ctx.fillRect(x-12,y-12,24,24);
+    ctx.strokeStyle='#fff';ctx.lineWidth=2;
+    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*9,y+d[1]*9);ctx.lineTo(x+d[0]*3,y+d[1]*3);ctx.stroke();});
+    lbl('راجع','#e74c3c');
+  }else if(t==='diffuser'){
+    ctx.strokeStyle='#16a085';ctx.lineWidth=2;ctx.strokeRect(x-13,y-13,26,26);
+    ctx.lineWidth=1;for(var j=-13;j<=13;j+=5){ctx.beginPath();ctx.moveTo(x+j,y-13);ctx.lineTo(x+j,y+13);ctx.stroke();}
+    lbl('ديفيوزر','#16a085');
+  }else if(t==='thermostat'){
+    ctx.fillStyle='#f39c12';ctx.beginPath();ctx.arc(x,y,10,0,2*Math.PI);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='bold 12px Arial';ctx.fillText('T',x,y+4);lbl('ثرموستات','#f39c12');
+  }else if(t==='hood'){
+    ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.strokeRect(x-16,y-9,32,18);
+    ctx.lineWidth=1;for(var k=-11;k<=11;k+=5){ctx.beginPath();ctx.moveTo(x+k,y-9);ctx.lineTo(x+k,y+9);ctx.stroke();}
+    lbl('شفاط','#8e44ad');
+  }else if(t==='spotlight'){
+    var col=o.ok===false?'#e74c3c':(o.ok===true?'#27ae60':'#f1c40f');
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,8,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;
+    for(var a=0;a<8;a++){var ang=a*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*11,y+Math.sin(ang)*11);ctx.lineTo(x+Math.cos(ang)*15,y+Math.sin(ang)*15);ctx.stroke();}
+    ctx.fillStyle=col;ctx.font='bold 9px Tajawal,Arial';
+    ctx.fillText(o.ok===true?'سبوت ✓':(o.ok===false?'سبوت ✗':'سبوت'),x,y+26);
+  }else if(t==='column'){
+    ctx.fillStyle='#444';ctx.fillRect(x-13,y-13,26,26);
+    ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.strokeRect(x-13,y-13,26,26);
+    ctx.fillStyle='#fff';ctx.fillText('عمود',x,y+4);
+  }
+  ctx.restore();
+}
+
 function dwDrawObject(o, selected){
   var ctx=DW.ctx;
+  // الأدوات النقطية (رموز)
+  var POINT_TYPES=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
+  if(POINT_TYPES.indexOf(o.type)!==-1){
+    dwDrawSymbol(o);
+    if(selected){
+      ctx.save();ctx.setLineDash([4,3]);ctx.strokeStyle='#d4af37';ctx.lineWidth=1.5;
+      ctx.strokeRect(o.x1-18,o.y1-18,36,36);ctx.setLineDash([]);ctx.restore();
+    }
+    return;
+  }
   ctx.save();
   ctx.strokeStyle=o.color||'#0a2e22'; ctx.fillStyle=o.color||'#0a2e22';
   ctx.lineWidth=o.size||3; ctx.lineCap='round'; ctx.lineJoin='round';
@@ -11205,16 +11306,37 @@ function openDrawPad(clientId){
       '</div>'+
       // الأدوات
       '<div style="padding:12px 16px;border-bottom:1px solid var(--bd)">'+
+        '<div style="font-size:10px;font-weight:800;color:var(--mt);margin-bottom:6px">🏗️ الهيكل</div>'+
         '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
           toolBtn('select','🖱️','تحديد')+
           toolBtn('wall','🧱','جدار',true)+
           toolBtn('cabinet','🗄️','خزانة')+
+          toolBtn('column','⬛','عمود')+
           toolBtn('line','📏','خط')+
           toolBtn('rect','▭','مستطيل')+
           toolBtn('door','🚪','باب')+
           toolBtn('window','🪟','نافذة')+
           toolBtn('appliance','🔲','جهاز')+
           toolBtn('measure','📐','قياس')+
+        '</div>'+
+        '<div style="font-size:10px;font-weight:800;color:var(--mt);margin:9px 0 6px">💧 التمديدات (ماء/صرف/كهرباء/غاز)</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('water_hot','🔴','ماء حار')+
+          toolBtn('water_cold','🔵','ماء بارد')+
+          toolBtn('drain','🕳️','صرف')+
+          toolBtn('floor_drain','🚿','بالوعة أرضية')+
+          toolBtn('elec','⚡','كهرباء')+
+          toolBtn('elec_power','🔌','مخرج جهاز')+
+          toolBtn('gas','🔥','غاز')+
+        '</div>'+
+        '<div style="font-size:10px;font-weight:800;color:var(--mt);margin:9px 0 6px">❄️ التكييف والإضاءة</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('supply','🟦','دافع')+
+          toolBtn('return','🟥','راجع')+
+          toolBtn('diffuser','❄️','ديفيوزر')+
+          toolBtn('thermostat','🌡️','ثرموستات')+
+          toolBtn('hood','🔥','شفاط')+
+          toolBtn('spotlight','💡','سبوت')+
         '</div>'+
       '</div>'+
       // الخصائص
@@ -11224,6 +11346,14 @@ function openDrawPad(clientId){
             return '<button onclick="dwSetColor(\''+col+'\')" data-col="'+col+'" class="dw-color" style="width:24px;height:24px;border-radius:50%;background:'+col+';border:3px solid '+(col==='#0a2e22'?'#d4af37':'transparent')+';cursor:pointer"></button>';
           }).join('')+
         '</div>'+
+        '<div style="width:1px;height:20px;background:var(--bd)"></div>'+
+        '<div style="display:flex;gap:5px;align-items:center"><span style="font-size:11px;color:var(--mt);font-weight:700">عمق المخزن</span>'+
+          '<select id="dw-cab-depth" onchange="dwSetCabDepth(this.value)" style="padding:5px 8px;border-radius:8px;border:1.5px solid var(--bd);background:var(--card);color:var(--tx);font-size:12px;font-weight:700">'+
+            '<option value="0">بدون</option>'+
+            '<option value="40">40سم (أمان 60)</option>'+
+            '<option value="60" selected>60سم (أمان 80)</option>'+
+            '<option value="custom">مخصص...</option>'+
+          '</select></div>'+
         '<div style="width:1px;height:20px;background:var(--bd)"></div>'+
         '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">⊞ شبكة</button>'+
         '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">📐 انطباق الزوايا</button>'+
@@ -11257,8 +11387,22 @@ var DW_HINTS={
   rect:'▭ المستطيل: اسحب لرسم مستطيل',
   door:'🚪 الباب: اسحب لرسم فتحة باب بقوس',
   window:'🪟 النافذة: اسحب لرسم نافذة',
-  appliance:'🔲 الجهاز: اسحب لتحديد مكان جهاز',
-  measure:'📐 القياس: اسحب لقياس مسافة بالسنتيمتر'
+  appliance:'🔲 الجهاز: انقر نقطة البداية ثم نقطة النهاية لتحديد مكان جهاز',
+  measure:'📐 القياس: انقر نقطتين لقياس المسافة بالسنتيمتر',
+  column:'⬛ العمود: انقر لوضع علامة عمود',
+  water_hot:'🔴 ماء حار: انقر لوضع نقطة مخرج الماء الحار',
+  water_cold:'🔵 ماء بارد: انقر لوضع نقطة مخرج الماء البارد',
+  drain:'🕳️ الصرف: انقر لوضع نقطة الصرف (تصريف المجلى/الغسالة)',
+  floor_drain:'🚿 البالوعة الأرضية: انقر لوضعها — ⚠️ تأكد من ميول الأرضية بعيداً عن الخزائن',
+  elec:'⚡ الكهرباء: انقر لوضع نقطة كهرباء/بريزة',
+  elec_power:'🔌 مخرج جهاز: انقر لمخرج قدرة عالية (فرن/غسالة)',
+  gas:'🔥 الغاز: انقر لوضع نقطة الغاز',
+  supply:'🟦 الدافع: انقر لوضعه — ⚠️ يُمنع فوق منطقة الخزائن',
+  'return':'🟥 الراجع: انقر لوضعه — مقابل الدافع، بعيد ≥3م عن الطبخ',
+  diffuser:'❄️ الديفيوزر: انقر لوضعه — بالزاوية بعيد عن الخزائن',
+  thermostat:'🌡️ الثرموستات: انقر لوضع منظّم الحرارة',
+  hood:'🔥 الشفاط: انقر لوضع فتحة الشفاط المركزي فوق الطبخ',
+  spotlight:'💡 السبوت لايت: انقر لوضعه — سيتحقق من المسافة الآمنة حسب عمق المخزن'
 };
 
 function dwInit(){
@@ -11280,6 +11424,21 @@ function dwInit(){
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
     if(DW.tool==='select'){
       DW.selected=dwHitTest(w.x,w.y); dwRender(); return;
+    }
+    // الأدوات النقطية (نقرة واحدة تضع الرمز)
+    var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
+    if(POINT_TOOLS.indexOf(DW.tool)!==-1){
+      var sym={type:DW.tool, x1:wx, y1:wy, x2:wx, y2:wy, color:DW.color, size:DW.size};
+      // تحذير ذكي للفتحات داخل المنطقة المحظورة
+      dwCheckForbiddenZone(DW.tool, wx, wy);
+      // السبوت لايت: تأكيد المسافة
+      if(DW.tool==='spotlight'){
+        var sd=dwSafeDist();
+        var msg=sd>0?('💡 السبوت لايت:\n\nهل يبعد '+sd+'سم على الأقل عن الجدار/الديكور؟\n(عمق المخزن '+DW.cabDepth+'سم + هامش '+DW.safetyMargin+'سم)\n\nموافق = مطابق ✓ | إلغاء = غير مطابق ✗'):'💡 السبوت لايت — هل المسافة مطابقة؟';
+        sym.ok=confirm(msg);
+      }
+      DW.objects.push(sym); dwPushHistory(); dwRender();
+      return;
     }
     // طريقة كليك-حركة-كليك: أول نقرة تثبّت البداية، الثانية تثبّت النهاية
     if(!DW.drawing){
@@ -11404,6 +11563,22 @@ function dwToggleAngles(){
   if(b)b.className='lux-btn btn-sm '+(DW.showAngles?'lux-btn-primary':'lux-btn-ghost');
   dwRender();
 }
+// تحديد عمق المخزن — يحدد المسافة الآمنة للفتحات (عمق + هامش)
+function dwSetCabDepth(val){
+  if(val==='custom'){
+    var c=prompt('عمق المخزن بالسنتيمتر:',DW.cabDepth);
+    if(c===null){document.getElementById('dw-cab-depth').value=DW.cabDepth;return;}
+    c=parseFloat(c);
+    if(isNaN(c)||c<0){toast('⚠️ رقم غير صحيح','err');return;}
+    DW.cabDepth=c;
+    toast('✅ عمق المخزن: '+c+'سم — المسافة الآمنة للفتحات: '+(c+DW.safetyMargin)+'سم','ok');
+  }else{
+    DW.cabDepth=parseFloat(val)||0;
+    if(DW.cabDepth>0)toast('✅ عمق '+DW.cabDepth+'سم — الفتحات تبعد '+(DW.cabDepth+DW.safetyMargin)+'سم عن الجدار','ok');
+  }
+}
+// المسافة الآمنة للفتحات
+function dwSafeDist(){return DW.cabDepth>0?DW.cabDepth+DW.safetyMargin:0;}
 // رسم زوايا الأركان (بين الجدران المتصلة) — عند الطلب فقط
 function dwDrawAngles(){
   if(!DW.showAngles)return;
