@@ -11176,6 +11176,7 @@ function openDrawPad(clientId){
         '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">📐 انطباق الزوايا</button>'+
         '<button onclick="dwUndo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↩️</button>'+
         '<button onclick="dwRedo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↪️</button>'+
+        '<button onclick="dwEditSelected()" class="lux-btn lux-btn-gold btn-sm" style="padding:6px 10px">✏️ تعديل القياس</button>'+
         '<button onclick="dwDeleteSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">🗑️ حذف المحدد</button>'+
         '<button onclick="dwClearAll()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">مسح الكل</button>'+
       '</div>'+
@@ -11195,7 +11196,7 @@ function openDrawPad(clientId){
 }
 
 var DW_HINTS={
-  select:'🖱️ التحديد: انقر على عنصر لتحديده ثم احذفه أو عدّله',
+  select:'🖱️ التحديد: انقر على عنصر لتحديده، ثم اضغط "✏️ تعديل القياس" لتغيير أبعاده — أو انقر مرتين على العنصر مباشرة',
   wall:'🧱 الجدار: اسحب لرسمه — الطول بالسم والزاوية تنطبق تلقائياً (90/135/180)',
   cabinet:'🗄️ الخزانة: اسحب لرسم خزانة (عمق 60سم تقريباً)',
   line:'📏 الخط: اسحب لرسم خط مستقيم',
@@ -11244,6 +11245,53 @@ function dwInit(){
   }
   cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
   cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+  // النقر المزدوج لتعديل القياس
+  cv.ondblclick=function(e){
+    e.preventDefault();
+    var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
+    var idx=dwHitTest(w.x,w.y);
+    if(idx>=0)dwEditObjectMeasure(idx);
+  };
+}
+
+// تعديل قياس عنصر (الطول بالسم) — النقر المزدوج
+function dwEditObjectMeasure(idx){
+  var o=DW.objects[idx];
+  if(!o)return;
+  var dx=o.x2-o.x1, dy=o.y2-o.y1;
+  var curLen=Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+  var isWall=(o.type==='wall'||o.type==='line'||o.type==='measure');
+  var isBox=(o.type==='rect'||o.type==='cabinet'||o.type==='appliance'||o.type==='door'||o.type==='window');
+
+  if(isBox){
+    // مستطيل: نعدّل العرض والارتفاع
+    var curW=Math.round(Math.abs(dx)/DW.pxPerCm), curH=Math.round(Math.abs(dy)/DW.pxPerCm);
+    var nw=prompt('العرض بالسنتيمتر:',curW);
+    if(nw===null)return;
+    var nh=prompt('الارتفاع/العمق بالسنتيمتر:',curH);
+    if(nh===null)return;
+    nw=parseFloat(nw); nh=parseFloat(nh);
+    if(isNaN(nw)||isNaN(nh)||nw<=0||nh<=0){toast('⚠️ أرقام غير صحيحة','err');return;}
+    var sx=o.x1<=o.x2?1:-1, sy=o.y1<=o.y2?1:-1;
+    o.x2=o.x1+sx*nw*DW.pxPerCm;
+    o.y2=o.y1+sy*nh*DW.pxPerCm;
+    DW.selected=idx; dwPushHistory(); dwRender();
+    toast('✅ '+nw+'×'+nh+' سم','ok');
+    return;
+  }
+
+  // خط/جدار: نعدّل الطول مع الحفاظ على الزاوية ونقطة البداية
+  var newLen=prompt('الطول بالسنتيمتر:',curLen);
+  if(newLen===null)return;
+  newLen=parseFloat(newLen);
+  if(isNaN(newLen)||newLen<=0){toast('⚠️ رقم غير صحيح','err');return;}
+  var lenPx=newLen*DW.pxPerCm;
+  var ang=Math.atan2(dy,dx); // نفس الزاوية الحالية
+  o.x2=o.x1+Math.cos(ang)*lenPx;
+  o.y2=o.y1+Math.sin(ang)*lenPx;
+  if(o.type==='wall')o.lenCm=newLen;
+  DW.selected=idx; dwPushHistory(); dwRender();
+  toast('✅ الطول: '+newLen+' سم','ok');
 }
 
 // اختبار النقر على كائن
@@ -11286,6 +11334,10 @@ function dwToggleSnap(){
 function dwDeleteSelected(){
   if(DW.selected<0){toast('اختر عنصراً أولاً (أداة التحديد)','err');return;}
   DW.objects.splice(DW.selected,1); DW.selected=-1; dwPushHistory(); dwRender();
+}
+function dwEditSelected(){
+  if(DW.selected<0){toast('💡 اختر عنصراً أولاً بأداة التحديد 🖱️، أو انقر مرتين على العنصر','err');return;}
+  dwEditObjectMeasure(DW.selected);
 }
 function dwClearAll(){
   if(!DW.objects.length)return;
