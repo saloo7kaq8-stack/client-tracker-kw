@@ -11069,6 +11069,9 @@ function dwBuildObject(x1,y1,x2,y2,isPreview){
   if(t==='rect'||t==='cabinet'||t==='appliance'){
     return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
   }
+  if(['sink','stove','fridge','oven','washer','dishwasher'].indexOf(t)!==-1){
+    return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
+  }
   if(t==='door'||t==='window'){
     return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
   }
@@ -11271,6 +11274,32 @@ function dwDrawObject(o, selected){
     var wlw=ctx.measureText(wLabel).width+10;
     ctx.fillStyle='#fff'; ctx.fillRect(wmx-wlw/2,wmy+8,wlw,15);
     ctx.fillStyle=o.color; ctx.fillText(wLabel,wmx,wmy+19);
+  }else if(['sink','stove','fridge','oven','washer','dishwasher'].indexOf(o.type)!==-1){
+    var APP={sink:['مجلى','🚰','#2980b9'],stove:['بوتاجاز','🍳','#e67e22'],fridge:['ثلاجة','🧊','#16a085'],oven:['فرن','🔥','#c0392b'],washer:['غسالة','🌀','#8e44ad'],dishwasher:['جلاية','💧','#2980b9']};
+    var ap=APP[o.type];
+    var ax=Math.min(o.x1,o.x2), ay=Math.min(o.y1,o.y2), aw=Math.abs(dx), ah=Math.abs(dy);
+    ctx.fillStyle=ap[2]+'18'; ctx.fillRect(ax,ay,aw,ah);
+    ctx.strokeStyle=ap[2]; ctx.lineWidth=2; ctx.strokeRect(ax,ay,aw,ah);
+    // أيقونة + اسم بالوسط
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='18px Arial'; ctx.fillStyle=ap[2];
+    ctx.fillText(ap[1],ax+aw/2,ay+ah/2-7);
+    ctx.font='bold 11px Tajawal,Arial';
+    ctx.fillText(ap[0],ax+aw/2,ay+ah/2+11);
+    ctx.textBaseline='alphabetic';
+    // تفاصيل المجلى (حوضان)
+    if(o.type==='sink'){
+      ctx.strokeStyle=ap[2];ctx.lineWidth=1;
+      ctx.strokeRect(ax+aw*0.15,ay+ah*0.2,aw*0.3,ah*0.6);
+      ctx.strokeRect(ax+aw*0.55,ay+ah*0.2,aw*0.3,ah*0.6);
+    }
+    // البوتاجاز (٤ عيون)
+    if(o.type==='stove'){
+      ctx.strokeStyle=ap[2];ctx.lineWidth=1;
+      [[0.3,0.3],[0.7,0.3],[0.3,0.7],[0.7,0.7]].forEach(function(p){
+        ctx.beginPath();ctx.arc(ax+aw*p[0],ay+ah*p[1],Math.min(aw,ah)*0.12,0,2*Math.PI);ctx.stroke();
+      });
+    }
   }
 
   // تمييز المحدد
@@ -11341,6 +11370,15 @@ function openDrawPad(clientId){
           toolBtn('hood','🔥','شفاط')+
           toolBtn('spotlight','💡','سبوت')+
         '</div>'+
+        '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin:9px 0 6px">🍳 الأجهزة والمطبخ</div>'+
+        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('sink','🚰','مجلى')+
+          toolBtn('stove','🍳','بوتاجاز')+
+          toolBtn('fridge','🧊','ثلاجة')+
+          toolBtn('oven','🔥','فرن')+
+          toolBtn('washer','🌀','غسالة')+
+          toolBtn('dishwasher','💧','جلاية')+
+        '</div>'+
       '</div>'+
       // الخصائص
       '<div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px;border-bottom:1px solid #dce6e2;align-items:center">'+
@@ -11406,7 +11444,13 @@ var DW_HINTS={
   diffuser:'❄️ الديفيوزر: انقر لوضعه — بالزاوية بعيد عن الخزائن',
   thermostat:'🌡️ الثرموستات: انقر لوضع منظّم الحرارة',
   hood:'🔥 الشفاط: انقر لوضع فتحة الشفاط المركزي فوق الطبخ',
-  spotlight:'💡 السبوت لايت: انقر لوضعه — سيتحقق من المسافة الآمنة حسب عمق المخزن'
+  spotlight:'💡 السبوت لايت: انقر لوضعه — سيتحقق من المسافة الآمنة حسب عمق المخزن',
+  sink:'🚰 المجلى: اسحب لرسم المجلى (حوضان) — انقر نقطتين',
+  stove:'🍳 البوتاجاز: اسحب لرسم البوتاجاز (٤ عيون) — انقر نقطتين',
+  fridge:'🧊 الثلاجة: اسحب لتحديد مكان الثلاجة',
+  oven:'🔥 الفرن: اسحب لتحديد مكان الفرن',
+  washer:'🌀 الغسالة: اسحب لتحديد مكان الغسالة',
+  dishwasher:'💧 الجلاية: اسحب لتحديد مكان غسالة الصحون'
 };
 
 function dwInit(){
