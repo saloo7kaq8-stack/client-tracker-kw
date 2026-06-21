@@ -10914,37 +10914,246 @@ function measSearch(q){
 }
 
 // ═══ لوحة الرسم على التابلت ═══
-// ═══ أداة رسم المطابخ الاحترافية (Kitchen Drafting Tool) ═══
-var _drawState={ctx:null,cv:null,drawing:false,color:'#0a2e22',size:3,tool:'wall',
-  history:[],clientId:null,startX:0,startY:0,snapshot:null,showGrid:true,scale:50};
-// scale: عدد البكسلات لكل 50سم (للقياس التقريبي)
+// ═══════════════════════════════════════════════════════
+// 🏛️ أداة رسم المطابخ — نظام الكائنات (Vector Engine)
+// كل عنصر كائن مستقل قابل للتعديل — أساس احترافي عالمي
+// المقياس: 1 متر = 100 بكسل افتراضياً (PX_PER_M)، قابل للتحجيم
+// ═══════════════════════════════════════════════════════
+var DW={
+  cv:null, ctx:null, clientId:null,
+  objects:[],            // كل الكائنات المرسومة
+  tool:'wall',
+  color:'#0a2e22', size:3,
+  showGrid:true, showRuler:true,
+  // المقياس: عدد البكسلات لكل متر (100px = 1م = 100سم)، فالـ 1px = 1سم
+  pxPerCm:1,
+  snapGrid:5,            // انطباق كل 5سم
+  snapAngle:true,        // انطباق الزوايا للقيم الشائعة
+  // حالة الرسم الجاري
+  drawing:false, startX:0, startY:0, curX:0, curY:0,
+  freePath:null,         // للرسم الحر
+  selected:-1,           // الكائن المحدد للتعديل
+  history:[], histIdx:-1,
+  view:{ox:0, oy:0, zoom:1} // الإزاحة والتكبير
+};
 
-function openDrawPad(clientId){
-  _drawState.clientId=clientId;
-  _drawState.history=[];
-  _drawState.tool='wall';
-  var modal=document.createElement('div');
-  modal.id='draw-pad-modal';
-  modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:8px';
+// ── تحويلات الإحداثيات (شاشة ↔ عالم) ──
+function dwToWorld(sx,sy){
+  return {x:(sx-DW.view.ox)/DW.view.zoom, y:(sy-DW.view.oy)/DW.view.zoom};
+}
+function dwSnap(v){
+  if(!DW.showGrid)return v;
+  var g=DW.snapGrid; // بالسم
+  return Math.round(v/g)*g;
+}
+// انطباق الزاوية لأقرب قيمة شائعة (0,45,90,135,180...)
+function dwSnapAngle(x1,y1,x2,y2){
+  var dx=x2-x1, dy=y2-y1;
+  var len=Math.sqrt(dx*dx+dy*dy);
+  if(len<1)return {x:x2,y:y2,angle:0,len:0};
+  var ang=Math.atan2(dy,dx)*180/Math.PI; // -180..180
+  if(DW.snapAngle){
+    var step=15; // انطباق كل 15 درجة
+    ang=Math.round(ang/step)*step;
+  }
+  var rad=ang*Math.PI/180;
+  return {x:x1+Math.cos(rad)*len, y:y1+Math.sin(rad)*len, angle:ang, len:len};
+}
 
-  function toolBtn(id,icon,label,active){
-    return '<button onclick="drawSetTool(\''+id+'\')" id="dt-'+id+'" class="draw-tool-btn" data-tool="'+id+'" '+
-      'style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 10px;border-radius:10px;border:1.5px solid '+(active?'#0a8f5c':'var(--bd)')+';background:'+(active?'rgba(10,143,92,.12)':'var(--card)')+';cursor:pointer;min-width:58px;transition:all .15s">'+
-      '<span style="font-size:18px">'+icon+'</span>'+
-      '<span style="font-size:9.5px;font-weight:700;color:var(--tx)">'+label+'</span></button>';
+// ── إدارة السجل (تراجع/إعادة) ──
+function dwPushHistory(){
+  DW.history=DW.history.slice(0,DW.histIdx+1);
+  DW.history.push(JSON.stringify(DW.objects));
+  if(DW.history.length>40)DW.history.shift();
+  DW.histIdx=DW.history.length-1;
+}
+function dwUndo(){
+  if(DW.histIdx<=0)return;
+  DW.histIdx--;
+  DW.objects=JSON.parse(DW.history[DW.histIdx]);
+  DW.selected=-1; dwRender();
+}
+function dwRedo(){
+  if(DW.histIdx>=DW.history.length-1)return;
+  DW.histIdx++;
+  DW.objects=JSON.parse(DW.history[DW.histIdx]);
+  DW.selected=-1; dwRender();
+}
+
+// ═══════════════════════════════════════════════════════
+// المحرّك الأساسي: إعادة رسم كل الكائنات
+// ═══════════════════════════════════════════════════════
+function dwRender(){
+  var ctx=DW.ctx, cv=DW.cv;
+  if(!ctx)return;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,cv.width,cv.height);
+  dwDrawGrid();
+  // رسم كل الكائنات
+  ctx.save();
+  ctx.translate(DW.view.ox,DW.view.oy); ctx.scale(DW.view.zoom,DW.view.zoom);
+  DW.objects.forEach(function(o,i){
+    dwDrawObject(o, i===DW.selected);
+  });
+  // معاينة العنصر الجاري رسمه
+  if(DW.drawing && DW.tool!=='pen' && DW.tool!=='select'){
+    var prev=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,true);
+    if(prev){ctx.globalAlpha=0.6; dwDrawObject(prev,false); ctx.globalAlpha=1;}
+  }
+  ctx.restore();
+  dwDrawRuler();
+}
+
+// ── الشبكة ──
+function dwDrawGrid(){
+  if(!DW.showGrid)return;
+  var ctx=DW.ctx, cv=DW.cv;
+  var z=DW.view.zoom, ox=DW.view.ox, oy=DW.view.oy;
+  var minor=10*DW.pxPerCm*z;  // كل 10سم
+  var major=100*DW.pxPerCm*z; // كل 100سم (1م)
+  ctx.save();
+  // خطوط ثانوية
+  ctx.strokeStyle='#eef3f5'; ctx.lineWidth=1;
+  for(var x=ox%minor;x<cv.width;x+=minor){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();}
+  for(var y=oy%minor;y<cv.height;y+=minor){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}
+  // خطوط رئيسية (كل متر)
+  ctx.strokeStyle='#dce6e9'; ctx.lineWidth=1.5;
+  for(var x2=ox%major;x2<cv.width;x2+=major){ctx.beginPath();ctx.moveTo(x2,0);ctx.lineTo(x2,cv.height);ctx.stroke();}
+  for(var y2=oy%major;y2<cv.height;y2+=major){ctx.beginPath();ctx.moveTo(0,y2);ctx.lineTo(cv.width,y2);ctx.stroke();}
+  ctx.restore();
+}
+
+// ── المسطرة ──
+function dwDrawRuler(){
+  if(!DW.showRuler)return;
+  var ctx=DW.ctx, cv=DW.cv, z=DW.view.zoom, ox=DW.view.ox, oy=DW.view.oy;
+  var major=100*DW.pxPerCm*z;
+  ctx.save();
+  // شريط علوي وجانبي
+  ctx.fillStyle='#0a2e22';
+  ctx.fillRect(0,0,cv.width,20); ctx.fillRect(0,0,20,cv.height);
+  ctx.fillStyle='#fff'; ctx.font='9px Tajawal,Arial'; ctx.textAlign='center';
+  // علامات أفقية (كل متر)
+  for(var x=ox%major,wm=Math.round((-ox)/major);x<cv.width;x+=major,wm++){
+    if(x>20){var cm=wm*100; ctx.fillText(cm>=0?cm+'':'',x,13);}
+  }
+  // علامات رأسية
+  ctx.save();
+  for(var y=oy%major,hm=Math.round((-oy)/major);y<cv.height;y+=major,hm++){
+    if(y>20){var cmy=hm*100; ctx.save();ctx.translate(11,y);ctx.rotate(-Math.PI/2);ctx.fillText(cmy>=0?cmy+'':'',0,3);ctx.restore();}
+  }
+  ctx.restore();
+  // زاوية
+  ctx.fillStyle='#d4af37'; ctx.fillRect(0,0,20,20);
+  ctx.fillStyle='#0a2e22'; ctx.font='bold 8px Tajawal,Arial'; ctx.fillText('سم',10,13);
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════
+// بناء كائن من نقطتين (حسب الأداة الحالية)
+// ═══════════════════════════════════════════════════════
+function dwBuildObject(x1,y1,x2,y2,isPreview){
+  var t=DW.tool;
+  var base={type:t, color:DW.color, size:DW.size};
+  if(t==='wall'){
+    var snapped=dwSnapAngle(x1,y1,x2,y2);
+    return Object.assign(base,{x1:x1,y1:y1,x2:snapped.x,y2:snapped.y,angle:snapped.angle,lenCm:Math.round(snapped.len/DW.pxPerCm)});
+  }
+  if(t==='line'||t==='measure'){
+    return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
+  }
+  if(t==='rect'||t==='cabinet'||t==='appliance'){
+    return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
+  }
+  if(t==='door'||t==='window'){
+    return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
+  }
+  return null;
+}
+
+// ═══════════════════════════════════════════════════════
+// رسم كائن واحد
+// ═══════════════════════════════════════════════════════
+function dwDrawObject(o, selected){
+  var ctx=DW.ctx;
+  ctx.save();
+  ctx.strokeStyle=o.color||'#0a2e22'; ctx.fillStyle=o.color||'#0a2e22';
+  ctx.lineWidth=o.size||3; ctx.lineCap='round'; ctx.lineJoin='round';
+  var dx=(o.x2||0)-(o.x1||0), dy=(o.y2||0)-(o.y1||0);
+
+  if(o.type==='wall'){
+    ctx.lineWidth=Math.max((o.size||3)+5,9);
+    ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();
+    // قياس الطول بالسم + الزاوية
+    var mx=(o.x1+o.x2)/2, my=(o.y1+o.y2)/2;
+    var lenCm=o.lenCm||Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+    ctx.font='bold 12px Tajawal,Arial'; ctx.textAlign='center';
+    var label=lenCm+' سم';
+    var tw=ctx.measureText(label).width+10;
+    ctx.fillStyle='#fff'; ctx.fillRect(mx-tw/2,my-22,tw,16);
+    ctx.strokeStyle=o.color; ctx.lineWidth=1; ctx.strokeRect(mx-tw/2,my-22,tw,16);
+    ctx.fillStyle=o.color; ctx.fillText(label,mx,my-10);
+  }else if(o.type==='line'){
+    ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();
+  }else if(o.type==='rect'||o.type==='cabinet'){
+    ctx.strokeRect(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2),Math.abs(dx),Math.abs(dy));
+    if(o.type==='cabinet'){
+      ctx.lineWidth=1; ctx.strokeStyle=(o.color||'#0a2e22')+'88';
+      ctx.beginPath();ctx.moveTo(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2));ctx.lineTo(Math.max(o.x1,o.x2),Math.max(o.y1,o.y2));ctx.stroke();
+    }
+  }else if(o.type==='appliance'){
+    ctx.setLineDash([6,4]);
+    ctx.strokeRect(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2),Math.abs(dx),Math.abs(dy));
+    ctx.setLineDash([]);
+    ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.moveTo(o.x2,o.y1);ctx.lineTo(o.x1,o.y2);ctx.stroke();
+  }else if(o.type==='measure'){
+    ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();
+    var dCm=Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+    var mmx=(o.x1+o.x2)/2, mmy=(o.y1+o.y2)/2-6;
+    ctx.font='bold 12px Tajawal,Arial';ctx.textAlign='center';
+    ctx.fillStyle='#fff';ctx.fillRect(mmx-24,mmy-12,48,16);
+    ctx.fillStyle=o.color;ctx.fillText(dCm+' سم',mmx,mmy);
   }
 
+  // تمييز المحدد
+  if(selected){
+    ctx.setLineDash([4,3]); ctx.strokeStyle='#d4af37'; ctx.lineWidth=1.5;
+    var pad=8;
+    var minx=Math.min(o.x1,o.x2)-pad, miny=Math.min(o.y1,o.y2)-pad;
+    ctx.strokeRect(minx,miny,Math.abs(dx)+pad*2,Math.abs(dy)+pad*2);
+    ctx.setLineDash([]);
+  }
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════════════════
+// واجهة الأداة
+// ═══════════════════════════════════════════════════════
+function openDrawPad(clientId){
+  DW.clientId=clientId; DW.objects=[]; DW.tool='wall'; DW.selected=-1;
+  DW.history=[]; DW.histIdx=-1; DW.view={ox:30,oy:30,zoom:1};
+
+  function toolBtn(id,icon,label,active){
+    return '<button onclick="dwSetTool(\''+id+'\')" id="dwt-'+id+'" class="dw-tool" data-tool="'+id+'" '+
+      'style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 9px;border-radius:9px;border:1.5px solid '+(active?'#0a8f5c':'var(--bd)')+';background:'+(active?'rgba(10,143,92,.12)':'var(--card)')+';cursor:pointer;min-width:54px;transition:all .15s">'+
+      '<span style="font-size:17px">'+icon+'</span><span style="font-size:9px;font-weight:700;color:var(--tx)">'+label+'</span></button>';
+  }
+
+  var modal=document.createElement('div');
+  modal.id='draw-pad-modal';
+  modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:6px';
   modal.innerHTML=
-    '<div style="background:var(--card);border-radius:18px;width:100%;max-width:1000px;max-height:97vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.4)">'+
+    '<div style="background:var(--card);border-radius:18px;width:100%;max-width:1040px;max-height:97vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.5)">'+
       // الهيدر
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(135deg,#0a2e22,#0a8f5c);border-radius:18px 18px 0 0">'+
-        '<div style="color:#fff;font-weight:900;font-size:16px">📐 أداة رسم المطبخ</div>'+
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(135deg,#0a2e22,#0a8f5c)">'+
+        '<div style="color:#fff;font-weight:900;font-size:16px">🏛️ مخطط المطبخ الاحترافي</div>'+
         '<button onclick="closeDrawPad()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer">✕</button>'+
       '</div>'+
-      // الأدوات الهندسية
+      // الأدوات
       '<div style="padding:12px 16px;border-bottom:1px solid var(--bd)">'+
-        '<div style="font-size:11px;font-weight:800;color:var(--mt);margin-bottom:7px">🔧 أدوات الرسم</div>'+
         '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('select','🖱️','تحديد')+
           toolBtn('wall','🧱','جدار',true)+
           toolBtn('cabinet','🗄️','خزانة')+
           toolBtn('line','📏','خط')+
@@ -10952,47 +11161,28 @@ function openDrawPad(clientId){
           toolBtn('door','🚪','باب')+
           toolBtn('window','🪟','نافذة')+
           toolBtn('appliance','🔲','جهاز')+
-          toolBtn('column','⬛','عمود')+
           toolBtn('measure','📐','قياس')+
-          toolBtn('text','🔤','نص')+
-          toolBtn('pen','✏️','حر')+
-          toolBtn('eraser','🧽','ممحاة')+
-        '</div>'+
-        // أدوات التكييف المركزي والإضاءة
-        '<div style="font-size:11px;font-weight:800;color:var(--mt);margin:10px 0 7px">❄️ التكييف المركزي والإضاءة</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
-          toolBtn('supply','🔵','دافع')+
-          toolBtn('return','🔴','راجع')+
-          toolBtn('diffuser','❄️','ديفيوزر')+
-          toolBtn('thermostat','🌡️','ثرموستات')+
-          toolBtn('hood','🔥','شفاط')+
-          toolBtn('spotlight','💡','سبوت لايت')+
         '</div>'+
       '</div>'+
       // الخصائص
       '<div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px;border-bottom:1px solid var(--bd);align-items:center">'+
-        // ألوان
         '<div style="display:flex;gap:4px">'+
           ['#0a2e22','#e74c3c','#2980b9','#27ae60','#f39c12','#000000'].map(function(col){
-            return '<button onclick="drawSetColor(\''+col+'\')" data-col="'+col+'" class="draw-color" style="width:26px;height:26px;border-radius:50%;background:'+col+';border:3px solid '+(col==='#0a2e22'?'#d4af37':'transparent')+';cursor:pointer"></button>';
+            return '<button onclick="dwSetColor(\''+col+'\')" data-col="'+col+'" class="dw-color" style="width:24px;height:24px;border-radius:50%;background:'+col+';border:3px solid '+(col==='#0a2e22'?'#d4af37':'transparent')+';cursor:pointer"></button>';
           }).join('')+
         '</div>'+
-        '<div style="width:1px;height:22px;background:var(--bd)"></div>'+
-        // سماكة
-        '<div style="display:flex;gap:4px;align-items:center"><span style="font-size:11px;color:var(--mt)">السماكة</span>'+
-          [2,3,5,8].map(function(sz){return '<button onclick="drawSetSize('+sz+')" data-sz="'+sz+'" class="draw-size lux-btn lux-btn-ghost btn-sm" style="padding:4px 9px;'+(sz===3?'background:var(--accent);color:#fff':'')+'">'+sz+'</button>';}).join('')+
-        '</div>'+
-        '<div style="width:1px;height:22px;background:var(--bd)"></div>'+
-        // شبكة + تراجع + مسح
-        '<button onclick="drawToggleGrid()" id="draw-grid-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 11px">⊞ الشبكة</button>'+
-        '<button onclick="drawUndo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px">↩️ تراجع</button>'+
-        '<button onclick="drawClear()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px;color:#e74c3c">🗑️ مسح</button>'+
+        '<div style="width:1px;height:20px;background:var(--bd)"></div>'+
+        '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">⊞ شبكة</button>'+
+        '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">📐 انطباق الزوايا</button>'+
+        '<button onclick="dwUndo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↩️</button>'+
+        '<button onclick="dwRedo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↪️</button>'+
+        '<button onclick="dwDeleteSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">🗑️ حذف المحدد</button>'+
+        '<button onclick="dwClearAll()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">مسح الكل</button>'+
       '</div>'+
-      // تلميح
-      '<div id="draw-hint" style="font-size:11px;color:var(--mt);padding:6px 16px;background:rgba(10,143,92,.06)">💡 اختر أداة ثم اسحب على اللوحة لرسمها. الجدران والخزائن تنطبق على الشبكة تلقائياً.</div>'+
+      '<div id="dw-hint" style="font-size:11px;color:var(--mt);padding:6px 16px;background:rgba(10,143,92,.06)">💡 الجدار: اسحب لرسمه — الطول يظهر بالسم والزاوية تنطبق تلقائياً لقيم دقيقة (90/135/180)</div>'+
       // اللوحة
       '<div style="padding:14px 16px;display:flex;justify-content:center">'+
-        '<canvas id="draw-canvas" width="900" height="560" style="width:100%;max-width:900px;border:2px solid var(--bd);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
+        '<canvas id="dw-canvas" width="980" height="580" style="width:100%;max-width:980px;border:2px solid var(--bd);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
       '</div>'+
       // الحفظ
       '<div style="display:flex;gap:10px;padding:0 16px 18px">'+
@@ -11001,321 +11191,119 @@ function openDrawPad(clientId){
       '</div>'+
     '</div>';
   document.body.appendChild(modal);
-  setTimeout(_initDrawCanvas,80);
+  setTimeout(dwInit,80);
 }
 
-var TOOL_HINTS={
-  wall:'🧱 الجدار: اسحب لرسم جدار سميك (ينطبق على الشبكة)',
-  cabinet:'🗄️ الخزانة: اسحب لرسم خزانة بعمق 60سم تقريباً',
+var DW_HINTS={
+  select:'🖱️ التحديد: انقر على عنصر لتحديده ثم احذفه أو عدّله',
+  wall:'🧱 الجدار: اسحب لرسمه — الطول بالسم والزاوية تنطبق تلقائياً (90/135/180)',
+  cabinet:'🗄️ الخزانة: اسحب لرسم خزانة (عمق 60سم تقريباً)',
   line:'📏 الخط: اسحب لرسم خط مستقيم',
   rect:'▭ المستطيل: اسحب لرسم مستطيل',
   door:'🚪 الباب: اسحب لرسم فتحة باب بقوس',
-  window:'🪟 النافذة: اسحب لرسم نافذة على الجدار',
-  appliance:'🔲 الجهاز: اسحب لرسم مكان جهاز (فرن/ثلاجة/غسالة)',
-  measure:'📐 القياس: اسحب لرسم خط قياس مع المسافة بالسنتيمتر',
-  text:'🔤 النص: انقر على اللوحة لكتابة نص',
-  pen:'✏️ الرسم الحر: ارسم بإصبعك بحرية',
-  eraser:'🧽 الممحاة: امسح أجزاء من الرسم',
-  column:'⬛ العمود: انقر لوضع علامة عمود في هذا المكان',
-  supply:'🔵 الدافع: انقر لتحديد مكان فتحة الهواء الدافع (Supply)',
-  'return':'🔴 الراجع: انقر لتحديد مكان فتحة الهواء الراجع (Return) — يكون مقابل الدافع وبعيد ≥3م عن الطبخ',
-  diffuser:'❄️ الديفيوزر: انقر لتحديد مكانه — بالزاوية بعيد عن الخزائن وفوق الباب وفوق الثرموستات',
-  thermostat:'🌡️ الثرموستات: انقر لتحديد مكان منظّم الحرارة',
-  hood:'🔥 الشفاط: انقر لتحديد مكان فتحة الشفاط المركزي فوق الطبخ',
-  spotlight:'💡 السبوت لايت: انقر لوضعه — يجب أن يبعد 80سم عن الديكور (سيسألك النظام للتأكد)'
+  window:'🪟 النافذة: اسحب لرسم نافذة',
+  appliance:'🔲 الجهاز: اسحب لتحديد مكان جهاز',
+  measure:'📐 القياس: اسحب لقياس مسافة بالسنتيمتر'
 };
 
-function _initDrawCanvas(){
-  var cv=document.getElementById('draw-canvas');
+function dwInit(){
+  var cv=document.getElementById('dw-canvas');
   if(!cv)return;
-  var ctx=cv.getContext('2d');
-  _drawState.cv=cv;_drawState.ctx=ctx;
-  _drawState.color='#0a2e22';_drawState.size=3;_drawState.tool='wall';_drawState.showGrid=true;
-  _drawBg();
-  _saveDrawHistory();
+  DW.cv=cv; DW.ctx=cv.getContext('2d');
+  dwPushHistory();
+  dwRender();
 
-  function pos(e){
+  function getXY(e){
     var r=cv.getBoundingClientRect();
     var cx=e.touches?e.touches[0].clientX:e.clientX;
     var cy=e.touches?e.touches[0].clientY:e.clientY;
-    var x=(cx-r.left)*(cv.width/r.width), y=(cy-r.top)*(cv.height/r.height);
-    // انطباق على الشبكة للجدران والخزائن
-    if((_drawState.tool==='wall'||_drawState.tool==='cabinet'||_drawState.tool==='rect')&&_drawState.showGrid){
-      var g=25;x=Math.round(x/g)*g;y=Math.round(y/g)*g;
-    }
-    return {x:x,y:y};
+    return {sx:(cx-r.left)*(cv.width/r.width), sy:(cy-r.top)*(cv.height/r.height)};
   }
   function start(e){
     e.preventDefault();
-    var p=pos(e);_drawState.startX=p.x;_drawState.startY=p.y;_drawState.drawing=true;
-    if(_drawState.tool==='text'){
-      var txt=prompt('اكتب النص:');
-      if(txt){ctx.fillStyle=_drawState.color;ctx.font='bold 16px Tajawal,Arial';ctx.fillText(txt,p.x,p.y);_saveDrawHistory();}
-      _drawState.drawing=false;return;
+    var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
+    var wx=dwSnap(w.x), wy=dwSnap(w.y);
+    if(DW.tool==='select'){
+      DW.selected=dwHitTest(w.x,w.y); dwRender(); return;
     }
-    // الأدوات النقطية (تُرسم بنقرة واحدة)
-    var pointTools=['column','supply','return','diffuser','thermostat','hood','spotlight'];
-    if(pointTools.indexOf(_drawState.tool)!==-1){
-      _drawSymbol(_drawState.tool,p.x,p.y);
-      _saveDrawHistory();
-      _drawState.drawing=false;return;
-    }
-    if(_drawState.tool==='pen'||_drawState.tool==='eraser'){_drawState.lastX=p.x;_drawState.lastY=p.y;}
-    // نحفظ snapshot للأشكال (preview)
-    _drawState.snapshot=ctx.getImageData(0,0,cv.width,cv.height);
+    DW.drawing=true; DW.startX=wx; DW.startY=wy; DW.curX=wx; DW.curY=wy;
   }
   function move(e){
-    if(!_drawState.drawing)return;e.preventDefault();
-    var p=pos(e);
-    var t=_drawState.tool;
-    if(t==='pen'||t==='eraser'){
-      ctx.strokeStyle=t==='eraser'?'#fff':_drawState.color;
-      ctx.lineWidth=t==='eraser'?_drawState.size*6:_drawState.size;
-      ctx.lineCap='round';ctx.lineJoin='round';
-      ctx.beginPath();ctx.moveTo(_drawState.lastX,_drawState.lastY);ctx.lineTo(p.x,p.y);ctx.stroke();
-      _drawState.lastX=p.x;_drawState.lastY=p.y;
-      return;
-    }
-    // أشكال: استرجاع snapshot ثم رسم preview
-    if(_drawState.snapshot)ctx.putImageData(_drawState.snapshot,0,0);
-    _drawShape(t,_drawState.startX,_drawState.startY,p.x,p.y);
+    if(!DW.drawing)return; e.preventDefault();
+    var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
+    DW.curX=dwSnap(w.x); DW.curY=dwSnap(w.y);
+    dwRender();
   }
   function end(e){
-    if(!_drawState.drawing)return;_drawState.drawing=false;
-    _saveDrawHistory();
+    if(!DW.drawing)return; DW.drawing=false;
+    var dist=Math.abs(DW.curX-DW.startX)+Math.abs(DW.curY-DW.startY);
+    if(dist<3){dwRender();return;} // نقرة بدون سحب
+    var obj=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,false);
+    if(obj){DW.objects.push(obj); dwPushHistory();}
+    dwRender();
   }
-  cv.onmousedown=start;cv.onmousemove=move;cv.onmouseup=end;cv.onmouseleave=end;
-  cv.ontouchstart=start;cv.ontouchmove=move;cv.ontouchend=end;
+  cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
+  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
 }
 
-// رسم خلفية (شبكة + مسطرة)
-function _drawBg(){
-  var cv=_drawState.cv,ctx=_drawState.ctx;
-  ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);
-  if(_drawState.showGrid){
-    ctx.strokeStyle='#e8eef0';ctx.lineWidth=1;
-    for(var x=0;x<=cv.width;x+=25){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();}
-    for(var y=0;y<=cv.height;y+=25){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();}
-    ctx.strokeStyle='#d5e0e3';
-    for(var x2=0;x2<=cv.width;x2+=100){ctx.beginPath();ctx.moveTo(x2,0);ctx.lineTo(x2,cv.height);ctx.stroke();}
-    for(var y2=0;y2<=cv.height;y2+=100){ctx.beginPath();ctx.moveTo(0,y2);ctx.lineTo(cv.width,y2);ctx.stroke();}
+// اختبار النقر على كائن
+function dwHitTest(wx,wy){
+  for(var i=DW.objects.length-1;i>=0;i--){
+    var o=DW.objects[i];
+    var minx=Math.min(o.x1,o.x2)-8, maxx=Math.max(o.x1,o.x2)+8;
+    var miny=Math.min(o.y1,o.y2)-8, maxy=Math.max(o.y1,o.y2)+8;
+    if(wx>=minx&&wx<=maxx&&wy>=miny&&wy<=maxy)return i;
   }
-  // المسطرة (علوية + جانبية) بالسنتيمتر — كل 25px = 50سم
-  ctx.save();
-  ctx.fillStyle='#0a2e22';ctx.fillRect(0,0,cv.width,18); // شريط علوي
-  ctx.fillRect(0,0,18,cv.height); // شريط جانبي
-  ctx.fillStyle='#fff';ctx.font='9px Tajawal,Arial';ctx.textAlign='center';
-  for(var rx=100;rx<cv.width;rx+=100){
-    var cm=Math.round(rx*2); // 1px=2سم
-    ctx.fillText(cm+'',rx,12);
-    ctx.strokeStyle='rgba(255,255,255,.4)';ctx.beginPath();ctx.moveTo(rx,14);ctx.lineTo(rx,18);ctx.stroke();
-  }
-  ctx.save();
-  for(var ry=100;ry<cv.height;ry+=100){
-    var cmy=Math.round(ry*2);
-    ctx.save();ctx.translate(10,ry);ctx.rotate(-Math.PI/2);ctx.fillText(cmy+'',0,3);ctx.restore();
-  }
-  ctx.restore();
-  // زاوية المسطرة
-  ctx.fillStyle='#d4af37';ctx.fillRect(0,0,18,18);
-  ctx.fillStyle='#0a2e22';ctx.font='bold 8px Tajawal,Arial';ctx.fillText('سم',9,12);
-  ctx.restore();
+  return -1;
 }
 
-// رسم الرموز النقطية (تكييف، إضاءة، عمود، ثرموستات)
-function _drawSymbol(tool,x,y){
-  var ctx=_drawState.ctx;
-  ctx.save();
-  ctx.lineWidth=2;ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
-  if(tool==='column'){
-    // عمود: مربع مملوء داكن
-    ctx.fillStyle='#444';ctx.fillRect(x-12,y-12,24,24);
-    ctx.strokeStyle='#000';ctx.strokeRect(x-12,y-12,24,24);
-    ctx.fillStyle='#fff';ctx.fillText('عمود',x,y+4);
-  }else if(tool==='supply'){
-    // الدافع: دائرة زرقاء بأسهم للخارج
-    ctx.fillStyle='#2980b9';ctx.beginPath();ctx.arc(x,y,14,0,2*Math.PI);ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;
-    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*4,y+d[1]*4);ctx.lineTo(x+d[0]*10,y+d[1]*10);ctx.stroke();});
-    ctx.fillStyle='#2980b9';ctx.fillText('دافع',x,y+26);
-  }else if(tool==='return'){
-    // الراجع: دائرة حمراء بأسهم للداخل
-    ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(x,y,14,0,2*Math.PI);ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;
-    [[0,-1],[0,1],[-1,0],[1,0]].forEach(function(d){ctx.beginPath();ctx.moveTo(x+d[0]*10,y+d[1]*10);ctx.lineTo(x+d[0]*4,y+d[1]*4);ctx.stroke();});
-    ctx.fillStyle='#e74c3c';ctx.fillText('راجع',x,y+26);
-  }else if(tool==='diffuser'){
-    // الديفيوزر: مربع بشبكة
-    ctx.strokeStyle='#16a085';ctx.lineWidth=2;ctx.strokeRect(x-13,y-13,26,26);
-    ctx.lineWidth=1;
-    for(var i=-13;i<=13;i+=6){ctx.beginPath();ctx.moveTo(x+i,y-13);ctx.lineTo(x+i,y+13);ctx.stroke();}
-    ctx.fillStyle='#16a085';ctx.fillText('ديفيوزر',x,y+27);
-  }else if(tool==='thermostat'){
-    // الثرموستات: دائرة صغيرة بحرف T
-    ctx.fillStyle='#f39c12';ctx.beginPath();ctx.arc(x,y,11,0,2*Math.PI);ctx.fill();
-    ctx.fillStyle='#fff';ctx.font='bold 13px Arial';ctx.fillText('T',x,y+5);
-    ctx.fillStyle='#f39c12';ctx.font='bold 11px Tajawal,Arial';ctx.fillText('ثرموستات',x,y+24);
-  }else if(tool==='hood'){
-    // الشفاط: مستطيل بخطوط شفط
-    ctx.strokeStyle='#8e44ad';ctx.lineWidth=2;ctx.strokeRect(x-18,y-10,36,20);
-    ctx.lineWidth=1;
-    for(var j=-12;j<=12;j+=6){ctx.beginPath();ctx.moveTo(x+j,y-10);ctx.lineTo(x+j,y+10);ctx.stroke();}
-    ctx.fillStyle='#8e44ad';ctx.fillText('شفاط',x,y+24);
-  }else if(tool==='spotlight'){
-    // السبوت لايت: دائرة صفراء بأشعة + سؤال 80سم
-    ctx.fillStyle='#f1c40f';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
-    ctx.strokeStyle='#f1c40f';ctx.lineWidth=1.5;
-    for(var a=0;a<8;a++){var ang=a*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*12,y+Math.sin(ang)*12);ctx.lineTo(x+Math.cos(ang)*16,y+Math.sin(ang)*16);ctx.stroke();}
-    // سؤال التأكد
-    setTimeout(function(){
-      var ok=confirm('💡 السبوت لايت:\n\nهل قياسه 80 سم من بداية الديكور؟\n\n⚠️ تذكير: يجب أن يبعد السبوت لايت (وجميع فتحات التكييف) 80سم عن الديكور — وليس 60سم — لأن عمق الخزانة 60سم.\n\nاضغط (موافق) إذا 80سم ✓\nاضغط (إلغاء) إذا غير مطابق ✗');
-      var ctx2=_drawState.ctx;ctx2.font='bold 10px Tajawal,Arial';ctx2.textAlign='center';
-      if(ok){ctx2.fillStyle='#27ae60';ctx2.fillText('💡80✓',x,y+28);}
-      else{ctx2.fillStyle='#e74c3c';ctx2.fillText('💡✗',x,y+28);}
-      _saveDrawHistory();
-    },50);
-  }
-  ctx.restore();
-}
-
-// رسم الأشكال الهندسية
-function _drawShape(tool,x1,y1,x2,y2){
-  var ctx=_drawState.ctx,col=_drawState.color,sz=_drawState.size;
-  ctx.strokeStyle=col;ctx.fillStyle=col;ctx.lineWidth=sz;ctx.lineCap='round';ctx.lineJoin='round';
-  var dx=x2-x1,dy=y2-y1;
-  if(tool==='line'){
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-  }else if(tool==='wall'){
-    ctx.lineWidth=Math.max(sz+5,8);ctx.strokeStyle=col;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    // إظهار طول الجدار بالسنتيمتر (1px ≈ 2سم)
-    var wallPx=Math.sqrt(dx*dx+dy*dy);
-    var wallCm=Math.round(wallPx*2/5)*5; // تقريب لأقرب 5سم
-    if(wallPx>15){
-      var wmx=(x1+x2)/2,wmy=(y1+y2)/2;
-      ctx.save();ctx.font='bold 13px Tajawal,Arial';ctx.textAlign='center';
-      ctx.fillStyle='#fff';ctx.fillRect(wmx-26,wmy-22,52,18);
-      ctx.strokeStyle=col;ctx.lineWidth=1;ctx.strokeRect(wmx-26,wmy-22,52,18);
-      ctx.fillStyle=col;ctx.fillText(wallCm+' سم',wmx,wmy-9);
-      ctx.restore();
-    }
-  }else if(tool==='rect'||tool==='cabinet'){
-    ctx.lineWidth=sz;
-    ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(dx),Math.abs(dy));
-    if(tool==='cabinet'){
-      // قطر للدلالة على خزانة
-      ctx.lineWidth=1;ctx.strokeStyle=col+'88';
-      ctx.beginPath();ctx.moveTo(Math.min(x1,x2),Math.min(y1,y2));ctx.lineTo(Math.max(x1,x2),Math.max(y1,y2));ctx.stroke();
-    }
-  }else if(tool==='appliance'){
-    ctx.lineWidth=sz;ctx.setLineDash([6,4]);
-    ctx.strokeRect(Math.min(x1,x2),Math.min(y1,y2),Math.abs(dx),Math.abs(dy));
-    ctx.setLineDash([]);
-    // X بالوسط
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.moveTo(x2,y1);ctx.lineTo(x1,y2);ctx.lineWidth=1;ctx.stroke();
-  }else if(tool==='door'){
-    // فتحة باب دقيقة مع عرضها بالسم
-    var doorW=Math.abs(dx)||40;
-    var doorCm=Math.round(doorW*2/5)*5;
-    ctx.lineWidth=Math.max(sz+3,7);ctx.strokeStyle='#fff';
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y1);ctx.stroke(); // فتحة بيضاء بالجدار
-    ctx.lineWidth=sz;ctx.strokeStyle=col;
-    var dir=x2>=x1?1:-1;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1,y1+doorW);ctx.stroke(); // ورقة الباب
-    ctx.beginPath();ctx.arc(x1,y1,doorW,0,Math.PI/2*dir,dir<0);ctx.stroke(); // قوس الفتح
-    // العرض
-    ctx.save();ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
-    ctx.fillStyle='#fff';ctx.fillRect((x1+x2)/2-20,y1-16,40,14);
-    ctx.fillStyle=col;ctx.fillText('باب '+doorCm,(x1+x2)/2,y1-5);ctx.restore();
-  }else if(tool==='window'){
-    // نافذة دقيقة مع عرضها بالسم
-    var winCm=Math.round((Math.abs(dx)||40)*2/5)*5;
-    ctx.lineWidth=Math.max(sz+3,7);ctx.strokeStyle='#fff';
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    ctx.lineWidth=2.5;ctx.strokeStyle=col;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    ctx.lineWidth=1;
-    ctx.beginPath();ctx.moveTo(x1,(y1+y2)/2);ctx.lineTo(x2,(y1+y2)/2);ctx.stroke(); // خط أوسط
-    ctx.save();ctx.font='bold 11px Tajawal,Arial';ctx.textAlign='center';
-    ctx.fillStyle='#fff';ctx.fillRect((x1+x2)/2-24,(y1+y2)/2-16,48,14);
-    ctx.fillStyle=col;ctx.fillText('شباك '+winCm,(x1+x2)/2,(y1+y2)/2-5);ctx.restore();
-  }else if(tool==='measure'){
-    // خط قياس مع أسهم ومسافة
-    ctx.lineWidth=1;ctx.strokeStyle=col;
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
-    // أطراف
-    var ang=Math.atan2(dy,dx);
-    [[x1,y1,ang],[x2,y2,ang+Math.PI]].forEach(function(p){
-      ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(p[0]+10*Math.cos(p[2]-0.4),p[1]+10*Math.sin(p[2]-0.4));
-      ctx.moveTo(p[0],p[1]);ctx.lineTo(p[0]+10*Math.cos(p[2]+0.4),p[1]+10*Math.sin(p[2]+0.4));ctx.stroke();
-    });
-    // المسافة بالسم (تقريبي: 25px = 50سم → 1px=2سم)
-    var distPx=Math.sqrt(dx*dx+dy*dy);
-    var distCm=Math.round(distPx*2);
-    ctx.fillStyle=col;ctx.font='bold 13px Tajawal,Arial';
-    var mx=(x1+x2)/2,my=(y1+y2)/2-6;
-    ctx.fillStyle='#fff';ctx.fillRect(mx-22,my-12,44,16);
-    ctx.fillStyle=col;ctx.fillText(distCm+' سم',mx-18,my);
-  }
-}
-
-function _saveDrawHistory(){
-  var cv=_drawState.cv;if(!cv)return;
-  if(_drawState.history.length>15)_drawState.history.shift();
-  _drawState.history.push(cv.toDataURL());
-}
-function drawSetColor(col){
-  _drawState.color=col;
-  document.querySelectorAll('.draw-color').forEach(function(b){b.style.borderColor=b.getAttribute('data-col')===col?'#d4af37':'transparent';});
-}
-function drawSetSize(sz){
-  _drawState.size=sz;
-  document.querySelectorAll('.draw-size').forEach(function(b){var on=+b.getAttribute('data-sz')===sz;b.style.background=on?'var(--accent)':'';b.style.color=on?'#fff':'';});
-}
-function drawSetTool(tool){
-  _drawState.tool=tool;
-  document.querySelectorAll('.draw-tool-btn').forEach(function(b){
-    var on=b.getAttribute('data-tool')===tool;
+function dwSetTool(t){
+  DW.tool=t; DW.selected=-1;
+  document.querySelectorAll('.dw-tool').forEach(function(b){
+    var on=b.getAttribute('data-tool')===t;
     b.style.borderColor=on?'#0a8f5c':'var(--bd)';
     b.style.background=on?'rgba(10,143,92,.12)':'var(--card)';
   });
-  var hint=document.getElementById('draw-hint');
-  if(hint&&TOOL_HINTS[tool])hint.innerHTML='💡 '+TOOL_HINTS[tool];
+  var h=document.getElementById('dw-hint');
+  if(h&&DW_HINTS[t])h.innerHTML='💡 '+DW_HINTS[t];
+  dwRender();
 }
-function drawToggleGrid(){
-  _drawState.showGrid=!_drawState.showGrid;
-  var btn=document.getElementById('draw-grid-btn');
-  if(btn){btn.className='lux-btn btn-sm '+(_drawState.showGrid?'lux-btn-primary':'lux-btn-ghost');}
-  // إعادة رسم الخلفية مع الحفاظ على الرسم
-  var cv=_drawState.cv,ctx=_drawState.ctx;
-  var cur=new Image();
-  cur.onload=function(){
-    _drawBg();
-    // ما نقدر نفصل الرسم عن الخلفية بسهولة — فقط نبدّل عرض الشبكة للرسومات الجديدة
-  };
-  // ببساطة: الشبكة تظهر/تختفي على الرسم القادم فقط (الموجود يبقى)
+function dwSetColor(c){
+  DW.color=c;
+  document.querySelectorAll('.dw-color').forEach(function(b){b.style.borderColor=b.getAttribute('data-col')===c?'#d4af37':'transparent';});
 }
-function drawUndo(){
-  if(_drawState.history.length<2)return;
-  _drawState.history.pop();
-  var prev=_drawState.history[_drawState.history.length-1];
-  var cv=_drawState.cv,ctx=_drawState.ctx;
-  var img=new Image();img.onload=function(){ctx.clearRect(0,0,cv.width,cv.height);ctx.drawImage(img,0,0);};img.src=prev;
+function dwToggleGrid(){
+  DW.showGrid=!DW.showGrid;
+  var b=document.getElementById('dw-grid-btn');
+  if(b)b.className='lux-btn btn-sm '+(DW.showGrid?'lux-btn-primary':'lux-btn-ghost');
+  dwRender();
 }
-function drawClear(){
-  _drawBg();_saveDrawHistory();
+function dwToggleSnap(){
+  DW.snapAngle=!DW.snapAngle;
+  var b=document.getElementById('dw-snap-btn');
+  if(b)b.className='lux-btn btn-sm '+(DW.snapAngle?'lux-btn-primary':'lux-btn-ghost');
+}
+function dwDeleteSelected(){
+  if(DW.selected<0){toast('اختر عنصراً أولاً (أداة التحديد)','err');return;}
+  DW.objects.splice(DW.selected,1); DW.selected=-1; dwPushHistory(); dwRender();
+}
+function dwClearAll(){
+  if(!DW.objects.length)return;
+  if(!confirm('مسح كل الرسم؟'))return;
+  DW.objects=[]; DW.selected=-1; dwPushHistory(); dwRender();
 }
 function closeDrawPad(){
-  var m=document.getElementById('draw-pad-modal');if(m)m.remove();
+  var m=document.getElementById('draw-pad-modal'); if(m)m.remove();
 }
 
 async function saveDrawPad(){
-  var cv=_drawState.cv;
+  var cv=DW.cv;
   if(!cv){toast('⚠️ خطأ','err');return;}
-  var clientId=_drawState.clientId;
-  toast('⏳ جاري حفظ الرسمة...','ok');
+  DW.selected=-1; dwRender(); // نشيل تمييز التحديد قبل الحفظ
+  var clientId=DW.clientId;
+  toast('⏳ جاري حفظ المخطط...','ok');
   cv.toBlob(async function(blob){
-    if(!blob){toast('⚠️ فشل تحويل الرسمة','err');return;}
+    if(!blob){toast('⚠️ فشل التحويل','err');return;}
     var fname='مخطط_مطبخ_'+Date.now()+'.png';
     var path='clients/'+clientId+'/'+fname;
     try{
@@ -11329,7 +11317,7 @@ async function saveDrawPad(){
       await sb.from('fu_files').insert([{
         client_id:clientId,file_name:fname,file_type:'مخطط مطبخ',
         file_url:publicUrl,file_path:path,file_size:blob.size,
-        notes:'رسمة من أداة رسم المطبخ',
+        notes:'مخطط من أداة الرسم الاحترافية',
         uploaded_by:currentUser?currentUser.name:'فني قياس'
       }]);
       toast('✅ حُفظ المخطط في ملف العميل','ok');
@@ -11338,6 +11326,8 @@ async function saveDrawPad(){
     }catch(e){toast('❌ فشل رفع المخطط','err');console.error(e);}
   },'image/png');
 }
+
+
 
 
 function _fmtSize(bytes){
