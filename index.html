@@ -11346,6 +11346,8 @@ function openDrawPad(clientId){
           toolBtn('column','⬛','عمود')+
           toolBtn('line','📏','خط')+
           toolBtn('rect','▭','مستطيل')+
+          toolBtn('lshape','📐','شكل L')+
+          toolBtn('ushape','⊔','شكل U')+
           toolBtn('door','🚪','باب')+
           toolBtn('window','🪟','نافذة')+
           toolBtn('appliance','🔲','جهاز')+
@@ -11432,7 +11434,9 @@ var DW_HINTS={
   wall:'🧱 الجدار: اسحب لرسمه — الطول بالسم والزاوية تنطبق تلقائياً (90/135/180)',
   cabinet:'🗄️ الخزانة: اسحب لرسم خزانة (عمق 60سم تقريباً)',
   line:'📏 الخط: اسحب لرسم خط مستقيم',
-  rect:'▭ المستطيل: اسحب لرسم مستطيل',
+  rect:'▭ المستطيل: أدخل الطول والعرض بالأرقام بدقة',
+  lshape:'📐 شكل L: مطبخ زاوية — أدخل أطوال الأضلاع وعرض الكاونتر',
+  ushape:'⊔ شكل U: مطبخ ثلاثي — أدخل الأضلاع الثلاثة وعرض الكاونتر',
   door:'🚪 الباب: اسحب لرسم فتحة باب بقوس',
   window:'🪟 النافذة: اسحب لرسم نافذة',
   appliance:'🔲 الجهاز: انقر نقطة البداية ثم نقطة النهاية لتحديد مكان جهاز',
@@ -11485,6 +11489,10 @@ function dwInit(){
         DW.dragLastX=w.x; DW.dragLastY=w.y;
       }
       dwRender(); return;
+    }
+    // الأشكال الرقمية تُرسم من النموذج — تجاهل النقر على اللوحة
+    if(DW.tool==='rect'||DW.tool==='lshape'||DW.tool==='ushape'){
+      dwOpenShapeDialog(DW.tool); return;
     }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
     var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
@@ -11679,6 +11687,79 @@ function dwSetTool(t){
   var h=document.getElementById('dw-hint');
   if(h&&DW_HINTS[t])h.innerHTML='💡 '+DW_HINTS[t];
   dwRender();
+  // الأشكال الرقمية: تفتح نموذج الأبعاد مباشرة
+  if(t==='rect'||t==='lshape'||t==='ushape')dwOpenShapeDialog(t);
+}
+
+// نموذج إدخال أبعاد الأشكال بالأرقام
+function dwOpenShapeDialog(shape){
+  var titles={rect:'▭ مستطيل',lshape:'📐 شكل L (مطبخ زاوية)',ushape:'⊔ شكل U (مطبخ ثلاثي)'};
+  var fields='';
+  if(shape==='rect'){
+    fields=
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">الطول (سم)</label><input type="number" id="sh-len" value="300" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">العرض/العمق (سم)</label><input type="number" id="sh-wid" value="200" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+      '</div>';
+  }else if(shape==='lshape'){
+    fields=
+      '<div style="font-size:11px;color:#6b7d76;margin-bottom:10px">شكل L: ضلعان متعامدان. حدّد طول كل ضلع وعرض الكاونتر.</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">طول الضلع الأفقي (سم)</label><input type="number" id="sh-len" value="300" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">طول الضلع الرأسي (سم)</label><input type="number" id="sh-len2" value="250" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div style="grid-column:1/3"><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">عرض الكاونتر (سم)</label><input type="number" id="sh-wid" value="60" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+      '</div>';
+  }else if(shape==='ushape'){
+    fields=
+      '<div style="font-size:11px;color:#6b7d76;margin-bottom:10px">شكل U: ثلاثة أضلاع. حدّد طول الضلع الأوسط والضلعين الجانبيين وعرض الكاونتر.</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">الضلع الأوسط/الطول (سم)</label><input type="number" id="sh-len" value="300" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">عرض الكاونتر (سم)</label><input type="number" id="sh-wid" value="60" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">الضلع الجانبي 1 (سم)</label><input type="number" id="sh-side1" value="250" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+        '<div><label style="font-size:12px;font-weight:800;display:block;margin-bottom:5px;color:#1a2e26">الضلع الجانبي 2 (سم)</label><input type="number" id="sh-side2" value="250" style="width:100%;padding:10px;border-radius:9px;border:1.5px solid #dce6e2;font-size:15px;font-weight:700;box-sizing:border-box"></div>'+
+      '</div>';
+  }
+  var modal=document.createElement('div');
+  modal.id='dw-shape-dialog';
+  modal.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=
+    '<div style="background:#fff;border-radius:16px;width:100%;max-width:440px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:hidden">'+
+      '<div style="background:linear-gradient(135deg,#0a2e22,#0a8f5c);color:#fff;padding:14px 20px;font-weight:900;font-size:16px">'+titles[shape]+'</div>'+
+      '<div style="padding:20px">'+fields+
+        '<div style="display:flex;gap:10px;margin-top:18px">'+
+          '<button onclick="dwCreateShape(\''+shape+'\')" style="flex:1;padding:12px;border:none;border-radius:10px;background:#0a8f5c;color:#fff;font-weight:800;font-size:14px;cursor:pointer">✓ ارسم الشكل</button>'+
+          '<button onclick="document.getElementById(\'dw-shape-dialog\').remove()" style="padding:12px 18px;border:1.5px solid #dce6e2;border-radius:10px;background:#fff;color:#1a2e26;font-weight:700;cursor:pointer">إلغاء</button>'+
+        '</div>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(modal);
+  setTimeout(function(){var f=document.getElementById('sh-len');if(f){f.focus();f.select();}},100);
+}
+
+// إنشاء الشكل من الأبعاد المُدخلة
+function dwCreateShape(shape){
+  function num(id,def){var e=document.getElementById(id);var v=e?parseFloat(e.value):def;return (isNaN(v)||v<=0)?def:v;}
+  var p=DW.pxPerCm;
+  // نضع الشكل في وسط اللوحة المرئية
+  var cx=300, cy=250;
+  if(shape==='rect'){
+    var L=num('sh-len',300)*p, W=num('sh-wid',200)*p;
+    DW.objects.push({type:'rect',x1:cx,y1:cy,x2:cx+L,y2:cy+W,color:DW.color,size:DW.size});
+  }else if(shape==='lshape'){
+    var lh=num('sh-len',300)*p, lv=num('sh-len2',250)*p, cw=num('sh-wid',60)*p;
+    // شكل L = جدارين/كاونترين متعامدين (مستطيلان)
+    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+lh,y2:cy+cw,color:DW.color,size:DW.size});
+    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+cw,y2:cy+lv,color:DW.color,size:DW.size});
+  }else if(shape==='ushape'){
+    var um=num('sh-len',300)*p, ucw=num('sh-wid',60)*p, us1=num('sh-side1',250)*p, us2=num('sh-side2',250)*p;
+    // شكل U = ضلع أوسط + ضلعان جانبيان
+    DW.objects.push({type:'cabinet',x1:cx,y1:cy+Math.max(us1,us2),x2:cx+um,y2:cy+Math.max(us1,us2)+ucw,color:DW.color,size:DW.size}); // الأوسط (تحت)
+    DW.objects.push({type:'cabinet',x1:cx,y1:cy,x2:cx+ucw,y2:cy+us1+ucw,color:DW.color,size:DW.size}); // جانبي 1
+    DW.objects.push({type:'cabinet',x1:cx+um-ucw,y1:cy,x2:cx+um,y2:cy+us2+ucw,color:DW.color,size:DW.size}); // جانبي 2
+  }
+  var d=document.getElementById('dw-shape-dialog');if(d)d.remove();
+  dwPushHistory(); dwRender();
+  toast('✅ رُسم الشكل — يمكنك سحبه أو تعديله','ok');
 }
 function dwSetColor(c){
   DW.color=c;
