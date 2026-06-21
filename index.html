@@ -10933,6 +10933,7 @@ var DW={
   snapAngle:true,        // انطباق الزوايا للقيم الشائعة
   // حالة الرسم الجاري
   drawing:false, startX:0, startY:0, curX:0, curY:0,
+  dragging:false, dragLastX:0, dragLastY:0,
   freePath:null,         // للرسم الحر
   selected:-1,           // الكائن المحدد للتعديل
   history:[], histIdx:-1,
@@ -11266,8 +11267,10 @@ function dwDrawObject(o, selected){
     ctx.restore();
     var wmx=(o.x1+o.x2)/2, wmy=(o.y1+o.y2)/2;
     ctx.font='bold 11px Tajawal,Arial'; ctx.textAlign='center';
-    ctx.fillStyle='#fff'; ctx.fillRect(wmx-30,wmy+8,60,15);
-    ctx.fillStyle=o.color; ctx.fillText('شباك '+wCm,wmx,wmy+19);
+    var wLabel='شباك '+wCm+(o.sill?' ↑'+o.sill:'');
+    var wlw=ctx.measureText(wLabel).width+10;
+    ctx.fillStyle='#fff'; ctx.fillRect(wmx-wlw/2,wmy+8,wlw,15);
+    ctx.fillStyle=o.color; ctx.fillText(wLabel,wmx,wmy+19);
   }
 
   // تمييز المحدد
@@ -11372,6 +11375,7 @@ function openDrawPad(clientId){
       // الحفظ
       '<div style="display:flex;gap:10px;padding:0 16px 18px">'+
         '<button class="lux-btn lux-btn-primary" style="flex:1;padding:13px;font-size:15px" onclick="saveDrawPad()">💾 حفظ ورفع للسحابة</button>'+
+        '<button class="lux-btn lux-btn-gold" onclick="dwPrint()" style="padding:13px 20px">🖨️ طباعة</button>'+
         '<button class="lux-btn lux-btn-ghost" onclick="closeDrawPad()" style="padding:13px 20px">إلغاء</button>'+
       '</div>'+
     '</div>';
@@ -11380,7 +11384,7 @@ function openDrawPad(clientId){
 }
 
 var DW_HINTS={
-  select:'🖱️ التحديد: انقر على عنصر لتحديده، ثم اضغط "✏️ تعديل القياس" لتغيير أبعاده — أو انقر مرتين على العنصر مباشرة',
+  select:'🖱️ التحديد: انقر على عنصر لتحديده — أمسكه واسحبه لنقله لمكان آخر — أو انقر مرتين لتعديل القياس',
   wall:'🧱 الجدار: اسحب لرسمه — الطول بالسم والزاوية تنطبق تلقائياً (90/135/180)',
   cabinet:'🗄️ الخزانة: اسحب لرسم خزانة (عمق 60سم تقريباً)',
   line:'📏 الخط: اسحب لرسم خط مستقيم',
@@ -11423,7 +11427,14 @@ function dwInit(){
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
     if(DW.tool==='select'){
-      DW.selected=dwHitTest(w.x,w.y); dwRender(); return;
+      var hit=dwHitTest(w.x,w.y);
+      DW.selected=hit;
+      if(hit>=0){
+        // بدء السحب
+        DW.dragging=true;
+        DW.dragLastX=w.x; DW.dragLastY=w.y;
+      }
+      dwRender(); return;
     }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
     var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
@@ -11452,6 +11463,11 @@ function dwInit(){
       var dist=Math.abs(DW.curX-DW.startX)+Math.abs(DW.curY-DW.startY);
       if(dist>=3){
         var obj=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,false);
+        // النافذة: نسأل ارتفاع الجلسة من الأرض
+        if(obj&&DW.tool==='window'){
+          var sill=prompt('ارتفاع جلسة الشباك من الأرض لبداية الدريشة (سم):','90');
+          if(sill!==null&&!isNaN(parseFloat(sill)))obj.sill=parseFloat(sill);
+        }
         if(obj){DW.objects.push(obj); dwPushHistory();}
       }
       DW.drawing=false;
@@ -11461,16 +11477,39 @@ function dwInit(){
     }
   }
   function move(e){
+    // سحب عنصر محدد
+    if(DW.dragging && DW.selected>=0){
+      e.preventDefault();
+      var pp=getXY(e); var ww=dwToWorld(pp.sx,pp.sy);
+      var ddx=ww.x-DW.dragLastX, ddy=ww.y-DW.dragLastY;
+      var o=DW.objects[DW.selected];
+      if(o){o.x1+=ddx; o.y1+=ddy; o.x2+=ddx; o.y2+=ddy;}
+      DW.dragLastX=ww.x; DW.dragLastY=ww.y;
+      dwRender();
+      return;
+    }
     if(!DW.drawing)return; e.preventDefault();
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     DW.curX=dwSnap(w.x); DW.curY=dwSnap(w.y);
     dwRender();
   }
-  function end(e){ /* لا شيء — الرسم بالنقر مو بالسحب */ }
+  function end(e){
+    // إنهاء السحب
+    if(DW.dragging){
+      DW.dragging=false;
+      // انطباق على الشبكة بعد الإفلات
+      var o=DW.objects[DW.selected];
+      if(o){
+        var sx=dwSnap(o.x1)-o.x1, sy=dwSnap(o.y1)-o.y1;
+        o.x1+=sx; o.y1+=sy; o.x2+=sx; o.y2+=sy;
+      }
+      dwPushHistory(); dwRender();
+    }
+  }
   // ESC للإلغاء
   document.addEventListener('keydown',dwEscHandler);
-  cv.onmousedown=start; cv.onmousemove=move;
-  cv.ontouchstart=start; cv.ontouchmove=move;
+  cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
+  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
   // النقر المزدوج لتعديل القياس
   cv.ondblclick=function(e){
     e.preventDefault();
@@ -11641,6 +11680,31 @@ function dwEscHandler(e){
 function closeDrawPad(){
   document.removeEventListener('keydown',dwEscHandler);
   var m=document.getElementById('draw-pad-modal'); if(m)m.remove();
+}
+
+// طباعة المخطط
+function dwPrint(){
+  var cv=DW.cv;
+  if(!cv){toast('⚠️ خطأ','err');return;}
+  DW.selected=-1; dwRender();
+  var dataUrl=cv.toDataURL('image/png');
+  var c=clients.find(function(x){return x.id===DW.clientId;});
+  var cname=c?c.name:'';
+  var w=window.open('','_blank');
+  w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>مخطط مطبخ</title>'+
+    '<style>body{font-family:Tajawal,Arial,sans-serif;margin:0;padding:20px;color:#0a2e22}'+
+    '.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #0a8f5c;padding-bottom:12px;margin-bottom:16px}'+
+    '.hd h1{margin:0;font-size:20px;color:#0a8f5c}.hd .sub{font-size:13px;color:#666}'+
+    'img{width:100%;border:1px solid #ddd;border-radius:8px}'+
+    '.ft{margin-top:14px;font-size:11px;color:#999;text-align:center}</style></head><body>'+
+    '<div class="hd"><div><h1>📐 مخطط المطبخ — مطابخ العيسى</h1>'+
+    '<div class="sub">العميل: '+pEsc(cname)+(c&&c.phone?' • '+c.phone:'')+'</div></div>'+
+    '<div class="sub">'+new Date().toLocaleDateString('ar-KW')+'</div></div>'+
+    '<img src="'+dataUrl+'">'+
+    '<div class="ft">نظام SLKR للمتابعة — مطابخ العيسى</div>'+
+    '</body></html>');
+  w.document.close();
+  setTimeout(function(){w.print();},300);
 }
 
 async function saveDrawPad(){
