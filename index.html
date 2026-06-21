@@ -11406,6 +11406,12 @@ function openDrawPad(clientId){
         '<button onclick="dwClearAll()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">مسح الكل</button>'+
       '</div>'+
       '<div id="dw-hint" style="font-size:11px;color:#6b7d76;padding:6px 16px;background:rgba(10,143,92,.06)">💡 الجدار: اسحب لرسمه — الطول يظهر بالسم والزاوية تنطبق تلقائياً لقيم دقيقة (90/135/180)</div>'+
+      // شريط المعلومات الحي (المؤشر الذكي)
+      '<div id="dw-info-bar" style="display:flex;align-items:center;gap:14px;padding:8px 16px;background:#0a2e22;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap">'+
+        '<span style="display:flex;align-items:center;gap:5px"><span style="opacity:.6">📍 الموضع:</span><span id="dw-pos">0, 0</span></span>'+
+        '<span style="width:1px;height:14px;background:rgba(255,255,255,.2)"></span>'+
+        '<span id="dw-hover-info" style="flex:1;color:#d4af37">حرّك المؤشر فوق عنصر لرؤية تفاصيله</span>'+
+      '</div>'+
       // اللوحة
       '<div style="padding:14px 16px;display:flex;justify-content:center">'+
         '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1240px;border:2px solid #dce6e2;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
@@ -11521,20 +11527,20 @@ function dwInit(){
     }
   }
   function move(e){
+    var pInfo=getXY(e); var wInfo=dwToWorld(pInfo.sx,pInfo.sy);
+    dwUpdateInfoBar(wInfo.x,wInfo.y); // تحديث المؤشر الذكي دائماً
     // سحب عنصر محدد
     if(DW.dragging && DW.selected>=0){
       e.preventDefault();
-      var pp=getXY(e); var ww=dwToWorld(pp.sx,pp.sy);
-      var ddx=ww.x-DW.dragLastX, ddy=ww.y-DW.dragLastY;
+      var ddx=wInfo.x-DW.dragLastX, ddy=wInfo.y-DW.dragLastY;
       var o=DW.objects[DW.selected];
       if(o){o.x1+=ddx; o.y1+=ddy; o.x2+=ddx; o.y2+=ddy;}
-      DW.dragLastX=ww.x; DW.dragLastY=ww.y;
+      DW.dragLastX=wInfo.x; DW.dragLastY=wInfo.y;
       dwRender();
       return;
     }
     if(!DW.drawing)return; e.preventDefault();
-    var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
-    DW.curX=dwSnap(w.x); DW.curY=dwSnap(w.y);
+    DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
     dwRender();
   }
   function end(e){
@@ -11612,6 +11618,55 @@ function dwHitTest(wx,wy){
     if(wx>=minx&&wx<=maxx&&wy>=miny&&wy<=maxy)return i;
   }
   return -1;
+}
+
+// أسماء العناصر بالعربي
+var DW_NAMES={wall:'جدار',cabinet:'خزانة',line:'خط',rect:'مستطيل',door:'باب',window:'نافذة',
+  appliance:'جهاز',measure:'قياس',column:'عمود',water_hot:'ماء حار',water_cold:'ماء بارد',
+  drain:'صرف',floor_drain:'بالوعة أرضية',elec:'كهرباء',elec_power:'مخرج جهاز',gas:'غاز',
+  supply:'دافع',return:'راجع',diffuser:'ديفيوزر',thermostat:'ثرموستات',hood:'شفاط',spotlight:'سبوت لايت',
+  sink:'مجلى',stove:'بوتاجاز',fridge:'ثلاجة',oven:'فرن',washer:'غسالة',dishwasher:'جلاية'};
+
+// استخراج تفاصيل عنصر كنص
+function dwObjectDetails(o){
+  if(!o)return '';
+  var name=DW_NAMES[o.type]||o.type;
+  var dx=o.x2-o.x1, dy=o.y2-o.y1;
+  var lenCm=Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+  var wCm=Math.round(Math.abs(dx)/DW.pxPerCm), hCm=Math.round(Math.abs(dy)/DW.pxPerCm);
+  // عناصر خطية
+  if(['wall','line','measure'].indexOf(o.type)!==-1){
+    var ang=Math.round(Math.atan2(dy,dx)*180/Math.PI);
+    return '📐 '+name+' • الطول: '+lenCm+'سم • الزاوية: '+Math.abs(ang)+'°';
+  }
+  // عناصر نقطية
+  var POINT=['column','water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
+  if(POINT.indexOf(o.type)!==-1){
+    var extra=(o.type==='spotlight'&&o.ok!==undefined)?(o.ok?' • ✓ مطابق':' • ✗ غير مطابق'):'';
+    return '📍 '+name+extra;
+  }
+  // عناصر بمساحة (مستطيلات/أجهزة/خزائن)
+  var area=Math.round(wCm*hCm/100)/100; // م²
+  var sillTxt=(o.type==='window'&&o.sill)?' • ارتفاع الجلسة: '+o.sill+'سم':'';
+  return '▭ '+name+' • العرض: '+wCm+'سم × العمق: '+hCm+'سم • المساحة: '+area+'م²'+sillTxt;
+}
+
+// تحديث شريط المعلومات الحي
+function dwUpdateInfoBar(wx,wy){
+  var pos=document.getElementById('dw-pos');
+  if(pos)pos.textContent=Math.round(wx/DW.pxPerCm)+', '+Math.round(wy/DW.pxPerCm)+' سم';
+  var hover=document.getElementById('dw-hover-info');
+  if(!hover)return;
+  var idx=dwHitTest(wx,wy);
+  if(idx>=0){
+    hover.innerHTML='🔍 '+dwObjectDetails(DW.objects[idx])+' &nbsp;<span style="opacity:.7;font-size:10px">(دبل-كليك للتعديل)</span>';
+    hover.style.color='#d4af37';
+    if(DW.cv)DW.cv.style.cursor=DW.tool==='select'?'move':'pointer';
+  }else{
+    hover.textContent=DW.tool==='select'?'حرّك المؤشر فوق عنصر لرؤية تفاصيله، أو اسحبه لنقله':'حرّك المؤشر فوق عنصر لرؤية تفاصيله';
+    hover.style.color='rgba(255,255,255,.7)';
+    if(DW.cv)DW.cv.style.cursor='crosshair';
+  }
 }
 
 function dwSetTool(t){
