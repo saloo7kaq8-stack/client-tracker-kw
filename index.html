@@ -10924,7 +10924,7 @@ var DW={
   objects:[],            // كل الكائنات المرسومة
   tool:'wall',
   color:'#0a2e22', size:3,
-  showGrid:true, showRuler:true,
+  showGrid:true, showRuler:true, showAngles:false,
   // المقياس: عدد البكسلات لكل متر (100px = 1م = 100سم)، فالـ 1px = 1سم
   pxPerCm:1,
   snapGrid:5,            // انطباق كل 5سم
@@ -11000,6 +11000,7 @@ function dwRender(){
     var prev=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,true);
     if(prev){ctx.globalAlpha=0.6; dwDrawObject(prev,false); ctx.globalAlpha=1;}
   }
+  dwDrawAngles();
   ctx.restore();
   dwDrawRuler();
 }
@@ -11114,6 +11115,58 @@ function dwDrawObject(o, selected){
     ctx.font='bold 12px Tajawal,Arial';ctx.textAlign='center';
     ctx.fillStyle='#fff';ctx.fillRect(mmx-24,mmy-12,48,16);
     ctx.fillStyle=o.color;ctx.fillText(dCm+' سم',mmx,mmy);
+  }else if(o.type==='door'){
+    // باب معماري: فتحة + ورقة باب + قوس الحركة
+    var dLen=Math.sqrt(dx*dx+dy*dy);
+    var dCm2=Math.round(dLen/DW.pxPerCm);
+    var ang=Math.atan2(dy,dx);
+    ctx.save();
+    ctx.translate(o.x1,o.y1); ctx.rotate(ang);
+    // فتحة الجدار (خطين على الجوانب)
+    ctx.strokeStyle=o.color; ctx.lineWidth=Math.max((o.size||3)+4,8);
+    ctx.strokeStyle='#fff';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(dLen,0);ctx.stroke(); // مسح مكان الفتحة
+    ctx.strokeStyle=o.color; ctx.lineWidth=2;
+    // العتبتان (جانبا الفتحة)
+    ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(0,5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(dLen,-5);ctx.lineTo(dLen,5);ctx.stroke();
+    // ورقة الباب (خط عمودي من المفصلة)
+    ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-dLen);ctx.stroke();
+    // قوس الحركة (ربع دائرة)
+    ctx.lineWidth=1; ctx.setLineDash([4,3]);
+    ctx.beginPath();ctx.arc(0,0,dLen,-Math.PI/2,0);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+    // التسمية بالعرض
+    var dmx=(o.x1+o.x2)/2, dmy=(o.y1+o.y2)/2;
+    ctx.font='bold 11px Tajawal,Arial'; ctx.textAlign='center';
+    ctx.fillStyle='#fff'; ctx.fillRect(dmx-26,dmy+8,52,15);
+    ctx.fillStyle=o.color; ctx.fillText('باب '+dCm2,dmx,dmy+19);
+  }else if(o.type==='window'){
+    // نافذة معمارية: ٣ خطوط متوازية داخل الفتحة
+    var wLen=Math.sqrt(dx*dx+dy*dy);
+    var wCm=Math.round(wLen/DW.pxPerCm);
+    var wang=Math.atan2(dy,dx);
+    ctx.save();
+    ctx.translate(o.x1,o.y1); ctx.rotate(wang);
+    // مسح مكان الفتحة بالأبيض
+    ctx.strokeStyle='#fff'; ctx.lineWidth=Math.max((o.size||3)+4,8);
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(wLen,0);ctx.stroke();
+    // إطار النافذة (٣ خطوط)
+    ctx.strokeStyle=o.color; ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,-3);ctx.lineTo(wLen,-3);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(wLen,0);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(wLen,3);ctx.stroke();
+    // العتبتان
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(0,5);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(wLen,-5);ctx.lineTo(wLen,5);ctx.stroke();
+    ctx.restore();
+    var wmx=(o.x1+o.x2)/2, wmy=(o.y1+o.y2)/2;
+    ctx.font='bold 11px Tajawal,Arial'; ctx.textAlign='center';
+    ctx.fillStyle='#fff'; ctx.fillRect(wmx-30,wmy+8,60,15);
+    ctx.fillStyle=o.color; ctx.fillText('شباك '+wCm,wmx,wmy+19);
   }
 
   // تمييز المحدد
@@ -11144,7 +11197,7 @@ function openDrawPad(clientId){
   modal.id='draw-pad-modal';
   modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;padding:6px';
   modal.innerHTML=
-    '<div style="background:var(--card);border-radius:18px;width:100%;max-width:1040px;max-height:97vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.5)">'+
+    '<div style="background:var(--card);border-radius:18px;width:100%;max-width:1300px;max-height:97vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.5)">'+
       // الهيدر
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(135deg,#0a2e22,#0a8f5c)">'+
         '<div style="color:#fff;font-weight:900;font-size:16px">🏛️ مخطط المطبخ الاحترافي</div>'+
@@ -11174,6 +11227,7 @@ function openDrawPad(clientId){
         '<div style="width:1px;height:20px;background:var(--bd)"></div>'+
         '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">⊞ شبكة</button>'+
         '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">📐 انطباق الزوايا</button>'+
+        '<button onclick="dwToggleAngles()" id="dw-angles-btn" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">📐 إظهار الزوايا</button>'+
         '<button onclick="dwUndo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↩️</button>'+
         '<button onclick="dwRedo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↪️</button>'+
         '<button onclick="dwEditSelected()" class="lux-btn lux-btn-gold btn-sm" style="padding:6px 10px">✏️ تعديل القياس</button>'+
@@ -11183,7 +11237,7 @@ function openDrawPad(clientId){
       '<div id="dw-hint" style="font-size:11px;color:var(--mt);padding:6px 16px;background:rgba(10,143,92,.06)">💡 الجدار: اسحب لرسمه — الطول يظهر بالسم والزاوية تنطبق تلقائياً لقيم دقيقة (90/135/180)</div>'+
       // اللوحة
       '<div style="padding:14px 16px;display:flex;justify-content:center">'+
-        '<canvas id="dw-canvas" width="980" height="580" style="width:100%;max-width:980px;border:2px solid var(--bd);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
+        '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1240px;border:2px solid var(--bd);border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
       '</div>'+
       // الحفظ
       '<div style="display:flex;gap:10px;padding:0 16px 18px">'+
@@ -11227,7 +11281,25 @@ function dwInit(){
     if(DW.tool==='select'){
       DW.selected=dwHitTest(w.x,w.y); dwRender(); return;
     }
-    DW.drawing=true; DW.startX=wx; DW.startY=wy; DW.curX=wx; DW.curY=wy;
+    // طريقة كليك-حركة-كليك: أول نقرة تثبّت البداية، الثانية تثبّت النهاية
+    if(!DW.drawing){
+      // النقرة الأولى — تثبيت نقطة البداية
+      DW.drawing=true; DW.startX=wx; DW.startY=wy; DW.curX=wx; DW.curY=wy;
+      var h=document.getElementById('dw-hint');
+      if(h)h.innerHTML='✏️ ثُبّتت نقطة البداية — حرّك ثم انقر مرة أخرى لإنهاء الرسم (أو اضغط ESC للإلغاء)';
+    }else{
+      // النقرة الثانية — إنهاء العنصر
+      DW.curX=wx; DW.curY=wy;
+      var dist=Math.abs(DW.curX-DW.startX)+Math.abs(DW.curY-DW.startY);
+      if(dist>=3){
+        var obj=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,false);
+        if(obj){DW.objects.push(obj); dwPushHistory();}
+      }
+      DW.drawing=false;
+      var h2=document.getElementById('dw-hint');
+      if(h2&&DW_HINTS[DW.tool])h2.innerHTML='💡 '+DW_HINTS[DW.tool];
+      dwRender();
+    }
   }
   function move(e){
     if(!DW.drawing)return; e.preventDefault();
@@ -11235,16 +11307,11 @@ function dwInit(){
     DW.curX=dwSnap(w.x); DW.curY=dwSnap(w.y);
     dwRender();
   }
-  function end(e){
-    if(!DW.drawing)return; DW.drawing=false;
-    var dist=Math.abs(DW.curX-DW.startX)+Math.abs(DW.curY-DW.startY);
-    if(dist<3){dwRender();return;} // نقرة بدون سحب
-    var obj=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,false);
-    if(obj){DW.objects.push(obj); dwPushHistory();}
-    dwRender();
-  }
-  cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
-  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+  function end(e){ /* لا شيء — الرسم بالنقر مو بالسحب */ }
+  // ESC للإلغاء
+  document.addEventListener('keydown',dwEscHandler);
+  cv.onmousedown=start; cv.onmousemove=move;
+  cv.ontouchstart=start; cv.ontouchmove=move;
   // النقر المزدوج لتعديل القياس
   cv.ondblclick=function(e){
     e.preventDefault();
@@ -11331,6 +11398,50 @@ function dwToggleSnap(){
   var b=document.getElementById('dw-snap-btn');
   if(b)b.className='lux-btn btn-sm '+(DW.snapAngle?'lux-btn-primary':'lux-btn-ghost');
 }
+function dwToggleAngles(){
+  DW.showAngles=!DW.showAngles;
+  var b=document.getElementById('dw-angles-btn');
+  if(b)b.className='lux-btn btn-sm '+(DW.showAngles?'lux-btn-primary':'lux-btn-ghost');
+  dwRender();
+}
+// رسم زوايا الأركان (بين الجدران المتصلة) — عند الطلب فقط
+function dwDrawAngles(){
+  if(!DW.showAngles)return;
+  var ctx=DW.ctx;
+  var walls=DW.objects.filter(function(o){return o.type==='wall';});
+  // نلقى الأركان: نقاط نهاية جدار قريبة من نقطة بداية/نهاية جدار آخر
+  for(var i=0;i<walls.length;i++){
+    for(var j=0;j<walls.length;j++){
+      if(i===j)continue;
+      var a=walls[i], b=walls[j];
+      // نقاط الاتصال المحتملة
+      var pts=[[a.x2,a.y2,a.x1,a.y1, b.x1,b.y1,b.x2,b.y2]];
+      pts.forEach(function(P){
+        var jx=P[0],jy=P[1]; // نقطة الالتقاء (نهاية a)
+        // هل بداية b قريبة من نهاية a؟
+        if(Math.abs(P[4]-jx)<10&&Math.abs(P[5]-jy)<10){
+          // الزاوية بين الجدارين عند هذا الركن
+          var ang1=Math.atan2(P[3]-jy,P[2]-jx); // اتجاه a للخلف
+          var ang2=Math.atan2(P[6]-jy,P[7]-jx); // اتجاه b للأمام
+          var deg=Math.abs((ang2-ang1)*180/Math.PI);
+          if(deg>180)deg=360-deg;
+          deg=Math.round(deg);
+          // نرسم القوس والرقم
+          ctx.save();
+          ctx.strokeStyle='#e74c3c'; ctx.fillStyle='#e74c3c'; ctx.lineWidth=1.5;
+          ctx.beginPath();ctx.arc(jx,jy,22,Math.min(ang1,ang2),Math.max(ang1,ang2));ctx.stroke();
+          ctx.font='bold 13px Tajawal,Arial'; ctx.textAlign='center';
+          var midAng=(ang1+ang2)/2;
+          var lx=jx+Math.cos(midAng)*36, ly=jy+Math.sin(midAng)*36;
+          ctx.fillStyle='#fff'; ctx.fillRect(lx-20,ly-10,40,18);
+          ctx.strokeStyle='#e74c3c'; ctx.strokeRect(lx-20,ly-10,40,18);
+          ctx.fillStyle='#e74c3c'; ctx.fillText(deg+'°',lx,ly+4);
+          ctx.restore();
+        }
+      });
+    }
+  }
+}
 function dwDeleteSelected(){
   if(DW.selected<0){toast('اختر عنصراً أولاً (أداة التحديد)','err');return;}
   DW.objects.splice(DW.selected,1); DW.selected=-1; dwPushHistory(); dwRender();
@@ -11344,7 +11455,16 @@ function dwClearAll(){
   if(!confirm('مسح كل الرسم؟'))return;
   DW.objects=[]; DW.selected=-1; dwPushHistory(); dwRender();
 }
+function dwEscHandler(e){
+  if(e.key==='Escape'&&DW.drawing){
+    DW.drawing=false;
+    var h=document.getElementById('dw-hint');
+    if(h&&DW_HINTS[DW.tool])h.innerHTML='💡 '+DW_HINTS[DW.tool];
+    dwRender();
+  }
+}
 function closeDrawPad(){
+  document.removeEventListener('keydown',dwEscHandler);
   var m=document.getElementById('draw-pad-modal'); if(m)m.remove();
 }
 
