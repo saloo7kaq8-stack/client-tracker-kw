@@ -11072,6 +11072,9 @@ function dwBuildObject(x1,y1,x2,y2,isPreview){
   if(['sink','stove','fridge','oven','washer','dishwasher'].indexOf(t)!==-1){
     return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
   }
+  if(t==='column'){
+    return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
+  }
   if(t==='door'||t==='window'){
     return Object.assign(base,{x1:x1,y1:y1,x2:x2,y2:y2});
   }
@@ -11162,10 +11165,6 @@ function dwDrawSymbol(o){
     for(var a=0;a<8;a++){var ang=a*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*11,y+Math.sin(ang)*11);ctx.lineTo(x+Math.cos(ang)*15,y+Math.sin(ang)*15);ctx.stroke();}
     ctx.fillStyle=col;ctx.font='bold 9px Tajawal,Arial';
     ctx.fillText(o.ok===true?'سبوت ✓':(o.ok===false?'سبوت ✗':'سبوت'),x,y+26);
-  }else if(t==='column'){
-    ctx.fillStyle='#444';ctx.fillRect(x-13,y-13,26,26);
-    ctx.strokeStyle='#000';ctx.lineWidth=1.5;ctx.strokeRect(x-13,y-13,26,26);
-    ctx.fillStyle='#fff';ctx.fillText('عمود',x,y+4);
   }
   ctx.restore();
 }
@@ -11173,7 +11172,7 @@ function dwDrawSymbol(o){
 function dwDrawObject(o, selected){
   var ctx=DW.ctx;
   // الأدوات النقطية (رموز)
-  var POINT_TYPES=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
+  var POINT_TYPES=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
   if(POINT_TYPES.indexOf(o.type)!==-1){
     dwDrawSymbol(o);
     if(selected){
@@ -11300,6 +11299,20 @@ function dwDrawObject(o, selected){
         ctx.beginPath();ctx.arc(ax+aw*p[0],ay+ah*p[1],Math.min(aw,ah)*0.12,0,2*Math.PI);ctx.stroke();
       });
     }
+  }else if(o.type==='column'){
+    // العمود: مستطيل مملوء داكن بأبعاد
+    var colx=Math.min(o.x1,o.x2), coly=Math.min(o.y1,o.y2), colw=Math.abs(dx), colh=Math.abs(dy);
+    ctx.fillStyle='#3a3a3a'; ctx.fillRect(colx,coly,colw,colh);
+    ctx.strokeStyle='#000'; ctx.lineWidth=2; ctx.strokeRect(colx,coly,colw,colh);
+    // خطوط قطرية (دلالة العمود الإنشائي)
+    ctx.strokeStyle='rgba(255,255,255,.3)'; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(colx,coly);ctx.lineTo(colx+colw,coly+colh);ctx.moveTo(colx+colw,coly);ctx.lineTo(colx,coly+colh);ctx.stroke();
+    // الأبعاد
+    var colWcm=Math.round(colw/DW.pxPerCm), colHcm=Math.round(colh/DW.pxPerCm);
+    ctx.fillStyle='#fff'; ctx.font='bold 10px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    if(colw>40&&colh>24)ctx.fillText('عمود',colx+colw/2,coly+colh/2-6);
+    if(colw>50&&colh>30){ctx.font='9px Tajawal,Arial';ctx.fillText(colWcm+'×'+colHcm,colx+colw/2,coly+colh/2+7);}
+    ctx.textBaseline='alphabetic';
   }
 
   // تمييز المحدد
@@ -11441,7 +11454,7 @@ var DW_HINTS={
   window:'🪟 النافذة: اسحب لرسم نافذة',
   appliance:'🔲 الجهاز: انقر نقطة البداية ثم نقطة النهاية لتحديد مكان جهاز',
   measure:'📐 القياس: انقر نقطتين لقياس المسافة بالسنتيمتر',
-  column:'⬛ العمود: انقر لوضع علامة عمود',
+  column:'⬛ العمود: اسحب لرسم عمود بأبعاد (عرض × عمق) — انقر نقطتين',
   water_hot:'🔴 ماء حار: انقر لوضع نقطة مخرج الماء الحار',
   water_cold:'🔵 ماء بارد: انقر لوضع نقطة مخرج الماء البارد',
   drain:'🕳️ الصرف: انقر لوضع نقطة الصرف (تصريف المجلى/الغسالة)',
@@ -11495,7 +11508,7 @@ function dwInit(){
       dwOpenShapeDialog(DW.tool); return;
     }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
-    var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight','column'];
+    var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
     if(POINT_TOOLS.indexOf(DW.tool)!==-1){
       var sym={type:DW.tool, x1:wx, y1:wy, x2:wx, y2:wy, color:DW.color, size:DW.size};
       // تحذير ذكي للفتحات داخل المنطقة المحظورة
@@ -11648,7 +11661,7 @@ function dwObjectDetails(o){
     return '📐 '+name+' • الطول: '+lenCm+'سم • الزاوية: '+Math.abs(ang)+'°';
   }
   // عناصر نقطية
-  var POINT=['column','water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
+  var POINT=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
   if(POINT.indexOf(o.type)!==-1){
     var extra=(o.type==='spotlight'&&o.ok!==undefined)?(o.ok?' • ✓ مطابق':' • ✗ غير مطابق'):'';
     return '📍 '+name+extra;
