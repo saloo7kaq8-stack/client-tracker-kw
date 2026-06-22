@@ -12382,32 +12382,32 @@ function dwShowDateClients(dateVal){
   });
   if(!matches.length){
     box.style.display='block';
-    box.innerHTML='<div style="background:#1a1a2a;border:1px solid #333;border-radius:10px;padding:10px 14px;color:#666;font-family:Tajawal,sans-serif;font-size:12px">📅 لا يوجد عملاء مجدولون بهذا التاريخ</div>';
+    box.innerHTML='<div style="background:rgba(0,0,0,.04);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;color:var(--mt);font-family:Tajawal,sans-serif;font-size:12px">📅 لا يوجد عملاء مجدولون بهذا التاريخ</div>';
     return;
   }
   var rows=matches.map(function(c){
     var measurer=c.measurement.measurer||'—';
     var time=c.measurement.time||'—';
-    return '<tr style="border-bottom:1px solid #2a3a3a">'+
-      '<td style="padding:8px 10px;color:#fff;font-weight:600">'+pEsc(c.name||'—')+'</td>'+
-      '<td style="padding:8px 10px;color:#4ecdc4">'+pEsc(c.phone||'—')+'</td>'+
-      '<td style="padding:8px 10px;color:#d4af37;text-align:center">'+pEsc(time)+'</td>'+
-      '<td style="padding:8px 10px;color:#aaa;text-align:center">'+pEsc(measurer)+'</td>'+
-      '<td style="padding:8px 10px;text-align:center"><button onclick="viewClient('+c.id+')" style="background:#0a8f5c;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:Tajawal,sans-serif">📂 الملف</button></td>'+
+    return '<tr style="border-bottom:1px solid rgba(10,143,92,.1)">'+
+      '<td style="padding:8px 12px;color:var(--tx);font-weight:600">'+pEsc(c.name||'—')+'</td>'+
+      '<td style="padding:8px 12px;color:#0a8f5c">'+pEsc(c.phone||'—')+'</td>'+
+      '<td style="padding:8px 12px;color:#d4af37;text-align:center">'+pEsc(time)+'</td>'+
+      '<td style="padding:8px 12px;color:var(--mt);text-align:center">'+pEsc(measurer)+'</td>'+
+      '<td style="padding:8px 12px;text-align:center"><button onclick="viewClient('+c.id+')" style="background:#0a8f5c;color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-size:11px;font-family:Tajawal,sans-serif">📂 الملف</button></td>'+
     '</tr>';
   }).join('');
   box.style.display='block';
-  box.innerHTML='<div style="background:#0d1a2a;border:1px solid #d4af37;border-radius:10px;overflow:hidden;margin-top:4px">'+
-    '<div style="background:#1a2a1a;padding:8px 12px;color:#d4af37;font-size:12px;font-weight:700;font-family:Tajawal,sans-serif">'+
-      '📅 عملاء مجدولون بتاريخ '+dateVal+' ('+matches.length+' عملاء)'+
+  box.innerHTML='<div style="background:rgba(10,143,92,.08);border:1px solid rgba(10,143,92,.3);border-radius:10px;overflow:hidden;margin-top:6px">'+
+    '<div style="background:rgba(10,143,92,.15);padding:8px 14px;color:#0a8f5c;font-size:12px;font-weight:700;font-family:Tajawal,sans-serif;border-bottom:1px solid rgba(10,143,92,.2)">'+
+      '📅 عملاء مجدولون بتاريخ '+dateVal+' — ('+matches.length+' عملاء)'+
     '</div>'+
     '<table style="width:100%;border-collapse:collapse;font-family:Tajawal,sans-serif;font-size:12px">'+
-      '<thead><tr style="background:#1a2a3a">'+
-        '<th style="padding:6px 10px;color:#888;text-align:right">العميل</th>'+
-        '<th style="padding:6px 10px;color:#888;text-align:right">الهاتف</th>'+
-        '<th style="padding:6px 10px;color:#888;text-align:center">الوقت</th>'+
-        '<th style="padding:6px 10px;color:#888;text-align:center">الفني</th>'+
-        '<th style="padding:6px 10px;color:#888;text-align:center"></th>'+
+      '<thead><tr style="background:rgba(10,143,92,.05)">'+
+        '<th style="padding:7px 12px;color:#666;text-align:right;font-weight:600">العميل</th>'+
+        '<th style="padding:7px 12px;color:#666;text-align:right;font-weight:600">الهاتف</th>'+
+        '<th style="padding:7px 12px;color:#666;text-align:center;font-weight:600">الوقت</th>'+
+        '<th style="padding:7px 12px;color:#666;text-align:center;font-weight:600">الفني</th>'+
+        '<th style="padding:7px 12px;color:#666;text-align:center;font-weight:600"></th>'+
       '</tr></thead>'+
       '<tbody>'+rows+'</tbody>'+
     '</table>'+
