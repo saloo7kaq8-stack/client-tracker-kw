@@ -12012,52 +12012,49 @@ function dwUpdateZoomLabel(){
   if(l)l.textContent=Math.round(DW.view.zoom*100)+'%';
 }
 function dwShowContinuePopup(wx, wy, curAng, lenCm, screenX, screenY){
-  // احذف أي popup قديم
   var old=document.getElementById('dw-continue-popup');
   if(old)old.remove();
 
-  // حسب الزاوية الحالية، نحدد خيارات الاكمال المنطقية
-  // مستقيم = نفس الزاوية، يسار = -90°، يمين = +90°، مشطوف = ±45°
-  var angStraight=curAng;
-  var angLeft=(curAng-90+360)%360;
-  var angRight=(curAng+90)%360;
-  var angLeft45=(curAng-45+360)%360;
-  var angRight45=(curAng+45)%360;
-
-  function angLabel(a){
-    var labels={0:'يمين ←',90:'أسفل ↓',180:'يسار →',270:'فوق ↑',45:'مائل ↘',135:'مائل ↙',225:'مائل ↖',315:'مائل ↗'};
-    return labels[a]||(a+'°');
-  }
+  // حساب كل الزوايا بناءً على الاتجاه الحالي
+  var a0=curAng;                    // مستقيم
+  var a90L=(curAng-90+360)%360;    // يسار 90°
+  var a90R=(curAng+90)%360;        // يمين 90°
+  var a135L=(curAng-135+360)%360;  // مشطوف يسار 135°
+  var a135R=(curAng+135)%360;      // مشطوف يمين 135°
+  var a45L=(curAng-45+360)%360;    // مشطوف يسار 45°
+  var a45R=(curAng+45)%360;        // مشطوف يمين 45°
 
   var popup=document.createElement('div');
   popup.id='dw-continue-popup';
-  popup.style.cssText='position:fixed;z-index:99999;background:#1a1a2e;border:2px solid #d4af37;border-radius:14px;padding:16px 20px;min-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.7);font-family:Tajawal,sans-serif;direction:rtl;';
+  popup.style.cssText='position:fixed;z-index:99999;background:#1a1a2e;border:2px solid #d4af37;border-radius:14px;padding:16px 20px;min-width:280px;box-shadow:0 8px 32px rgba(0,0,0,.7);font-family:Tajawal,sans-serif;direction:rtl;';
 
-  // حساب موضع الـ popup بجانب نقطة الضغط
-  var px=Math.min(screenX+20, window.innerWidth-280);
-  var py=Math.min(screenY-80, window.innerHeight-320);
+  var px=Math.min(screenX+20, window.innerWidth-300);
+  var py=Math.min(screenY-100, window.innerHeight-420);
+  if(py<10)py=10;
   popup.style.left=px+'px';
   popup.style.top=py+'px';
 
   popup.innerHTML=`
     <div style="color:#d4af37;font-size:13px;font-weight:700;margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:8px;">
       📐 الزاوية الحالية: <span style="color:#4ecdc4;font-size:15px">${curAng}°</span>
-      &nbsp;|&nbsp; 📏 الطول: <span style="color:#fff">${lenCm} سم</span>
+      &nbsp;|&nbsp; 📏 <span style="color:#fff">${lenCm} سم</span>
     </div>
-    <div style="color:#aaa;font-size:11px;margin-bottom:10px;">اختر اتجاه الاكمال:</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <button onclick="dwContinueDir(${angStraight})" style="background:#2a4a2a;border:1px solid #4a9;color:#4ecdc4;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">➡️ مستقيم<br><small style="color:#888">${curAng}°</small></button>
-      <button onclick="dwContinueDir(${angLeft})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↰ يسار 90°<br><small style="color:#888">${angLeft}°</small></button>
-      <button onclick="dwContinueDir(${angRight})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↱ يمين 90°<br><small style="color:#888">${angRight}°</small></button>
-      <button onclick="dwContinueDir(${angLeft45})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↖ مشطوف 45°<br><small style="color:#888">${angLeft45}°</small></button>
-      <button onclick="dwContinueDir(${angRight45})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↗ مشطوف 45°<br><small style="color:#888">${angRight45}°</small></button>
-      <button onclick="dwContinueFree()" style="background:#2a3a2a;border:1px solid #888;color:#ccc;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">🖱️ حر<br><small style="color:#888">بالماوس</small></button>
+    <div style="color:#aaa;font-size:11px;margin-bottom:8px;">اختر اتجاه الاكمال:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
+      <button onclick="dwContinueDir(${a90L})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↖ مشطوف<br><small style="color:#888">135° يسار</small></button>
+      <button onclick="dwContinueDir(${a0})" style="background:#1a3a1a;border:2px solid #4ecdc4;color:#4ecdc4;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;font-weight:700;">➡️ مستقيم<br><small style="color:#888">180°</small></button>
+      <button onclick="dwContinueDir(${a135R})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↗ مشطوف<br><small style="color:#888">135° يمين</small></button>
+      <button onclick="dwContinueDir(${a90L})" style="background:#2a2a4a;border:1px solid #88f;color:#ccf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↰ يسار<br><small style="color:#888">90°</small></button>
+      <button onclick="dwContinueFree()" style="background:#2a2a2a;border:1px solid #888;color:#ccc;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">🖱️ حر<br><small style="color:#888">بالماوس</small></button>
+      <button onclick="dwContinueDir(${a90R})" style="background:#2a2a4a;border:1px solid #88f;color:#ccf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↱ يمين<br><small style="color:#888">90°</small></button>
+      <button onclick="dwContinueDir(${a45L})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↙ مشطوف<br><small style="color:#888">45° يسار</small></button>
+      <button onclick="dwContinueDir(${(curAng+180)%360})" style="background:#3a1a1a;border:1px solid #a44;color:#f88;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">⬅️ رجوع<br><small style="color:#888">180° عكس</small></button>
+      <button onclick="dwContinueDir(${a45R})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↘ مشطوف<br><small style="color:#888">45° يمين</small></button>
     </div>
-    <button onclick="dwStopDrawing()" style="width:100%;background:#4a1a1a;border:1px solid #a44;color:#f88;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">✅ انهِ هنا</button>
+    <button onclick="dwStopDrawing()" style="width:100%;background:#1a3a1a;border:1px solid #4a9;color:#4ecdc4;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;">✅ انهِ هنا</button>
   `;
   document.body.appendChild(popup);
 
-  // إغلاق الـ popup بالضغط خارجه
   setTimeout(function(){
     document.addEventListener('click', function closePop(e){
       if(!popup.contains(e.target)){popup.remove(); document.removeEventListener('click',closePop);}
