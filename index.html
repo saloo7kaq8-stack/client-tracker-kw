@@ -11500,14 +11500,16 @@ function dwInit(){
     e.preventDefault();
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
+    // تحقق دائماً — أي أداة — إذا الضغط على شكل موجود، اسحبه مباشرة
+    var hitAny=dwHitTest(w.x,w.y);
+    if(hitAny>=0){
+      DW.selected=hitAny;
+      DW.dragging=true;
+      DW.dragLastX=w.x; DW.dragLastY=w.y;
+      dwRender(); return;
+    }
     if(DW.tool==='select'){
-      var hit=dwHitTest(w.x,w.y);
-      DW.selected=hit;
-      if(hit>=0){
-        // بدء السحب
-        DW.dragging=true;
-        DW.dragLastX=w.x; DW.dragLastY=w.y;
-      }
+      DW.selected=-1;
       dwRender(); return;
     }
     // الأشكال الرقمية تُرسم من النموذج — تجاهل النقر على اللوحة
@@ -11529,28 +11531,39 @@ function dwInit(){
       DW.objects.push(sym); dwPushHistory(); dwRender();
       return;
     }
-    // طريقة كليك-حركة-كليك: أول نقرة تثبّت البداية، الثانية تثبّت النهاية
+    // نظام AutoCAD: كل ضغطة تثبّت نقطة وتكمل — دبل كليك ينهي
+    var now=Date.now();
+    var dbl=(now-DW._lastClick)<350; // دبل كليك أقل من 350ms
+    DW._lastClick=now;
+    if(dbl){
+      // دبل كليك — إنهاء الرسم بدون إضافة خط جديد
+      DW.drawing=false;
+      DW._lastClick=0;
+      var h2=document.getElementById('dw-hint');
+      if(h2&&DW_HINTS[DW.tool])h2.innerHTML='💡 '+DW_HINTS[DW.tool];
+      var hov=document.getElementById('dw-hover-info');
+      if(hov)hov.innerHTML='✅ انتهى الرسم — اضغط ESC أو دبل كليك لإيقاف أي وقت';
+      dwRender(); return;
+    }
     if(!DW.drawing){
-      // النقرة الأولى — تثبيت نقطة البداية
+      // أول ضغطة — تثبيت نقطة البداية
       DW.drawing=true; DW.startX=wx; DW.startY=wy; DW.curX=wx; DW.curY=wy;
       var h=document.getElementById('dw-hint');
-      if(h)h.innerHTML='✏️ ثُبّتت نقطة البداية — حرّك ثم انقر مرة أخرى لإنهاء الرسم (أو اضغط ESC للإلغاء)';
+      if(h)h.innerHTML='✏️ حرّك الماوس ثم اضغط لتثبيت النقطة التالية — دبل كليك لإنهاء الرسم';
     }else{
-      // النقرة الثانية — إنهاء العنصر
+      // ضغطة تالية — تثبيت الخط وتصير نقطة البداية الجديدة
       DW.curX=wx; DW.curY=wy;
-      var dist=Math.abs(DW.curX-DW.startX)+Math.abs(DW.curY-DW.startY);
+      var dist=Math.sqrt(Math.pow(DW.curX-DW.startX,2)+Math.pow(DW.curY-DW.startY,2));
       if(dist>=3){
         var obj=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,false);
-        // النافذة: نسأل ارتفاع الجلسة من الأرض
         if(obj&&DW.tool==='window'){
-          var sill=prompt('ارتفاع جلسة الشباك من الأرض لبداية الدريشة (سم):','90');
+          var sill=prompt('ارتفاع جلسة الشباك من الأرض (سم):','90');
           if(sill!==null&&!isNaN(parseFloat(sill)))obj.sill=parseFloat(sill);
         }
         if(obj){DW.objects.push(obj); dwPushHistory();}
+        // النقطة الجديدة تصير بداية الخط التالي
+        DW.startX=DW.curX; DW.startY=DW.curY;
       }
-      DW.drawing=false;
-      var h2=document.getElementById('dw-hint');
-      if(h2&&DW_HINTS[DW.tool])h2.innerHTML='💡 '+DW_HINTS[DW.tool];
       dwRender();
     }
   }
@@ -11564,7 +11577,6 @@ function dwInit(){
       var o=DW.objects[DW.selected];
       if(o){
         if(o.group){
-          // تحريك كل المجموعة (الحرف كامل)
           DW.objects.forEach(function(obj){
             if(obj.group===o.group){obj.x1+=ddx;obj.y1+=ddy;obj.x2+=ddx;obj.y2+=ddy;}
           });
@@ -11578,6 +11590,23 @@ function dwInit(){
     }
     if(!DW.drawing)return; e.preventDefault();
     DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
+    // ── عرض الزاوية والطول الحي في شريط المعلومات ──
+    var hover=document.getElementById('dw-hover-info');
+    if(hover){
+      var dx=DW.curX-DW.startX, dy=DW.curY-DW.startY;
+      var lenPx=Math.sqrt(dx*dx+dy*dy);
+      var lenCm=Math.round(lenPx/DW.pxPerCm);
+      var angRad=Math.atan2(dy,dx);
+      var angDeg=Math.round(angRad*180/Math.PI);
+      if(angDeg<0)angDeg+=360;
+      // تحويل لزاوية مفهومة (0=يمين، 90=أسفل، 180=يسار، 270=أعلى)
+      var dispAng=angDeg;
+      // نحسب الزاوية المرئية من الأفقي (أبسط للمستخدم)
+      var fromHoriz=Math.abs(angDeg<=180?angDeg:360-angDeg);
+      if(fromHoriz>180)fromHoriz=360-fromHoriz;
+      hover.innerHTML='📏 <b style="color:#d4af37;font-size:14px">'+lenCm+' سم</b> &nbsp;|&nbsp; 📐 <b style="color:#4ecdc4;font-size:14px">'+dispAng+'°</b> &nbsp;<span style="opacity:.7;font-size:11px">(انقر لتثبيت النقطة التالية)</span>';
+      hover.style.color='#fff';
+    }
     dwRender();
   }
   function end(e){
