@@ -11619,7 +11619,7 @@ function dwInit(){
       // نحسب الزاوية المرئية من الأفقي (أبسط للمستخدم)
       var fromHoriz=Math.abs(angDeg<=180?angDeg:360-angDeg);
       if(fromHoriz>180)fromHoriz=360-fromHoriz;
-      hover.innerHTML='📏 <b style="color:#d4af37;font-size:14px">'+lenCm+' سم</b> &nbsp;|&nbsp; 📐 <b style="color:#4ecdc4;font-size:14px">'+dispAng+'°</b> &nbsp;<span style="opacity:.7;font-size:11px">(انقر لتثبيت النقطة التالية)</span>';
+      hover.innerHTML='📏 <b style="color:#d4af37;font-size:14px">'+lenCm+' سم</b> &nbsp;|&nbsp; 📐 <b style="color:#4ecdc4;font-size:14px">'+dispAng+'°</b> &nbsp;<button onclick="dwShowContinuePopup(DW.curX,DW.curY,'+dispAng+','+lenCm+',window.innerWidth/2,120)" style="background:#d4af37;color:#000;border:none;border-radius:6px;padding:2px 10px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;font-weight:700;margin-right:6px">📐 غيّر الزاوية</button><span style="opacity:.7;font-size:11px">(انقر لتثبيت — دبل كليك لإنهاء)</span>';
       hover.style.color='#fff';
     }
     dwRender();
