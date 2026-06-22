@@ -11551,7 +11551,7 @@ function dwInit(){
       var h=document.getElementById('dw-hint');
       if(h)h.innerHTML='✏️ حرّك الماوس ثم اضغط لتثبيت النقطة التالية — دبل كليك لإنهاء الرسم';
     }else{
-      // ضغطة تالية — تثبيت الخط وتصير نقطة البداية الجديدة
+      // ضغطة ثانية — ثبّت الخط وأظهر popup الخيارات
       DW.curX=wx; DW.curY=wy;
       var dist=Math.sqrt(Math.pow(DW.curX-DW.startX,2)+Math.pow(DW.curY-DW.startY,2));
       if(dist>=3){
@@ -11561,8 +11561,15 @@ function dwInit(){
           if(sill!==null&&!isNaN(parseFloat(sill)))obj.sill=parseFloat(sill);
         }
         if(obj){DW.objects.push(obj); dwPushHistory();}
-        // النقطة الجديدة تصير بداية الخط التالي
+        // احفظ نقطة النهاية كبداية جديدة
         DW.startX=DW.curX; DW.startY=DW.curY;
+        // احسب الزاوية الحالية
+        var adx=DW.curX-obj.x1, ady=DW.curY-obj.y1;
+        var curAng=Math.round(Math.atan2(ady,adx)*180/Math.PI);
+        if(curAng<0)curAng+=360;
+        var lenCm=Math.round(dist/DW.pxPerCm);
+        // أظهر popup الخيارات
+        dwShowContinuePopup(DW.curX, DW.curY, curAng, lenCm, p.sx, p.sy);
       }
       dwRender();
     }
@@ -11590,6 +11597,14 @@ function dwInit(){
     }
     if(!DW.drawing)return; e.preventDefault();
     DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
+    // إذا الزاوية مجبرة (اختار من الـ popup) — نثبّت الاتجاه
+    if(DW._forcedAngle!=null){
+      var fRad=DW._forcedAngle*Math.PI/180;
+      var fdx=wInfo.x-DW.startX, fdy=wInfo.y-DW.startY;
+      var fLen=Math.sqrt(fdx*fdx+fdy*fdy);
+      DW.curX=DW.startX+Math.cos(fRad)*fLen;
+      DW.curY=DW.startY+Math.sin(fRad)*fLen;
+    }
     // ── عرض الزاوية والطول الحي في شريط المعلومات ──
     var hover=document.getElementById('dw-hover-info');
     if(hover){
@@ -11996,6 +12011,83 @@ function dwUpdateZoomLabel(){
   var l=document.getElementById('dw-zoom-label');
   if(l)l.textContent=Math.round(DW.view.zoom*100)+'%';
 }
+function dwShowContinuePopup(wx, wy, curAng, lenCm, screenX, screenY){
+  // احذف أي popup قديم
+  var old=document.getElementById('dw-continue-popup');
+  if(old)old.remove();
+
+  // حسب الزاوية الحالية، نحدد خيارات الاكمال المنطقية
+  // مستقيم = نفس الزاوية، يسار = -90°، يمين = +90°، مشطوف = ±45°
+  var angStraight=curAng;
+  var angLeft=(curAng-90+360)%360;
+  var angRight=(curAng+90)%360;
+  var angLeft45=(curAng-45+360)%360;
+  var angRight45=(curAng+45)%360;
+
+  function angLabel(a){
+    var labels={0:'يمين ←',90:'أسفل ↓',180:'يسار →',270:'فوق ↑',45:'مائل ↘',135:'مائل ↙',225:'مائل ↖',315:'مائل ↗'};
+    return labels[a]||(a+'°');
+  }
+
+  var popup=document.createElement('div');
+  popup.id='dw-continue-popup';
+  popup.style.cssText='position:fixed;z-index:99999;background:#1a1a2e;border:2px solid #d4af37;border-radius:14px;padding:16px 20px;min-width:260px;box-shadow:0 8px 32px rgba(0,0,0,.7);font-family:Tajawal,sans-serif;direction:rtl;';
+
+  // حساب موضع الـ popup بجانب نقطة الضغط
+  var px=Math.min(screenX+20, window.innerWidth-280);
+  var py=Math.min(screenY-80, window.innerHeight-320);
+  popup.style.left=px+'px';
+  popup.style.top=py+'px';
+
+  popup.innerHTML=`
+    <div style="color:#d4af37;font-size:13px;font-weight:700;margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:8px;">
+      📐 الزاوية الحالية: <span style="color:#4ecdc4;font-size:15px">${curAng}°</span>
+      &nbsp;|&nbsp; 📏 الطول: <span style="color:#fff">${lenCm} سم</span>
+    </div>
+    <div style="color:#aaa;font-size:11px;margin-bottom:10px;">اختر اتجاه الاكمال:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <button onclick="dwContinueDir(${angStraight})" style="background:#2a4a2a;border:1px solid #4a9;color:#4ecdc4;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">➡️ مستقيم<br><small style="color:#888">${curAng}°</small></button>
+      <button onclick="dwContinueDir(${angLeft})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↰ يسار 90°<br><small style="color:#888">${angLeft}°</small></button>
+      <button onclick="dwContinueDir(${angRight})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↱ يمين 90°<br><small style="color:#888">${angRight}°</small></button>
+      <button onclick="dwContinueDir(${angLeft45})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↖ مشطوف 45°<br><small style="color:#888">${angLeft45}°</small></button>
+      <button onclick="dwContinueDir(${angRight45})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">↗ مشطوف 45°<br><small style="color:#888">${angRight45}°</small></button>
+      <button onclick="dwContinueFree()" style="background:#2a3a2a;border:1px solid #888;color:#ccc;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">🖱️ حر<br><small style="color:#888">بالماوس</small></button>
+    </div>
+    <button onclick="dwStopDrawing()" style="width:100%;background:#4a1a1a;border:1px solid #a44;color:#f88;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;">✅ انهِ هنا</button>
+  `;
+  document.body.appendChild(popup);
+
+  // إغلاق الـ popup بالضغط خارجه
+  setTimeout(function(){
+    document.addEventListener('click', function closePop(e){
+      if(!popup.contains(e.target)){popup.remove(); document.removeEventListener('click',closePop);}
+    });
+  },200);
+}
+
+function dwContinueDir(angleDeg){
+  // احذف الـ popup
+  var p=document.getElementById('dw-continue-popup'); if(p)p.remove();
+  // احفظ الاتجاه المختار وكمّل الرسم بهذا الاتجاه
+  DW._forcedAngle=angleDeg;
+  DW.drawing=true;
+  dwRender();
+}
+
+function dwContinueFree(){
+  var p=document.getElementById('dw-continue-popup'); if(p)p.remove();
+  DW._forcedAngle=null;
+  DW.drawing=true;
+  dwRender();
+}
+
+function dwStopDrawing(){
+  var p=document.getElementById('dw-continue-popup'); if(p)p.remove();
+  DW.drawing=false;
+  DW._forcedAngle=null;
+  dwRender();
+}
+
 function dwEscHandler(e){
   if(e.key==='Escape'&&DW.drawing){
     DW.drawing=false;
