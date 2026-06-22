@@ -11040,8 +11040,21 @@ function dwRender(){
   DW.objects.forEach(function(o,i){
     dwDrawObject(o, i===DW.selected);
   });
+  // معاينة القلم الحر أثناء الرسم
+  if(DW.tool==='pen' && DW.drawing && DW.penPath && DW.penPath.length>1){
+    ctx.save();
+    ctx.strokeStyle=DW.color||'#0a2e22';
+    ctx.lineWidth=DW.size||2;
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.globalAlpha=0.8;
+    ctx.beginPath();
+    ctx.moveTo(DW.penPath[0].x, DW.penPath[0].y);
+    for(var pp=1;pp<DW.penPath.length;pp++) ctx.lineTo(DW.penPath[pp].x, DW.penPath[pp].y);
+    ctx.stroke();
+    ctx.restore();
+  }
   // معاينة العنصر الجاري رسمه
-  if(DW.drawing && DW.tool!=='pen' && DW.tool!=='select'){
+  if(DW.drawing && DW.tool!=='pen' && DW.tool!=='select' && DW.tool!=='eraser'){
     var prev=dwBuildObject(DW.startX,DW.startY,DW.curX,DW.curY,true);
     if(prev){ctx.globalAlpha=0.6; dwDrawObject(prev,false); ctx.globalAlpha=1;}
   }
@@ -11213,6 +11226,20 @@ function dwDrawSymbol(o){
 
 function dwDrawObject(o, selected){
   var ctx=DW.ctx;
+  // القلم الحر
+  if(o.type==='pen' && o.path && o.path.length>1){
+    ctx.save();
+    ctx.strokeStyle=o.color||'#0a2e22';
+    ctx.lineWidth=(o.size||2);
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(o.path[0].x, o.path[0].y);
+    for(var pi=1;pi<o.path.length;pi++) ctx.lineTo(o.path[pi].x, o.path[pi].y);
+    ctx.stroke();
+    if(selected){ctx.setLineDash([4,3]);ctx.strokeStyle='#d4af37';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);}
+    ctx.restore();
+    return;
+  }
   // الأدوات النقطية (رموز)
   var POINT_TYPES=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
   if(POINT_TYPES.indexOf(o.type)!==-1){
@@ -11396,6 +11423,8 @@ function openDrawPad(clientId){
         '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin-bottom:6px">🏗️ الهيكل</div>'+
         '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
           toolBtn('select','🖱️','تحديد')+
+          toolBtn('pen','🖊️','قلم')+
+          toolBtn('eraser','⬜','مساحة')+
           toolBtn('wall','🧱','جدار',true)+
           toolBtn('cabinet','🗄️','خزانة')+
           toolBtn('column','⬛','عمود')+
@@ -11558,6 +11587,16 @@ function dwInit(){
     if(DW.tool==='rect'||DW.tool==='lshape'||DW.tool==='ushape'){
       dwOpenShapeDialog(DW.tool); return;
     }
+    // القلم الحر
+    if(DW.tool==='pen'){
+      DW.drawing=true; DW.penPath=[{x:wx,y:wy}];
+      return;
+    }
+    // المساحة
+    if(DW.tool==='eraser'){
+      DW.erasing=true; DW.eraserX=wx; DW.eraserY=wy;
+      return;
+    }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
     var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
     if(POINT_TOOLS.indexOf(DW.tool)!==-1){
@@ -11637,6 +11676,25 @@ function dwInit(){
       dwRender();
       return;
     }
+    // القلم الحر — يضيف نقاط للمسار
+    if(DW.tool==='pen' && DW.drawing){
+      e.preventDefault();
+      if(!DW.penPath)DW.penPath=[];
+      DW.penPath.push({x:wInfo.x,y:wInfo.y});
+      dwRender();
+      return;
+    }
+    // المساحة — تحذف العناصر اللي تلمسها
+    if(DW.tool==='eraser' && DW.erasing){
+      e.preventDefault();
+      var er=20/DW.view.scale;
+      DW.objects=DW.objects.filter(function(o){
+        var cx=(o.x1+o.x2)/2, cy=(o.y1+o.y2)/2;
+        return Math.sqrt(Math.pow(cx-wInfo.x,2)+Math.pow(cy-wInfo.y,2))>er;
+      });
+      dwRender();
+      return;
+    }
     if(!DW.drawing)return; e.preventDefault();
     DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
     // إذا الزاوية مجبرة (اختار من الـ popup) — نثبّت الاتجاه
@@ -11670,13 +11728,25 @@ function dwInit(){
     // إنهاء السحب
     if(DW.dragging){
       DW.dragging=false;
-      // انطباق على الشبكة بعد الإفلات
       var o=DW.objects[DW.selected];
       if(o){
         var sx=dwSnap(o.x1)-o.x1, sy=dwSnap(o.y1)-o.y1;
         o.x1+=sx; o.y1+=sy; o.x2+=sx; o.y2+=sy;
       }
       dwPushHistory(); dwRender();
+    }
+    // إنهاء القلم الحر
+    if(DW.tool==='pen' && DW.drawing && DW.penPath && DW.penPath.length>1){
+      DW.objects.push({type:'pen', path:DW.penPath.slice(), color:DW.color, size:DW.size, x1:DW.penPath[0].x, y1:DW.penPath[0].y, x2:DW.penPath[DW.penPath.length-1].x, y2:DW.penPath[DW.penPath.length-1].y});
+      dwPushHistory();
+      DW.penPath=[];
+      DW.drawing=false;
+      dwRender();
+    }
+    // إنهاء المساحة
+    if(DW.tool==='eraser' && DW.erasing){
+      DW.erasing=false;
+      dwPushHistory();
     }
   }
   // ESC للإلغاء
