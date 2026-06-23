@@ -10980,23 +10980,28 @@ function measSearch(q){
 // ═══════════════════════════════════════════════════════
 var DW={
   cv:null, ctx:null, clientId:null,
-  objects:[],            // كل الكائنات المرسومة
+  objects:[],
   tool:'wall',
   color:'#0a2e22', size:3,
   showGrid:true, showRuler:true, showAngles:false,
-  cabDepth:60,      // عمق المخزن بالسم (يحدد المنطقة المحظورة)
-  safetyMargin:20,  // هامش الأمان بعد المخزن
-  // المقياس: عدد البكسلات لكل متر (100px = 1م = 100سم)، فالـ 1px = 1سم
+  cabDepth:60,
+  safetyMargin:20,
   pxPerCm:1,
-  snapGrid:5,            // انطباق كل 5سم
-  snapAngle:true,        // انطباق الزوايا للقيم الشائعة
-  // حالة الرسم الجاري
+  snapGrid:5,
+  snapAngle:true,
   drawing:false, startX:0, startY:0, curX:0, curY:0,
   dragging:false, dragLastX:0, dragLastY:0,
-  freePath:null,         // للرسم الحر
-  selected:-1,           // الكائن المحدد للتعديل
+  selected:-1,
   history:[], histIdx:-1,
-  view:{ox:0, oy:0, zoom:1} // الإزاحة والتكبير
+  view:{ox:0, oy:0, zoom:1},
+  // القلم الحر
+  penPath:[], freePath:null,
+  // المساحة
+  erasing:false, eraserX:0, eraserY:0,
+  // الزاوية المجبرة
+  _forcedAngle:null,
+  // توقيت الضغط
+  _lastClick:0,
 };
 
 // ── تحويلات الإحداثيات (شاشة ↔ عالم) ──
@@ -11700,7 +11705,7 @@ function dwInit(){
     // المساحة — تحذف العناصر اللي تلمسها
     if(DW.tool==='eraser' && DW.erasing){
       e.preventDefault();
-      var er=20/DW.view.scale;
+      var er=20/DW.view.zoom;
       DW.objects=DW.objects.filter(function(o){
         var cx=(o.x1+o.x2)/2, cy=(o.y1+o.y2)/2;
         return Math.sqrt(Math.pow(cx-wInfo.x,2)+Math.pow(cy-wInfo.y,2))>er;
@@ -11765,29 +11770,24 @@ function dwInit(){
   // ESC للإلغاء
   document.addEventListener('keydown',dwEscHandler);
   cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
-  // اللمس للآيباد — passive:false عشان نقدر نمنع التمرير
+  // اللمس للآيباد
   cv.addEventListener('touchstart', start, {passive:false});
   cv.addEventListener('touchmove',  move,  {passive:false});
-  cv.addEventListener('touchend',   end,   {passive:false});
-  // النقر المزدوج لتعديل القياس
-  cv.ondblclick=function(e){
-    e.preventDefault();
-    var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
-    var idx=dwHitTest(w.x,w.y);
-    if(idx>=0)dwEditObjectMeasure(idx);
-  };
-  // double tap للآيباد
+  // touchend — يجمع إنهاء الرسم + double tap
   var _lastTap=0;
-  cv.addEventListener('touchend',function(e){
+  cv.addEventListener('touchend', function(e){
     var now=Date.now();
-    if(now-_lastTap<350){
+    var isDbl=(now-_lastTap)<350;
+    _lastTap=now;
+    if(isDbl){
       e.preventDefault();
       var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
       var idx=dwHitTest(w.x,w.y);
       if(idx>=0) dwEditObjectMeasure(idx);
       else { DW.drawing=false; DW._lastClick=0; dwRender(); }
+      return;
     }
-    _lastTap=now;
+    end(e);
   },{passive:false});
 }
 
