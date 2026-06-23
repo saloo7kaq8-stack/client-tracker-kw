@@ -9400,8 +9400,135 @@ function renderImport(){
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
     <div class="gc" style="padding:20px"><div style="font-size:15px;font-weight:700;margin-bottom:6px">✏️ إدخال يدوي مجمّع</div><div style="font-size:12px;color:var(--mt);margin-bottom:14px">كل سطر بهذا الترتيب — افصل بين الحقول بـ | (الاسم إجباري، الباقي اختياري):<br><b>الاسم | الهاتف | الرقم المدني | المنطقة | قيمة العقد</b></div><textarea class="fta" id="bulk-in" style="min-height:160px" placeholder="أحمد الكويتي | 55001234 | 296010103456 | حولي | 5000&#10;سالم العتيبي | 65009876 | 285012055678 | الفروانية | 7500&#10;شركة النجاح | 90001122 | | الأحمدي | 12000"></textarea><br><button class="btn-p" style="margin-top:8px" onclick="impBulk()">📥 إدخال</button></div>
     <div class="gc" style="padding:20px"><div style="font-size:15px;font-weight:700;margin-bottom:6px">📤 تصدير البيانات</div><div style="font-size:12px;color:var(--mt);margin-bottom:14px">نسخة احتياطية من كل البيانات</div><div style="display:flex;gap:8px"><button class="btn-p" onclick="expJSON()">📤 JSON</button><button class="btn-ghost" onclick="expCSV()">📤 CSV</button></div><div style="margin-top:12px;padding:10px;background:var(--gbg);border-radius:8px;border:1px solid var(--gbd)"><div style="font-size:12px;color:var(--g);font-weight:600">✅ ${clients.length} عميل في النظام</div></div></div>
-  </div><div id="imp-prev" style="margin-top:16px"></div>`;
+  </div><div id="imp-prev" style="margin-top:16px"></div>
+
+  <div class="gc" style="padding:20px;margin-top:16px;border:2px solid #d4af37">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px;color:#d4af37">🔄 استيراد ذكي من ملف المتابعة</div>
+    <div style="font-size:12px;color:var(--mt);margin-bottom:14px">
+      يستورد 365 عميل من ملف المتابعة النهائي مع تحديد المرحلة تلقائياً.<br>
+      <b>المطابقة:</b> بالرقم المدني أولاً، ثم بالهاتف — لا تكرار.<br>
+      <b>الموجود</b> يُحدّث بآخر بياناته · <b>الجديد</b> يُضاف بمرحلته الصحيحة.
+    </div>
+    <button class="btn-p" onclick="impFollowUpFile()" style="background:linear-gradient(135deg,#d4af37,#b8962e)">🔄 بدء الاستيراد الذكي</button>
+    <div id="imp-smart-result" style="margin-top:14px"></div>
+  </div>`;
 }
+
+async function impFollowUpFile(){
+  var resultBox=document.getElementById('imp-smart-result');
+  resultBox.innerHTML='<div style="padding:12px;color:var(--mt)">⏳ جاري تحميل ملف المتابعة...</div>';
+
+  // اقرأ ملف البيانات من GitHub
+  var imported;
+  try{
+    var resp=await fetch('import_data.json?t='+Date.now());
+    imported=await resp.json();
+  }catch(e){
+    resultBox.innerHTML='<div style="padding:12px;color:var(--re)">❌ تعذّر تحميل الملف: '+e.message+'</div>';
+    return;
+  }
+
+  // تأكيد
+  if(!confirm('سيتم استيراد '+imported.length+' عميل.\n\nالموجود سيُحدّث، والجديد سيُضاف.\n\nمتابعة؟'))return;
+
+  var added=0, updated=0, failed=0;
+  var log=[];
+
+  // فهرسة العملاء الحاليين بالرقم المدني والهاتف
+  var byCivil={}, byPhone={};
+  clients.forEach(function(c){
+    if(c.civilId)byCivil[String(c.civilId).trim()]=c;
+    if(c.phone)byPhone[String(c.phone).replace(/\D/g,'')]=c;
+  });
+
+  resultBox.innerHTML='<div style="padding:12px;color:var(--mt)">⏳ جاري المعالجة... 0/'+imported.length+'</div>';
+
+  for(var i=0;i<imported.length;i++){
+    var row=imported[i];
+    try{
+      // طابق بالرقم المدني أولاً ثم الهاتف
+      var existing=null;
+      if(row.excel_id && byCivil[String(row.excel_id).trim()]) existing=byCivil[String(row.excel_id).trim()];
+      else if(row.phone){
+        var ph=String(row.phone).replace(/\D/g,'');
+        if(byPhone[ph]) existing=byPhone[ph];
+      }
+
+      var mapped=mapFollowUpRow(row, existing);
+
+      if(existing){
+        Object.assign(existing, mapped);
+        await dbUpdateClient(existing.id, existing);
+        updated++;
+      }else{
+        var created=await dbInsertClient(mapped);
+        if(!created)throw new Error('فشل الإضافة لقاعدة البيانات');
+        clients.push(created);
+        if(created.civilId)byCivil[String(created.civilId).trim()]=created;
+        if(created.phone)byPhone[String(created.phone).replace(/\D/g,'')]=created;
+        added++;
+      }
+    }catch(e){
+      failed++;
+      log.push(row.name+': '+e.message);
+    }
+    if(i%10===0){
+      resultBox.innerHTML='<div style="padding:12px;color:var(--mt)">⏳ '+(i+1)+'/'+imported.length+' — ✅'+added+' جديد · 🔄'+updated+' محدّث · ⚠️'+failed+' فشل</div>';
+      await new Promise(r=>setTimeout(r,5));
+    }
+  }
+
+  try{[clients,team]=await Promise.all([dbFetchClients(),dbFetchTeam()]);updateAlertBadge();}catch(e){}
+
+  resultBox.innerHTML='<div style="padding:16px;background:var(--gbg);border:1px solid var(--gbd);border-radius:10px">'+
+    '<div style="font-size:16px;font-weight:800;color:var(--g);margin-bottom:8px">✅ اكتمل الاستيراد!</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">'+
+      '<div style="text-align:center;padding:10px;background:rgba(10,143,92,.08);border-radius:8px"><div style="font-size:22px;font-weight:800;color:#0a8f5c">'+added+'</div><div style="font-size:11px;color:var(--mt)">عميل جديد</div></div>'+
+      '<div style="text-align:center;padding:10px;background:rgba(212,175,55,.08);border-radius:8px"><div style="font-size:22px;font-weight:800;color:#d4af37">'+updated+'</div><div style="font-size:11px;color:var(--mt)">محدّث</div></div>'+
+      '<div style="text-align:center;padding:10px;background:rgba(192,57,43,.08);border-radius:8px"><div style="font-size:22px;font-weight:800;color:#c0392b">'+failed+'</div><div style="font-size:11px;color:var(--mt)">فشل</div></div>'+
+    '</div>'+
+    (log.length?'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--re)">عرض الأخطاء ('+log.length+')</summary><div style="font-size:11px;color:var(--mt);margin-top:6px;max-height:150px;overflow:auto">'+log.join('<br>')+'</div></details>':'')+
+  '</div>';
+  toast('✅ استيراد: '+added+' جديد، '+updated+' محدّث','ok');
+}
+
+// تحويل صف الإكسل لبنية عميل النظام
+function mapFollowUpRow(row, existing){
+  var phaseNames={1:'تواصل أولي',2:'عرض سعر',3:'اتفاق مبدئي',4:'قياس أولي',5:'تصميم',6:'اعتماد العميل',7:'عقد وسلفة',8:'قياس نهائي',9:'أمر تصنيع',10:'تصنيع',11:'تركيب',12:'منتهي'};
+  var collected=(+row.pay1||0)+(+row.pay2||0)+(+row.pay3||0);
+  var contract=+row.contract_value||0;
+  var payStatus= collected<=0?'غير مدفوع' : (collected>=contract&&contract>0?'مدفوع':'مدفوع جزئياً');
+  var statusVal = row.phase>=12?'منتهي' : (row.delay_reason?'متأخر':'قيد التجهيز');
+
+  var base= existing? {} : {
+    name:row.name, type:'سكني', priority:'متوسطة',
+    kitTypes:[], payments:[], log:[],
+  };
+
+  base.name = row.name;
+  base.phone = row.phone||'';
+  base.phone2 = row.phone2||'';
+  base.civilId = row.excel_id||'';
+  base.resp = row.sales||'';
+  base.site = row.site_status||'غير جاهز';
+  base.contract = contract;
+  base.collected = collected;
+  base.pay = payStatus;
+  base.status = statusVal;
+  base.stage = phaseNames[row.phase]||'تصميم';
+  base._phase = row.phase;
+  base.contact = row.last_contact||'';
+  base.delivery = row.delivery_date||'';
+  base.notes = [row.notes, row.delay_reason?('⚠️ سبب التأخير: '+row.delay_reason):'', row.materials_desc?('المواد: '+row.materials_desc):''].filter(Boolean).join(' | ');
+
+  // الدفعات التفصيلية
+  var payments=[];
+  if(+row.pay1>0)payments.push({label:'دفعة 1',amount:+row.pay1,date:''});
+  if(+row.pay2>0)payments.push({label:'دفعة 2',amount:+row.pay2,date:''});
+  if(+row.pay3>0)payments.push({label:'دفعة 3',amount:+row.pay3,date:''});
+  base.payments=payments;
+
+  return base;
 
 async function impBulk(){
   const raw=document.getElementById('bulk-in')?.value.trim();if(!raw){toast('أدخل البيانات','err');return;}
