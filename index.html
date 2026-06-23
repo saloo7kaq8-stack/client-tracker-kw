@@ -9456,6 +9456,7 @@ async function impFollowUpFile(testLimit){
 
   var added=0, updated=0, failed=0;
   var log=[];
+  var addedNames=[], updatedNames=[];
 
   // فهرسة العملاء الحاليين بالرقم المدني والهاتف
   var byCivil={}, byPhone={};
@@ -9483,6 +9484,7 @@ async function impFollowUpFile(testLimit){
         Object.assign(existing, mapped);
         await dbUpdateClient(existing.id, existing);
         updated++;
+        updatedNames.push({name:existing.name, id:existing.id});
       }else{
         var created=await dbInsertClient(mapped);
         if(!created)throw new Error('فشل الإضافة لقاعدة البيانات');
@@ -9490,6 +9492,7 @@ async function impFollowUpFile(testLimit){
         if(created.civilId)byCivil[String(created.civilId).trim()]=created;
         if(created.phone)byPhone[String(created.phone).replace(/\D/g,'')]=created;
         added++;
+        addedNames.push({name:created.name, id:created.id});
       }
     }catch(e){
       failed++;
@@ -9510,6 +9513,8 @@ async function impFollowUpFile(testLimit){
       '<div style="text-align:center;padding:10px;background:rgba(212,175,55,.08);border-radius:8px"><div style="font-size:22px;font-weight:800;color:#d4af37">'+updated+'</div><div style="font-size:11px;color:var(--mt)">محدّث</div></div>'+
       '<div style="text-align:center;padding:10px;background:rgba(192,57,43,.08);border-radius:8px"><div style="font-size:22px;font-weight:800;color:#c0392b">'+failed+'</div><div style="font-size:11px;color:var(--mt)">فشل</div></div>'+
     '</div>'+
+    (addedNames.length?'<details style="margin-top:10px" open><summary style="cursor:pointer;font-size:13px;color:#0a8f5c;font-weight:700">🆕 العملاء الجدد ('+addedNames.length+')</summary><div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">'+addedNames.map(function(x){return '<div onclick="viewClient('+x.id+')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(10,143,92,.08);border-radius:8px;cursor:pointer"><span style="font-weight:600;color:var(--tx)">'+x.name+'</span><span style="background:#0a8f5c;color:#fff;border-radius:6px;padding:3px 10px;font-size:11px">📂 افتح الملف</span></div>';}).join('')+'</div></details>':'')+
+    (updatedNames.length?'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:#d4af37;font-weight:700">🔄 العملاء المحدّثون ('+updatedNames.length+')</summary><div style="margin-top:8px;display:flex;flex-direction:column;gap:6px">'+updatedNames.map(function(x){return '<div onclick="viewClient('+x.id+')" style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(212,175,55,.08);border-radius:8px;cursor:pointer"><span style="font-weight:600;color:var(--tx)">'+x.name+'</span><span style="background:#d4af37;color:#000;border-radius:6px;padding:3px 10px;font-size:11px">📂 افتح الملف</span></div>';}).join('')+'</div></details>':'')+
     (log.length?'<details style="margin-top:10px"><summary style="cursor:pointer;font-size:12px;color:var(--re)">عرض الأخطاء ('+log.length+')</summary><div style="font-size:11px;color:var(--mt);margin-top:6px;max-height:150px;overflow:auto">'+log.join('<br>')+'</div></details>':'')+
   '</div>';
   toast('✅ استيراد: '+added+' جديد، '+updated+' محدّث','ok');
