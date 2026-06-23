@@ -3640,6 +3640,20 @@ function renderSF(){
 
 // ── DASHBOARD ──
 let dashCharts={};
+function dwOpenClientMeas(id){
+  // روح لصفحة القياسات وافتح ملف العميل
+  go('measurements');
+  setTimeout(function(){
+    var el=document.querySelector('[data-client-id="'+id+'"]');
+    if(el){el.click();}
+    else{
+      // ابحث عن العميل وافتح صفحته
+      var c=clients.find(function(x){return x.id===id;});
+      if(c) viewClient(id);
+    }
+  },300);
+}
+
 function renderDash(){
   const c=counts(),f=financial();
   const p1=clients.filter(x=>x.status==='جاهز للتنفيذ'&&x.pay==='مدفوع').length;
@@ -3786,7 +3800,7 @@ function renderDash(){
           const badge=isToday?'<span style="background:#e74c3c;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">اليوم</span>':
                       isTmrw?'<span style="background:#f39c12;color:#fff;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">باجر</span>':
                       '<span style="background:rgba(0,0,0,.06);color:var(--mt);padding:2px 8px;border-radius:10px;font-size:10px">'+c.measurement.date+'</span>';
-          return '<div onclick="openMeasurements('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(212,175,55,.05);border-radius:9px;cursor:pointer;border:1px solid rgba(212,175,55,.12)" onmouseover="this.style.background=\'rgba(212,175,55,.12)\'" onmouseout="this.style.background=\'rgba(212,175,55,.05)\'">'+
+          return '<div onclick="dwOpenClientMeas('+c.id+')" style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:rgba(212,175,55,.05);border-radius:9px;cursor:pointer;border:1px solid rgba(212,175,55,.12)" onmouseover="this.style.background=\'rgba(212,175,55,.12)\'" onmouseout="this.style.background=\'rgba(212,175,55,.05)\'">'+
             '<div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#d4af37,#b8962e);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">'+ini(c.name)+'</div>'+
             '<div style="flex:1;min-width:0">'+
               '<div style="font-weight:600;font-size:13px;color:var(--tx)">'+c.name+'</div>'+
@@ -11767,6 +11781,19 @@ function dwInit(){
     var idx=dwHitTest(w.x,w.y);
     if(idx>=0)dwEditObjectMeasure(idx);
   };
+  // double tap للآيباد
+  var _lastTap=0;
+  cv.addEventListener('touchend',function(e){
+    var now=Date.now();
+    if(now-_lastTap<350){
+      e.preventDefault();
+      var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
+      var idx=dwHitTest(w.x,w.y);
+      if(idx>=0) dwEditObjectMeasure(idx);
+      else { DW.drawing=false; DW._lastClick=0; dwRender(); }
+    }
+    _lastTap=now;
+  },{passive:false});
 }
 
 // تعديل قياس عنصر (الطول بالسم) — النقر المزدوج
@@ -12166,14 +12193,14 @@ function dwShowContinuePopup(wx, wy, curAng, lenCm, screenX, screenY){
     </div>
     <div style="color:#aaa;font-size:11px;margin-bottom:8px;">اختر اتجاه الاكمال:</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px;">
-      <button onclick="dwContinueDir(${a90L})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↖ مشطوف<br><small style="color:#888">135° يسار</small></button>
+      <button onclick="dwContinueDir(${a135L})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↖ مشطوف<br><small style="color:#888">135° يسار</small></button>
       <button onclick="dwContinueDir(${a0})" style="background:#1a3a1a;border:2px solid #4ecdc4;color:#4ecdc4;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;font-weight:700;">➡️ مستقيم<br><small style="color:#888">180°</small></button>
       <button onclick="dwContinueDir(${a135R})" style="background:#2a2a4a;border:1px solid #66a;color:#aaf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↗ مشطوف<br><small style="color:#888">135° يمين</small></button>
       <button onclick="dwContinueDir(${a90L})" style="background:#2a2a4a;border:1px solid #88f;color:#ccf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↰ يسار<br><small style="color:#888">90°</small></button>
       <button onclick="dwContinueFree()" style="background:#2a2a2a;border:1px solid #888;color:#ccc;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">🖱️ حر<br><small style="color:#888">بالماوس</small></button>
       <button onclick="dwContinueDir(${a90R})" style="background:#2a2a4a;border:1px solid #88f;color:#ccf;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↱ يمين<br><small style="color:#888">90°</small></button>
       <button onclick="dwContinueDir(${a45L})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↙ مشطوف<br><small style="color:#888">45° يسار</small></button>
-      <button onclick="dwContinueDir(${(curAng+180)%360})" style="background:#3a1a1a;border:1px solid #a44;color:#f88;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">⬅️ رجوع<br><small style="color:#888">180° عكس</small></button>
+      <button onclick="dwContinueDir(${(curAng+180)%360})" style="background:#3a1a1a;border:1px solid #a44;color:#f88;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">⬅️ رجوع<br><small style="color:#888">عكس</small></button>
       <button onclick="dwContinueDir(${a45R})" style="background:#3a2a1a;border:1px solid #a84;color:#fa8;padding:7px 4px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:11px;">↘ مشطوف<br><small style="color:#888">45° يمين</small></button>
     </div>
     <button onclick="dwStopDrawing()" style="width:100%;background:#1a3a1a;border:1px solid #4a9;color:#4ecdc4;padding:8px;border-radius:8px;cursor:pointer;font-family:Tajawal,sans-serif;font-size:12px;font-weight:700;">✅ انهِ هنا</button>
