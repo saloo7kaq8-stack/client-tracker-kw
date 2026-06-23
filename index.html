@@ -3,7 +3,10 @@
 <!-- saved from url=(0063)file:///C:/Users/Lenovo/Downloads/SLKR_Follow_Up_System_14.html -->
 <html lang="ar" dir="rtl"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
 <title>SLKR - Follow Up System</title>
 <!-- ═══ INTELLECTUAL PROPERTY PROTECTION ═══ -->
 <meta name="author" content="Saleh Al-Jasem (صالح الجاسم) — Bo Sager">
@@ -11563,9 +11566,10 @@ function dwInit(){
 
   function getXY(e){
     var r=cv.getBoundingClientRect();
-    var cx=e.touches?e.touches[0].clientX:e.clientX;
-    var cy=e.touches?e.touches[0].clientY:e.clientY;
-    return {sx:(cx-r.left)*(cv.width/r.width), sy:(cy-r.top)*(cv.height/r.height)};
+    var touch=e.changedTouches?e.changedTouches[0]:(e.touches?e.touches[0]:null);
+    var cx=touch?touch.clientX:e.clientX;
+    var cy=touch?touch.clientY:e.clientY;
+    return {sx:(cx-r.left)*(cv.width/r.width), sy:(cy-r.top)*(cv.height/r.height), clientX:cx, clientY:cy};
   }
   function start(e){
     e.preventDefault();
@@ -11650,7 +11654,7 @@ function dwInit(){
         if(curAng<0)curAng+=360;
         var lenCm=Math.round(dist/DW.pxPerCm);
         // أظهر popup الخيارات
-        dwShowContinuePopup(DW.curX, DW.curY, curAng, lenCm, p.sx, p.sy);
+        dwShowContinuePopup(DW.curX, DW.curY, curAng, lenCm, p.clientX||p.sx, p.clientY||p.sy);
       }
       dwRender();
     }
@@ -11752,7 +11756,10 @@ function dwInit(){
   // ESC للإلغاء
   document.addEventListener('keydown',dwEscHandler);
   cv.onmousedown=start; cv.onmousemove=move; cv.onmouseup=end; cv.onmouseleave=end;
-  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+  // اللمس للآيباد — passive:false عشان نقدر نمنع التمرير
+  cv.addEventListener('touchstart', start, {passive:false});
+  cv.addEventListener('touchmove',  move,  {passive:false});
+  cv.addEventListener('touchend',   end,   {passive:false});
   // النقر المزدوج لتعديل القياس
   cv.ondblclick=function(e){
     e.preventDefault();
@@ -12143,6 +12150,12 @@ function dwShowContinuePopup(wx, wy, curAng, lenCm, screenX, screenY){
   var px=Math.min(screenX+20, window.innerWidth-300);
   var py=Math.min(screenY-100, window.innerHeight-420);
   if(py<10)py=10;
+  if(px<10)px=10;
+  // على الآيباد، حط الـ popup في وسط الشاشة إذا الشاشة صغيرة
+  if(window.innerWidth<900){
+    px=(window.innerWidth-280)/2;
+    py=Math.max(10, window.innerHeight/2-200);
+  }
   popup.style.left=px+'px';
   popup.style.top=py+'px';
 
