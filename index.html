@@ -5131,6 +5131,29 @@ async function saveClient(){
     notes:g('f-notes'),
     log:editId?clients.find(x=>x.id===editId)?.log||[]:[]
   };
+  // احفظ المرحلة الحالية + بيانات إضافية من العميل القديم
+  if(editId){
+    var _old=clients.find(x=>x.id===editId);
+    if(_old){
+      obj._phase=_old._phase; obj._siteCheck=_old._siteCheck; obj._mfgPct=_old._mfgPct;
+      obj._smartQ=_old._smartQ; obj._measStart=_old._measStart; obj._measEnd=_old._measEnd;
+      obj._mats=_old._mats; obj._appr=_old._appr; obj._snags=_old._snags; obj.measurement=_old.measurement;
+      obj.createdAt=_old.createdAt;
+      // ── منطق ذكي: توثيق تلقائي عند تغيّر حالة الموقع لغير جاهز ──
+      if(_old.site!=='غير جاهز' && obj.site==='غير جاهز'){
+        var phaseNm=getPhase(_old);
+        if(phaseNm>=9){ // وصل التصنيع أو أبعد
+          obj.log=[...(obj.log||[]),{date:today(),text:'⚠️ تغيّر الموقع لـ"غير جاهز" بينما العمل وصل '+(_old.stage||'مرحلة متقدمة')+' — المطبخ قد يكون جُهّز قبل جاهزية الموقع. سجّله: '+(currentUser?.name||'النظام')}];
+        }else{
+          obj.log=[...(obj.log||[]),{date:today(),text:'الموقع أصبح غير جاهز — '+(currentUser?.name||'النظام')}];
+        }
+      }
+      // توثيق تغيّر الحالة العامة
+      if(_old.status!==obj.status){
+        obj.log=[...(obj.log||[]),{date:today(),text:'تغيّرت الحالة: '+(_old.status||'—')+' ← '+obj.status+' ('+(currentUser?.name||'النظام')+')'}];
+      }
+    }
+  }
   document.getElementById('ov-form').classList.remove('open');
   if(editId){
     const ok=await dbUpdateClient(editId,obj);
@@ -5187,6 +5210,15 @@ function _triggerAutoSave(){
       notes:g('f-notes'),
       log:clients.find(x=>x.id===editId)?.log||[]
     };
+    // احفظ كل البيانات الإضافية من العميل القديم (المرحلة وغيرها)
+    var _oldAS=clients.find(x=>x.id===editId);
+    if(_oldAS){
+      obj._phase=_oldAS._phase; obj._siteCheck=_oldAS._siteCheck; obj._mfgPct=_oldAS._mfgPct;
+      obj._smartQ=_oldAS._smartQ; obj._measStart=_oldAS._measStart; obj._measEnd=_oldAS._measEnd;
+      obj._mats=_oldAS._mats; obj._appr=_oldAS._appr; obj._snags=_oldAS._snags;
+      obj.measurement=_oldAS.measurement; obj.meterPrice=_oldAS.meterPrice;
+      obj.kitTypes=_oldAS.kitTypes; obj.createdAt=_oldAS.createdAt;
+    }
     const ok=await dbUpdateClient(editId,obj);
     if(ok){
       clients=clients.map(x=>x.id===editId?{...obj,id:editId}:x);
