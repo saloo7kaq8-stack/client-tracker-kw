@@ -9409,12 +9409,28 @@ function renderImport(){
       <b>المطابقة:</b> بالرقم المدني أولاً، ثم بالهاتف — لا تكرار.<br>
       <b>الموجود</b> يُحدّث بآخر بياناته · <b>الجديد</b> يُضاف بمرحلته الصحيحة.
     </div>
-    <button class="btn-p" onclick="impFollowUpFile()" style="background:linear-gradient(135deg,#d4af37,#b8962e)">🔄 بدء الاستيراد الذكي</button>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="padding:12px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.3);border-radius:10px">
+        <div style="font-size:13px;font-weight:700;color:#c0392b;margin-bottom:4px">⚠️ الخطوة 1: نسخة احتياطية (إجبارية)</div>
+        <div style="font-size:11px;color:var(--mt);margin-bottom:8px">احفظ نسخة من بياناتك الحالية قبل أي استيراد</div>
+        <button class="btn-ghost" onclick="expJSON()">📥 تنزيل نسخة احتياطية الآن</button>
+      </div>
+      <div style="padding:12px;background:rgba(212,175,55,.08);border:1px solid rgba(212,175,55,.3);border-radius:10px">
+        <div style="font-size:13px;font-weight:700;color:#b8962e;margin-bottom:4px">🧪 الخطوة 2: تجربة (5 عملاء فقط)</div>
+        <div style="font-size:11px;color:var(--mt);margin-bottom:8px">جرّب على 5 عملاء أولاً وتأكد من النتيجة</div>
+        <button class="btn-p" onclick="impFollowUpFile(5)" style="background:#d4af37">🧪 تجربة 5 عملاء</button>
+      </div>
+      <div style="padding:12px;background:rgba(10,143,92,.08);border:1px solid rgba(10,143,92,.3);border-radius:10px">
+        <div style="font-size:13px;font-weight:700;color:#0a8f5c;margin-bottom:4px">✅ الخطوة 3: استيراد كامل (365 عميل)</div>
+        <div style="font-size:11px;color:var(--mt);margin-bottom:8px">بعد ما تتأكد من التجربة، استورد الكل</div>
+        <button class="btn-p" onclick="impFollowUpFile()" style="background:linear-gradient(135deg,#0a8f5c,#0d7a50)">🔄 استيراد الكل (365)</button>
+      </div>
+    </div>
     <div id="imp-smart-result" style="margin-top:14px"></div>
   </div>`;
 }
 
-async function impFollowUpFile(){
+async function impFollowUpFile(testLimit){
   var resultBox=document.getElementById('imp-smart-result');
   resultBox.innerHTML='<div style="padding:12px;color:var(--mt)">⏳ جاري تحميل ملف المتابعة...</div>';
 
@@ -9428,8 +9444,15 @@ async function impFollowUpFile(){
     return;
   }
 
+  // وضع التجربة — أول N عملاء فقط
+  var isTest=testLimit && testLimit>0;
+  if(isTest) imported=imported.slice(0,testLimit);
+
   // تأكيد
-  if(!confirm('سيتم استيراد '+imported.length+' عميل.\n\nالموجود سيُحدّث، والجديد سيُضاف.\n\nمتابعة؟'))return;
+  var confirmMsg=isTest?
+    ('🧪 وضع التجربة: سيتم استيراد أول '+imported.length+' عملاء فقط.\n\nهذا اختبار آمن — راقب النتيجة.\n\nمتابعة؟'):
+    ('سيتم استيراد '+imported.length+' عميل.\n\nالموجود سيُحدّث، والجديد سيُضاف.\n\n⚠️ هل سويت نسخة احتياطية؟\n\nمتابعة؟');
+  if(!confirm(confirmMsg))return;
 
   var added=0, updated=0, failed=0;
   var log=[];
