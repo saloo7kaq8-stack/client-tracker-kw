@@ -11589,7 +11589,16 @@ function dwInit(){
     e.preventDefault();
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
-    // تحقق دائماً — أي أداة — إذا الضغط على شكل موجود، اسحبه مباشرة
+    // القلم والمساحة — يشتغلون بدون سحب
+    if(DW.tool==='pen'){
+      DW.drawing=true; DW.penPath=[{x:wx,y:wy}];
+      return;
+    }
+    if(DW.tool==='eraser'){
+      DW.erasing=true; DW.eraserX=wx; DW.eraserY=wy;
+      return;
+    }
+    // تحقق — إذا الضغط على شكل موجود، اسحبه (بس مو بالقلم أو المساحة)
     var hitAny=dwHitTest(w.x,w.y);
     if(hitAny>=0){
       DW.selected=hitAny;
@@ -11600,20 +11609,6 @@ function dwInit(){
     if(DW.tool==='select'){
       DW.selected=-1;
       dwRender(); return;
-    }
-    // الأشكال الرقمية تُرسم من النموذج — تجاهل النقر على اللوحة
-    if(DW.tool==='rect'||DW.tool==='lshape'||DW.tool==='ushape'){
-      dwOpenShapeDialog(DW.tool); return;
-    }
-    // القلم الحر
-    if(DW.tool==='pen'){
-      DW.drawing=true; DW.penPath=[{x:wx,y:wy}];
-      return;
-    }
-    // المساحة
-    if(DW.tool==='eraser'){
-      DW.erasing=true; DW.eraserX=wx; DW.eraserY=wy;
-      return;
     }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
     var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
@@ -12417,6 +12412,7 @@ async function openMeasForClient(id){
       '<div class="meas-grid">'+
         '<div class="meas-fg"><label class="meas-fl">الموظف الذي أخذ القياس</label><select class="meas-in" id="m-measurer"><option value="">— اختر —</option>'+measurerOpts+'</select></div>'+
         fg('📅 تاريخ القياس','m-date',m.date,'','date')+
+        fg('🕐 وقت الموعد','m-time',m.time||'','مثال: 10:30','time')+
         '<div id="m-date-clients" style="margin-top:8px;display:none"></div>'+
       '</div>')+
 
@@ -12641,7 +12637,7 @@ function saveMeasurement(){
   if(waiverType&&waiverType!=='none'){var cv=document.getElementById('m-sign-canvas');if(cv)signature=cv.toDataURL('image/png');}
 
   c.measurement={
-    measurer:g('m-measurer'),date:g('m-date'),
+    measurer:g('m-measurer'),date:g('m-date'),time:g('m-time'),
     hoodLoc:g('m-hood-loc'),hoodH:g('m-hood-h'),hoodNote:g('m-hood-note'),
     supply:g('m-supply'),'return':g('m-return'),diffuser:g('m-diffuser'),
     windowH:g('m-window-h'),spot:g('m-spot'),spotSetback:g('m-spot-setback'),
