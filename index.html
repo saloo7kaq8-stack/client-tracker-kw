@@ -1897,12 +1897,17 @@ const SITE_CHECKLIST=[
 ];
 
 function getPhase(c){
-  if(c._phase&&+c._phase>0)return +c._phase;
-  // استنتاج من اسم المرحلة إذا _phase مفقود
-  var stageMap={'تواصل أولي':1,'عرض سعر':2,'اتفاق مبدئي':3,'قياس أولي':4,'تصميم':5,'اعتماد العميل':6,'عقد وسلفة':7,'قياس نهائي':8,'أمر تصنيع':9,'تصنيع':10,'مصنع':10,'دهان':10,'تركيب':11,'تسليم':12,'منتهي':12};
-  if(c.stage&&stageMap[c.stage])return stageMap[c.stage];
-  if(c.status==='منتهي')return 12;
-  return 1;
+  var ph;
+  if(c._phase&&+c._phase>0) ph=+c._phase;
+  else{
+    var stageMap={'تواصل أولي':1,'عرض سعر':2,'اتفاق مبدئي':3,'قياس أولي':4,'تصميم':5,'اعتماد العميل':6,'عقد وسلفة':7,'قياس نهائي':8,'أمر تصنيع':9,'تصنيع':10,'مصنع':10,'دهان':10,'تركيب':11,'تسليم':12,'منتهي':12};
+    if(c.stage&&stageMap[c.stage]) ph=stageMap[c.stage];
+    else if(c.status==='منتهي') ph=12;
+    else ph=1;
+  }
+  // قاعدة: الموقع غير جاهز يمنع التركيب والتسليم — يبقى "مطبخ جاهز ينتظر الموقع" (مرحلة 10)
+  if(c.site==='غير جاهز' && ph>10) ph=10;
+  return ph;
 }
 function setPhase(c,ph){c._phase=ph;}
 function getSiteCheck(c){return c._siteCheck||{};}
@@ -9578,12 +9583,16 @@ function mapFollowUpRow(row, existing){
   base.civilId = row.excel_id||'';
   base.resp = row.sales||'';
   base.site = row.site_status||'غير جاهز';
+  // قاعدة: الموقع غير جاهز يمنع التركيب — المطبخ يبقى "جاهز ينتظر الموقع"
+  var effPhase = row.phase;
+  if(base.site==='غير جاهز' && effPhase>10) effPhase=10;
+  var statusVal2 = effPhase>=12?'منتهي' : (base.site==='غير جاهز'&&effPhase>=10?'⏸️ مطبخ جاهز - ينتظر الموقع' : (row.delay_reason?'متأخر':'قيد التجهيز'));
   base.contract = contract;
   base.collected = collected;
   base.pay = payStatus;
-  base.status = statusVal;
-  base.stage = phaseNames[row.phase]||'تصميم';
-  base._phase = row.phase;
+  base.status = statusVal2;
+  base.stage = phaseNames[effPhase]||'تصميم';
+  base._phase = effPhase;
   base.contact = row.last_contact||'';
   base.delivery = row.delivery_date||'';
   base.notes = [row.notes, row.delay_reason?('⚠️ سبب التأخير: '+row.delay_reason):'', row.materials_desc?('المواد: '+row.materials_desc):''].filter(Boolean).join(' | ');
