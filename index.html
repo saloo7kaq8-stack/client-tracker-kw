@@ -1896,7 +1896,14 @@ const SITE_CHECKLIST=[
   {id:'doors',name:'الأبواب والنوافذ',icon:'🚪'},
 ];
 
-function getPhase(c){if(c._phase&&+c._phase>0)return +c._phase;if(c.stage==='تسليم'||c.status==='منتهي')return 12;return 1;}
+function getPhase(c){
+  if(c._phase&&+c._phase>0)return +c._phase;
+  // استنتاج من اسم المرحلة إذا _phase مفقود
+  var stageMap={'تواصل أولي':1,'عرض سعر':2,'اتفاق مبدئي':3,'قياس أولي':4,'تصميم':5,'اعتماد العميل':6,'عقد وسلفة':7,'قياس نهائي':8,'أمر تصنيع':9,'تصنيع':10,'مصنع':10,'دهان':10,'تركيب':11,'تسليم':12,'منتهي':12};
+  if(c.stage&&stageMap[c.stage])return stageMap[c.stage];
+  if(c.status==='منتهي')return 12;
+  return 1;
+}
 function setPhase(c,ph){c._phase=ph;}
 function getSiteCheck(c){return c._siteCheck||{};}
 
