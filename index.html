@@ -9604,6 +9604,17 @@ function mapFollowUpRow(row, existing){
   if(+row.pay3>0)payments.push({label:'دفعة 3',amount:+row.pay3,date:''});
   base.payments=payments;
 
+  // ── تشطيب مهام المراحل المكتملة تلقائياً ──
+  // كل مرحلة قبل المرحلة الحالية = مكتملة، فنشطّب كل نقاطها
+  var sq = existing && existing._smartQ ? Object.assign({}, existing._smartQ) : {};
+  if(typeof PHASE_QUESTIONS!=='undefined'){
+    for(var phIdx=0; phIdx < effPhase-1; phIdx++){ // المراحل قبل الحالية فقط
+      var qs = PHASE_QUESTIONS[phIdx]||[];
+      qs.forEach(function(q){ sq[q.id]=true; });
+    }
+  }
+  base._smartQ = sq;
+
   return base;
 }
 
