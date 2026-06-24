@@ -5436,6 +5436,30 @@ var PRICING_CONFIG = {
   magicBasketLabel:'سلة ماجيك', greenBasketSetLabel:'طقم سلال خضر', extraHeightLabel:'متر ارتفاع زائد'
 };
 
+// ── أنواع المطابخ (للاختيار في عرض السعر) ──
+var KITCHEN_TYPES=[
+  {id:'main',     name:'المطبخ الرئيسي',      en:'Main Kitchen'},
+  {id:'show',     name:'مطبخ العرض',          en:'Show Kitchen'},
+  {id:'prep',     name:'مطبخ التحضير',        en:'Prep Kitchen'},
+  {id:'dirty',    name:'المطبخ المتسخ',       en:'Dirty Kitchen'},
+  {id:'pantry',   name:'البانتري (مخزن الضيافة)', en:"Butler's Pantry"},
+  {id:'outdoor',  name:'المطبخ الخارجي',      en:'Outdoor Kitchen'},
+  {id:'service',  name:'مطبخ الخدمة',         en:'Service Kitchen'},
+];
+
+// ── المواصفات الفنية الافتراضية (قابلة للإظهار/الإخفاء في الطباعة) ──
+var QUOTE_SPECS_DEFAULT=[
+  {id:'alum',    label:'نوع الألمنيوم',   value:'قطاع سعودي — كفالة 25 سنة على عيوب التصنيع', on:true},
+  {id:'assembly',label:'نظام التجميع',     value:'زاوية ألمنيوم داخلي', on:true},
+  {id:'doors',   label:'أنواع الأبواب',    value:'دبل — ألمنيوم خارجي — فينول من الداخل', on:true},
+  {id:'hinges',  label:'المفصلات',         value:'هيتش ألماني هيدروليك / بلوم نمساوي هيدروليك — كفالة مدى الحياة (ما عدا سوء الاستخدام)', on:true},
+  {id:'rails',   label:'سكك الأدراج',      value:'نظام ألماني هيدروليك — كفالة مدى الحياة (ما عدا سوء الاستخدام)', on:true},
+  {id:'design',  label:'تصميم المطبخ',     value:'مودرن', on:true},
+  {id:'color',   label:'اللون',            value:'اختياري حسب طلب العميل', on:true},
+  {id:'surface', label:'أنواع الأسطح',     value:'جرانيت طبيعي أو كوارتز صناعي', on:true},
+  {id:'lighting',label:'الإضاءة',          value:'إضاءة أسفل الخزائن العلوية في كل مطبخ', on:true},
+];
+
 // اسم الإضافة: تخصيص العميل > الإعدادات > الافتراضي
 function addonLabel(a,client){
   if(client&&client.pricing&&client.pricing.addonOverrides&&client.pricing.addonOverrides[a.key]&&client.pricing.addonOverrides[a.key].label)
@@ -5705,7 +5729,8 @@ function renderPricingCalcTab(){
 
       '<div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">'+
         '<button class="lux-btn lux-btn-primary" style="flex:1;min-width:140px" onclick="savePricingToClient()">\ud83d\udcbe \u062d\u0641\u0638 \u0627\u0644\u062a\u0633\u0639\u064a\u0631</button>'+
-        '<button class="lux-btn lux-btn-gold" onclick="printQuote()">\ud83d\udda8\ufe0f \u0639\u0631\u0636 \u0633\u0639\u0631</button>'+
+        '<button class="lux-btn lux-btn-gold" onclick="printQuote()">\ud83d\udda8\ufe0f \u0639\u0631\u0636 \u0633\u0639\u0631 \u0633\u0631\u064a\u0639</button>'+
+        '<button class="lux-btn lux-btn-primary" style="background:linear-gradient(135deg,#0a8f5c,#0d7a50)" onclick="openProQuote()">\ud83d\udccb \u0639\u0631\u0636 \u0633\u0639\u0631 \u0627\u062d\u062a\u0631\u0627\u0641\u064a (\u0645\u062a\u0639\u062f\u062f \u0627\u0644\u0645\u0637\u0627\u0628\u062e)</button>'+
       '</div>'+
       '<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">'+
         '<button class="lux-btn lux-btn-ghost" style="flex:1;min-width:140px;color:#e74c3c;border-color:#e74c3c55" onclick="downloadQuotePDF()">\ud83d\udcc4 \u062d\u0641\u0638 PDF</button>'+
@@ -6602,6 +6627,223 @@ function applyOverride(){
 }
 
 // ── عرض السعر للطباعة ──
+// ══════════════════════════════════════════════════
+// عرض السعر الاحترافي — محرّر متعدد المطابخ
+// ══════════════════════════════════════════════════
+var _proQuote={ kitchens:[], specs:null, discount:0 };
+
+function openProQuote(clientId){
+  var id=clientId||_pricingState.clientId||+(document.getElementById('pricing-client')||{}).value||null;
+  if(!id){toast('⚠️ اختر العميل أولاً','err');return;}
+  var c=clients.find(function(x){return x.id===id;});
+  if(!c){toast('⚠️ العميل غير موجود','err');return;}
+  _proQuote.clientId=id;
+  // استرجاع محفوظ أو بدء جديد
+  var saved=c.proQuote||(c.pricing&&c.pricing._proQuote);
+  if(saved && saved.kitchens){
+    _proQuote.kitchens=JSON.parse(JSON.stringify(saved.kitchens));
+    _proQuote.specs=JSON.parse(JSON.stringify(saved.specs||QUOTE_SPECS_DEFAULT));
+    _proQuote.discount=saved.discount||0;
+  }else{
+    _proQuote.kitchens=[];
+    _proQuote.specs=JSON.parse(JSON.stringify(QUOTE_SPECS_DEFAULT));
+    _proQuote.discount=0;
+  }
+  renderProQuoteEditor(c);
+}
+
+function renderProQuoteEditor(c){
+  var ov=document.getElementById('proquote-modal');
+  if(ov)ov.remove();
+  ov=document.createElement('div');
+  ov.id='proquote-modal';
+  ov.style.cssText='position:fixed;inset:0;background:rgba(10,31,61,.75);backdrop-filter:blur(8px);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto';
+
+  var subtotal=_proQuote.kitchens.reduce(function(s,k){return s+(+k.price||0);},0);
+  var discAmt=subtotal*(_proQuote.discount/100);
+  var finalP=subtotal-discAmt;
+
+  var kitchenRows=_proQuote.kitchens.map(function(k,i){
+    return '<div style="background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+        '<div style="font-weight:800;color:var(--g);font-size:15px">🍳 '+pEsc(k.name)+'</div>'+
+        '<button onclick="proQuoteRemoveKitchen('+i+')" style="background:rgba(192,57,43,.1);color:#c0392b;border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px">🗑️ حذف</button>'+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'+
+        '<div><label style="font-size:11px;color:var(--mt)">ارتفاع الخزائن (م)</label><input type="text" value="'+pEsc(k.height||'2.85')+'" onchange="proQuoteUpd('+i+',\'height\',this.value)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)"></div>'+
+        '<div><label style="font-size:11px;color:var(--mt)">عدد الخزائن الطويلة</label><input type="number" value="'+(k.longCabinets||0)+'" onchange="proQuoteUpd('+i+',\'longCabinets\',this.value)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)"></div>'+
+        '<div style="grid-column:1/3"><label style="font-size:11px;color:var(--mt)">تفاصيل الخزائن العلوية</label><input type="text" value="'+pEsc(k.upperDesc||'خزانتين فوق بعض — الأولى ارتفاع 90سم عمق 40سم، الثانية ارتفاع 45سم عمق 60سم')+'" onchange="proQuoteUpd('+i+',\'upperDesc\',this.value)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)"></div>'+
+        '<div><label style="font-size:11px;color:var(--mt)">المغسلة</label><input type="text" value="'+pEsc(k.sink||'قياس 80×45 سم سيلفر')+'" onchange="proQuoteUpd('+i+',\'sink\',this.value)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)"></div>'+
+        '<div><label style="font-size:11px;color:var(--mt)">السطح</label><input type="text" value="'+pEsc(k.surface||'جرانيت طبيعي أو كوارتز صناعي 2سم')+'" onchange="proQuoteUpd('+i+',\'surface\',this.value)" style="width:100%;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)"></div>'+
+        '<div style="grid-column:1/3"><label style="font-size:11px;color:var(--g);font-weight:700">💰 سعر المطبخ (د.ك)</label><input type="number" value="'+(k.price||0)+'" onchange="proQuoteUpd('+i+',\'price\',this.value)" style="width:100%;padding:10px;border:2px solid var(--g);border-radius:8px;background:var(--bg);font-weight:800;font-size:16px;color:var(--g)"></div>'+
+      '</div>'+
+    '</div>';
+  }).join('');
+
+  var typeButtons=KITCHEN_TYPES.map(function(t){
+    var used=_proQuote.kitchens.some(function(k){return k.typeId===t.id;});
+    return '<button onclick="proQuoteAddKitchen(\''+t.id+'\')" '+(used?'disabled':'')+' style="padding:8px 12px;border:1px solid '+(used?'var(--bd)':'var(--g)')+';border-radius:8px;background:'+(used?'var(--bg)':'rgba(10,143,92,.08)')+';color:'+(used?'var(--mt)':'var(--g)')+';cursor:'+(used?'not-allowed':'pointer')+';font-size:12px;font-weight:600;opacity:'+(used?'.5':'1')+'">'+(used?'✓ ':'+')+t.name+'</button>';
+  }).join('');
+
+  var specRows=_proQuote.specs.map(function(s,i){
+    return '<label style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg);border-radius:8px;margin-bottom:5px;cursor:pointer">'+
+      '<input type="checkbox" '+(s.on?'checked':'')+' onchange="proQuoteToggleSpec('+i+',this.checked)" style="width:16px;height:16px;accent-color:var(--g)">'+
+      '<span style="font-size:12px;font-weight:600;color:var(--tx);min-width:120px">'+pEsc(s.label)+':</span>'+
+      '<input type="text" value="'+pEsc(s.value)+'" onchange="proQuoteUpdSpec('+i+',this.value)" style="flex:1;padding:5px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--card);font-size:12px">'+
+    '</label>';
+  }).join('');
+
+  ov.innerHTML='<div style="background:var(--bg);border-radius:20px;max-width:760px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.4);margin:auto">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">'+
+      '<div><div style="font-size:20px;font-weight:900;color:var(--tx)">📋 عرض سعر — '+pEsc(c.name)+'</div>'+
+      '<div style="font-size:12px;color:var(--mt)">أضف المطابخ ومواصفاتها وأسعارها</div></div>'+
+      '<button onclick="document.getElementById(\'proquote-modal\').remove()" style="background:var(--card);border:none;border-radius:10px;width:36px;height:36px;cursor:pointer;font-size:18px">✕</button>'+
+    '</div>'+
+
+    '<div style="margin-bottom:16px"><div style="font-size:13px;font-weight:800;color:var(--tx);margin-bottom:8px">➕ أضف مطبخ:</div>'+
+      '<div style="display:flex;flex-wrap:wrap;gap:6px">'+typeButtons+'</div></div>'+
+
+    '<div style="margin-bottom:16px">'+(kitchenRows||'<div style="text-align:center;padding:30px;color:var(--mt);background:var(--card);border-radius:12px">لم تُضف مطابخ بعد — اختر نوع مطبخ من فوق</div>')+'</div>'+
+
+    '<details style="margin-bottom:16px;background:var(--card);border-radius:12px;padding:12px"><summary style="cursor:pointer;font-weight:800;color:var(--tx);font-size:13px">⚙️ المواصفات الفنية (اختر ما يظهر في العرض)</summary>'+
+      '<div style="margin-top:10px">'+specRows+'</div></details>'+
+
+    '<div style="background:var(--card);border-radius:12px;padding:16px;margin-bottom:16px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px"><span style="color:var(--mt)">الإجمالي قبل الخصم:</span><b>'+subtotal.toFixed(0)+' د.ك</b></div>'+
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="color:var(--mt);font-size:14px">الخصم:</span>'+
+        '<input type="number" value="'+_proQuote.discount+'" min="0" max="30" onchange="proQuoteSetDiscount(this.value)" style="width:70px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);text-align:center">'+
+        '<span style="color:var(--mt)">%</span>'+
+        (discAmt>0?'<span style="color:#c0392b;font-size:13px">(- '+discAmt.toFixed(0)+' د.ك)</span>':'')+
+      '</div>'+
+      '<div style="display:flex;justify-content:space-between;padding-top:10px;border-top:2px solid var(--bd);font-size:18px"><span style="font-weight:700;color:var(--tx)">الإجمالي بعد الخصم:</span><b style="color:var(--g)">'+finalP.toFixed(0)+' د.ك</b></div>'+
+    '</div>'+
+
+    '<div style="display:flex;gap:10px">'+
+      '<button onclick="proQuoteSaveAndPrint()" style="flex:1;padding:14px;background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">🖨️ معاينة وطباعة عرض السعر</button>'+
+      '<button onclick="proQuoteSave()" style="padding:14px 20px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;font-size:14px;font-weight:700;cursor:pointer">💾 حفظ</button>'+
+    '</div>'+
+  '</div>';
+  document.body.appendChild(ov);
+}
+
+function proQuoteAddKitchen(typeId){
+  var t=KITCHEN_TYPES.find(function(x){return x.id===typeId;});
+  if(!t)return;
+  if(_proQuote.kitchens.some(function(k){return k.typeId===typeId;}))return;
+  _proQuote.kitchens.push({typeId:t.id, name:t.name, height:'2.85', longCabinets:0, upperDesc:'خزانتين فوق بعض — الأولى ارتفاع 90سم عمق 40سم، الثانية ارتفاع 45سم عمق 60سم', sink:'قياس 80×45 سم سيلفر', surface:'جرانيت طبيعي أو كوارتز صناعي 2سم', price:0});
+  var c=clients.find(function(x){return x.id===_proQuote.clientId;});
+  renderProQuoteEditor(c);
+}
+function proQuoteRemoveKitchen(i){ _proQuote.kitchens.splice(i,1); renderProQuoteEditor(clients.find(function(x){return x.id===_proQuote.clientId;})); }
+function proQuoteUpd(i,field,val){ if(_proQuote.kitchens[i]) _proQuote.kitchens[i][field]=(field==='price'||field==='longCabinets')?(+val||0):val; if(field==='price')renderProQuoteEditor(clients.find(function(x){return x.id===_proQuote.clientId;})); }
+function proQuoteToggleSpec(i,on){ if(_proQuote.specs[i])_proQuote.specs[i].on=on; }
+function proQuoteUpdSpec(i,val){ if(_proQuote.specs[i])_proQuote.specs[i].value=val; }
+function proQuoteSetDiscount(v){ _proQuote.discount=Math.min(30,Math.max(0,+v||0)); renderProQuoteEditor(clients.find(function(x){return x.id===_proQuote.clientId;})); }
+
+async function proQuoteSave(){
+  var c=clients.find(function(x){return x.id===_proQuote.clientId;});
+  if(!c)return;
+  if(!c.pricing)c.pricing={};
+  c.pricing._proQuote={kitchens:_proQuote.kitchens, specs:_proQuote.specs, discount:_proQuote.discount};
+  c.proQuote=c.pricing._proQuote;
+  try{ await dbUpdateClient(c.id,c); toast('💾 حُفظ عرض السعر','ok'); }catch(e){ toast('⚠️ حفظ محلي فقط','err'); }
+}
+
+async function proQuoteSaveAndPrint(){
+  if(!_proQuote.kitchens.length){toast('⚠️ أضف مطبخاً واحداً على الأقل','err');return;}
+  await proQuoteSave();
+  printProQuote();
+}
+
+function printProQuote(){
+  var c=clients.find(function(x){return x.id===_proQuote.clientId;});
+  if(!c)return;
+  var today=new Date();
+  var fmt=function(d){return d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();};
+  var subtotal=_proQuote.kitchens.reduce(function(s,k){return s+(+k.price||0);},0);
+  var discAmt=subtotal*(_proQuote.discount/100);
+  var finalP=subtotal-discAmt;
+
+  var specsHtml=_proQuote.specs.filter(function(s){return s.on;}).map(function(s){
+    return '<li><b>'+pEsc(s.label)+':</b> '+pEsc(s.value)+'</li>';
+  }).join('');
+
+  var kitchenDetails=_proQuote.kitchens.map(function(k){
+    var items=[];
+    items.push('ارتفاع خزائن المطبخ '+pEsc(k.height)+' متر');
+    if(k.upperDesc)items.push(pEsc(k.upperDesc));
+    if(+k.longCabinets>0)items.push('يوجد بالتصميم عدد '+k.longCabinets+' خزائن طويلة');
+    if(k.surface)items.push('سطحة المطبخ — '+pEsc(k.surface));
+    if(k.sink)items.push('مغسلة '+pEsc(k.sink));
+    items.push('إكسسوارات (حسب طلب العميل — مجاناً)');
+    return '<div class="kit"><div class="kit-name">▪ '+pEsc(k.name)+'</div><ul>'+items.map(function(it){return '<li>'+it+'</li>';}).join('')+'</ul></div>';
+  }).join('');
+
+  var priceRows=_proQuote.kitchens.map(function(k){
+    return '<tr><td>'+pEsc(k.name)+'</td><td>'+(+k.price||0).toFixed(0)+'</td></tr>';
+  }).join('');
+
+  var w=window.open('','_blank');
+  var html='<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>عرض سعر — '+pEsc(c.name)+'</title>'+
+  '<style>'+
+  '@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap");'+
+  '*{margin:0;padding:0;box-sizing:border-box;font-family:Tajawal,sans-serif}'+
+  'body{padding:36px;color:#1a1a1a;line-height:1.7}'+
+  '.hd{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0a8f5c;padding-bottom:18px;margin-bottom:20px}'+
+  '.logo{display:flex;align-items:center;gap:12px}'+
+  '.logo-box{width:64px;height:64px;background:linear-gradient(135deg,#0a8f5c,#0d5a3a);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:32px}'+
+  '.logo h1{color:#0a8f5c;font-size:24px;font-weight:900}.logo .sub{color:#888;font-size:12px;letter-spacing:2px}'+
+  '.qbadge{background:#0a8f5c;color:#fff;padding:10px 20px;border-radius:10px;font-weight:800;font-size:14px}'+
+  '.client{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:#f7faf8;border:1px solid #d8ebe3;border-radius:12px;padding:16px;margin-bottom:20px;font-size:14px}'+
+  '.client b{color:#0a8f5c}'+
+  'h2{font-size:17px;color:#0a8f5c;border-right:5px solid #c9a84c;padding-right:12px;margin:22px 0 12px}'+
+  '.specs{background:#faf8f0;border-radius:12px;padding:18px 30px;font-size:13.5px}'+
+  '.specs li{margin-bottom:7px}.specs b{color:#7a6320}'+
+  '.kit{margin-bottom:16px;background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:14px 18px}'+
+  '.kit-name{font-weight:800;color:#0a8f5c;font-size:15px;margin-bottom:8px}'+
+  '.kit ul{padding-right:22px;font-size:13px;color:#444}.kit li{margin-bottom:4px}'+
+  '.ptable{width:100%;border-collapse:collapse;margin-top:12px;font-size:15px}'+
+  '.ptable th,.ptable td{padding:12px 16px;border:1px solid #ddd;text-align:center}'+
+  '.ptable th{background:#0a8f5c;color:#fff;font-weight:800}'+
+  '.ptable .subtotal{background:#f5f5f5;font-weight:800}'+
+  '.final{background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;padding:20px;border-radius:14px;text-align:center;margin-top:16px}'+
+  '.final .l{font-size:14px;opacity:.9}.final .v{font-size:36px;font-weight:900;margin-top:4px}'+
+  '.note{font-size:12px;color:#888;margin-top:20px;padding:14px;background:#faf8f0;border-radius:10px;line-height:1.9}'+
+  '.sign{margin-top:30px;display:flex;justify-content:space-between;font-size:13px;color:#555}'+
+  '@media print{body{padding:20px}.no-print{display:none}}'+
+  '</style></head><body>'+
+  '<div class="hd"><div class="logo"><div class="logo-box">🍳</div><div><h1>مطابخ العيسى</h1><div class="sub">SLKR — الكويت</div></div></div>'+
+    '<div style="text-align:left"><div class="qbadge">عرض سعر</div><div style="font-size:12px;color:#888;margin-top:8px">التاريخ: '+fmt(today)+'</div></div></div>'+
+
+  '<div class="client">'+
+    '<div><b>السيد:</b> '+pEsc(c.name)+'</div>'+
+    '<div><b>الهاتف:</b> '+pEsc(c.phone||'—')+'</div>'+
+    (c.area?'<div><b>المنطقة:</b> '+pEsc(c.area)+'</div>':'')+
+    '<div style="grid-column:1/3"><b>الموضوع:</b> عرض سعر لتوريد وتركيب مطابخ ألمنيوم</div>'+
+  '</div>'+
+
+  (specsHtml?'<h2>مواصفات المطابخ</h2><ul class="specs">'+specsHtml+'</ul>':'')+
+
+  '<h2>تفاصيل المطابخ</h2>'+kitchenDetails+
+
+  '<h2>عرض الأسعار</h2>'+
+  '<table class="ptable"><tr><th>المطبخ</th><th>التكلفة (د.ك)</th></tr>'+priceRows+
+    '<tr class="subtotal"><td>الإجمالي قبل الخصم</td><td>'+subtotal.toFixed(0)+'</td></tr>'+
+    (_proQuote.discount>0?'<tr><td>الخصم ('+_proQuote.discount+'%)</td><td>- '+discAmt.toFixed(0)+'</td></tr>':'')+
+  '</table>'+
+  '<div class="final"><div class="l">التكلفة بعد الخصم</div><div class="v">'+finalP.toFixed(0)+' <span style="font-size:18px">د.ك</span></div><div style="font-size:13px;margin-top:6px;opacity:.9">+ جميع إكسسوارات المطابخ مجاناً</div></div>'+
+
+  '<div class="note">ملاحظة / في حالة أي زيادة أو نقصان في الكميات أو القياسات أو التصاميم يتم إضافة تكلفتها بالاتفاق مع العميل.<br>يسعدنا أن نتقدم إليكم بأحسن العروض آملين أن تنال رضاكم.</div>'+
+
+  '<div class="sign"><div></div><div><b>مدير المعرض / محمد العيسى</b></div></div>'+
+
+  '<div class="no-print" style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:14px 36px;background:#0a8f5c;color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">🖨️ طباعة</button></div>'+
+  '</body></html>';
+  w.document.write(html);
+  w.document.close();
+  if(typeof logSecurityEvent==='function')logSecurityEvent('quote','طباعة عرض سعر احترافي — '+c.name+' — '+finalP.toFixed(0)+' د.ك');
+}
+
 function printQuote(){
   var id=_pricingState.clientId||+(document.getElementById('pricing-client')||{}).value||null;
   if(!id){toast('⚠️ اختر العميل أولاً','err');return;}
