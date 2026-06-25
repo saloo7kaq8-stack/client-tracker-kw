@@ -9809,8 +9809,10 @@ async function impFollowUpFile(testLimit){
 // تحويل صف الإكسل لبنية عميل النظام
 function mapFollowUpRow(row, existing){
   var phaseNames={1:'تواصل أولي',2:'عرض سعر',3:'اتفاق مبدئي',4:'قياس أولي',5:'تصميم',6:'اعتماد العميل',7:'عقد وسلفة',8:'قياس نهائي',9:'أمر تصنيع',10:'تصنيع',11:'تركيب',12:'منتهي'};
-  var collected=(+row.pay1||0)+(+row.pay2||0)+(+row.pay3||0);
-  var contract=+row.contract_value||0;
+  // حماية: أي قيمة > 100,000 د.ك غير منطقية لمطبخ (غالباً تاريخ أو ID بالغلط)
+  var _sanitize=function(v){ v=+v||0; return v>100000?0:v; };
+  var collected=_sanitize(row.pay1)+_sanitize(row.pay2)+_sanitize(row.pay3);
+  var contract=_sanitize(row.contract_value);
   var payStatus= collected<=0?'غير مدفوع' : (collected>=contract&&contract>0?'مدفوع':'مدفوع جزئياً');
   var statusVal = row.phase>=12?'منتهي' : (row.delay_reason?'متأخر':'قيد التجهيز');
 
@@ -9841,9 +9843,10 @@ function mapFollowUpRow(row, existing){
 
   // الدفعات التفصيلية
   var payments=[];
-  if(+row.pay1>0)payments.push({label:'دفعة 1',amount:+row.pay1,date:''});
-  if(+row.pay2>0)payments.push({label:'دفعة 2',amount:+row.pay2,date:''});
-  if(+row.pay3>0)payments.push({label:'دفعة 3',amount:+row.pay3,date:''});
+  var p1=_sanitize(row.pay1), p2=_sanitize(row.pay2), p3=_sanitize(row.pay3);
+  if(p1>0)payments.push({label:'دفعة 1',amount:p1,date:''});
+  if(p2>0)payments.push({label:'دفعة 2',amount:p2,date:''});
+  if(p3>0)payments.push({label:'دفعة 3',amount:p3,date:''});
   base.payments=payments;
 
   // ── تشطيب مهام المراحل المكتملة تلقائياً ──
