@@ -9850,12 +9850,12 @@ function mapFollowUpRow(row, existing){
   base.payments=payments;
 
   // ── تشطيب مهام المراحل المكتملة تلقائياً ──
-  // كل مرحلة قبل المرحلة الحالية = مكتملة، فنشطّب كل نقاطها
+  // PHASE_QUESTIONS[1]=مرحلة1 ... نشطّب كل المراحل من 1 حتى المرحلة الحالية (شاملة)
   var sq = existing && existing._smartQ ? Object.assign({}, existing._smartQ) : {};
   if(typeof PHASE_QUESTIONS!=='undefined'){
-    for(var phIdx=0; phIdx < effPhase-1; phIdx++){ // المراحل قبل الحالية فقط
+    for(var phIdx=1; phIdx <= effPhase && phIdx < PHASE_QUESTIONS.length; phIdx++){
       var qs = PHASE_QUESTIONS[phIdx]||[];
-      qs.forEach(function(q){ sq[q.id]=true; });
+      qs.forEach(function(q){ if(q&&q.id) sq[q.id]=true; });
     }
   }
   base._smartQ = sq;
