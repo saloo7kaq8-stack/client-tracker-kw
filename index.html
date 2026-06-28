@@ -11486,23 +11486,6 @@ function dwSnap(v){
   var g=DW.snapGrid; // بالسم
   return Math.round(v/g)*g;
 }
-// انطباق على نقاط نهايات/بدايات الجدران والخطوط الموجودة (Object Snap)
-function dwSnapToPoints(wx,wy){
-  var threshold=14/DW.view.zoom; // مسافة الالتقاط بالبكسل
-  var best=null, bestDist=threshold;
-  var lineTypes=['wall','line','measure','cabinet','rect','column','appliance','door','window'];
-  for(var i=0;i<DW.objects.length;i++){
-    var o=DW.objects[i];
-    if(lineTypes.indexOf(o.type)===-1)continue;
-    // نقاط البداية والنهاية لكل عنصر
-    var pts=[[o.x1,o.y1],[o.x2,o.y2]];
-    for(var k=0;k<pts.length;k++){
-      var d=Math.sqrt(Math.pow(wx-pts[k][0],2)+Math.pow(wy-pts[k][1],2));
-      if(d<bestDist){bestDist=d; best={x:pts[k][0],y:pts[k][1]};}
-    }
-  }
-  return best;
-}
 // انطباق الزاوية لأقرب قيمة شائعة (0,45,90,135,180...)
 function dwSnapAngle(x1,y1,x2,y2){
   var dx=x2-x1, dy=y2-y1;
@@ -11787,7 +11770,18 @@ function dwDrawObject(o, selected){
       ctx.lineWidth=1; ctx.strokeStyle=(o.color||'#0a2e22')+'88';
       ctx.beginPath();ctx.moveTo(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2));ctx.lineTo(Math.max(o.x1,o.x2),Math.max(o.y1,o.y2));ctx.stroke();
     }
-  }else if(o.type==='appliance'){
+    // أبعاد المستطيل (طول × عرض)
+    var rWcm=Math.round(Math.abs(dx)/DW.pxPerCm), rHcm=Math.round(Math.abs(dy)/DW.pxPerCm);
+    if(Math.abs(dx)>30&&Math.abs(dy)>20){
+      var rcx=(o.x1+o.x2)/2, rcy=(o.y1+o.y2)/2;
+      var rlabel=rWcm+' × '+rHcm+' سم';
+      ctx.save();ctx.font='bold 12px Tajawal,Arial';ctx.textAlign='center';
+      var rtw=ctx.measureText(rlabel).width+10;
+      ctx.fillStyle='#fff';ctx.fillRect(rcx-rtw/2,rcy-9,rtw,18);
+      ctx.strokeStyle=o.color;ctx.lineWidth=1;ctx.strokeRect(rcx-rtw/2,rcy-9,rtw,18);
+      ctx.fillStyle=o.color;ctx.textBaseline='middle';ctx.fillText(rlabel,rcx,rcy+1);
+      ctx.textBaseline='alphabetic';ctx.restore();
+    }
     ctx.setLineDash([6,4]);
     ctx.strokeRect(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2),Math.abs(dx),Math.abs(dy));
     ctx.setLineDash([]);
@@ -12094,9 +12088,6 @@ function dwInit(){
     e.preventDefault();
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
-    // انطباق على نقاط نهايات الجدران الموجودة (Object Snap) — أولوية أعلى من الشبكة
-    var snapPt=dwSnapToPoints(w.x,w.y);
-    if(snapPt){wx=snapPt.x; wy=snapPt.y;}
     // القلم والمساحة — يشتغلون بدون سحب
     if(DW.tool==='pen'){
       DW.drawing=true; DW.penPath=[{x:wx,y:wy}];
@@ -12117,6 +12108,12 @@ function dwInit(){
     if(DW.tool==='select'){
       DW.selected=-1;
       dwRender(); return;
+    }
+    // الأشكال الرقمية (مستطيل/L/U) تُرسم من النموذج فقط — لا رسم بالنقر
+    if(DW.tool==='rect'||DW.tool==='lshape'||DW.tool==='ushape'){
+      DW.drawing=false;
+      dwOpenShapeDialog(DW.tool);
+      return;
     }
     // الأدوات النقطية (نقرة واحدة تضع الرمز)
     var POINT_TOOLS=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
@@ -12163,16 +12160,15 @@ function dwInit(){
           if(sill!==null&&!isNaN(parseFloat(sill)))obj.sill=parseFloat(sill);
         }
         if(obj){DW.objects.push(obj); dwPushHistory();}
-        // نقطة النهاية الفعلية (بعد انطباق الزاوية) — تصير بداية الجدار التالي
-        var endX=obj?obj.x2:DW.curX, endY=obj?obj.y2:DW.curY;
-        DW.startX=endX; DW.startY=endY; DW.curX=endX; DW.curY=endY;
-        // احسب الزاوية والطول الفعليين
-        var adx=endX-(obj?obj.x1:DW.startX), ady=endY-(obj?obj.y1:DW.startY);
+        // احفظ نقطة النهاية كبداية جديدة
+        DW.startX=DW.curX; DW.startY=DW.curY;
+        // احسب الزاوية الحالية
+        var adx=DW.curX-obj.x1, ady=DW.curY-obj.y1;
         var curAng=Math.round(Math.atan2(ady,adx)*180/Math.PI);
         if(curAng<0)curAng+=360;
-        var lenCm=Math.round(Math.sqrt(adx*adx+ady*ady)/DW.pxPerCm);
+        var lenCm=Math.round(dist/DW.pxPerCm);
         // أظهر popup الخيارات
-        dwShowContinuePopup(endX, endY, curAng, lenCm, p.clientX||p.sx, p.clientY||p.sy);
+        dwShowContinuePopup(DW.curX, DW.curY, curAng, lenCm, p.clientX||p.sx, p.clientY||p.sy);
       }
       dwRender();
     }
@@ -12219,9 +12215,6 @@ function dwInit(){
     }
     if(!DW.drawing)return; e.preventDefault();
     DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
-    // انطباق على نقاط النهايات الموجودة (للمعاينة)
-    var snapMv=dwSnapToPoints(wInfo.x,wInfo.y);
-    if(snapMv){DW.curX=snapMv.x; DW.curY=snapMv.y;}
     // إذا الزاوية مجبرة (اختار من الـ popup) — نثبّت الاتجاه
     if(DW._forcedAngle!=null){
       var fRad=DW._forcedAngle*Math.PI/180;
@@ -12544,6 +12537,7 @@ function dwCreateShape(shape){
     }
   }
   var d=document.getElementById('dw-shape-dialog');if(d)d.remove();
+  DW.drawing=false; DW._forcedAngle=null; DW.selected=-1; // إيقاف المعاينة الشبح
   dwPushHistory(); dwRender();
   toast('✅ رُسم الشكل — اسحب أي جزء لتحريكه كامل','ok');
 }
