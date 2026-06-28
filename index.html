@@ -12577,55 +12577,84 @@ function dwDrawDimensions(){
   var ctx=DW.ctx;
   var walls=DW.objects.filter(function(o){return o.type==='wall'||o.type==='line';});
   if(!walls.length)return;
-  // نحسب الإطار المحيط بكل الجدران
+  // الإطار المحيط بكل الجدران
   var minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
   walls.forEach(function(o){
     minx=Math.min(minx,o.x1,o.x2); maxx=Math.max(maxx,o.x1,o.x2);
     miny=Math.min(miny,o.y1,o.y2); maxy=Math.max(maxy,o.y1,o.y2);
   });
-  var off=42; // المسافة خارج الرسمة
+  var off=55; // المسافة بين الجدار وخط البُعد (بعيد عن الرسمة)
+  var ext=8;  // امتداد خط البُعد قليلاً بعد طرف الجدار
   ctx.save();
-  ctx.strokeStyle='#8a98a0'; ctx.fillStyle='#3a4a44'; ctx.lineWidth=0.8;
-  ctx.font='bold 12px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font='bold 13px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
 
   walls.forEach(function(o){
     var dx=o.x2-o.x1, dy=o.y2-o.y1;
-    var lenCm=Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+    var lenPx=Math.sqrt(dx*dx+dy*dy);
+    var lenCm=Math.round(lenPx/DW.pxPerCm);
     if(lenCm<5)return;
-    var isH=Math.abs(dx)>Math.abs(dy); // أفقي أم رأسي
-    var dimX1,dimY1,dimX2,dimY2,tx,ty;
+    var isH=Math.abs(dx)>Math.abs(dy);
+    var label=lenCm+' سم';
+    var lw=ctx.measureText(label).width;
+    var gap=lw/2+8; // نصف الفجوة في منتصف الخط
+
     if(isH){
-      // جدار أفقي → خط البُعد فوق أو تحت (الأبعد عن المركز)
+      // ── جدار أفقي ── خط البُعد فوق أو تحت
       var below=(o.y1+o.y2)/2 > (miny+maxy)/2;
       var dimY=below?maxy+off:miny-off;
-      dimX1=o.x1; dimX2=o.x2; dimY1=dimY; dimY2=dimY;
-      // خطوط الامتداد (من الجدار لخط البُعد)
-      ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x1,dimY);ctx.moveTo(o.x2,o.y2);ctx.lineTo(o.x2,dimY);ctx.stroke();
-      tx=(o.x1+o.x2)/2; ty=dimY+(below?14:-14);
+      var xL=Math.min(o.x1,o.x2), xR=Math.max(o.x1,o.x2);
+      var mid=(xL+xR)/2;
+      // خطوط الامتداد الرفيعة (من الجدار لخط البُعد)
+      ctx.strokeStyle='#b0bcc4'; ctx.lineWidth=0.8;
+      var es=below?6:-6; // فجوة صغيرة بين الجدار وبداية خط الامتداد
+      ctx.beginPath();
+      ctx.moveTo(xL,(below?maxy:miny)+es); ctx.lineTo(xL,dimY+(below?ext:-ext));
+      ctx.moveTo(xR,(below?maxy:miny)+es); ctx.lineTo(xR,dimY+(below?ext:-ext));
+      ctx.stroke();
+      // خط البُعد نفسه مع فجوة في المنتصف للرقم
+      ctx.strokeStyle='#5a6b64'; ctx.lineWidth=1.2;
+      ctx.beginPath();
+      ctx.moveTo(xL,dimY); ctx.lineTo(mid-gap,dimY);
+      ctx.moveTo(mid+gap,dimY); ctx.lineTo(xR,dimY);
+      ctx.stroke();
+      // أسهم الأطراف (شرطات مائلة 45°)
+      dwDimTick(ctx,xL,dimY,true); dwDimTick(ctx,xR,dimY,true);
+      // الرقم في منتصف الخط بالضبط
+      ctx.fillStyle='#0a2e22'; ctx.fillText(label,mid,dimY);
     }else{
-      // جدار رأسي → خط البُعد يمين أو يسار
+      // ── جدار رأسي ── خط البُعد يمين أو يسار
       var right=(o.x1+o.x2)/2 > (minx+maxx)/2;
       var dimX=right?maxx+off:minx-off;
-      dimX1=dimX; dimX2=dimX; dimY1=o.y1; dimY2=o.y2;
-      ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(dimX,o.y1);ctx.moveTo(o.x2,o.y2);ctx.lineTo(dimX,o.y2);ctx.stroke();
-      tx=dimX+(right?16:-16); ty=(o.y1+o.y2)/2;
+      var yT=Math.min(o.y1,o.y2), yB=Math.max(o.y1,o.y2);
+      var midY=(yT+yB)/2;
+      // خطوط الامتداد
+      ctx.strokeStyle='#b0bcc4'; ctx.lineWidth=0.8;
+      var exs=right?6:-6;
+      ctx.beginPath();
+      ctx.moveTo((right?maxx:minx)+exs,yT); ctx.lineTo(dimX+(right?ext:-ext),yT);
+      ctx.moveTo((right?maxx:minx)+exs,yB); ctx.lineTo(dimX+(right?ext:-ext),yB);
+      ctx.stroke();
+      // خط البُعد مع فجوة في المنتصف
+      ctx.strokeStyle='#5a6b64'; ctx.lineWidth=1.2;
+      ctx.beginPath();
+      ctx.moveTo(dimX,yT); ctx.lineTo(dimX,midY-gap);
+      ctx.moveTo(dimX,midY+gap); ctx.lineTo(dimX,yB);
+      ctx.stroke();
+      dwDimTick(ctx,dimX,yT,false); dwDimTick(ctx,dimX,yB,false);
+      // الرقم في المنتصف (مدوّر عمودياً للقراءة)
+      ctx.save();
+      ctx.translate(dimX,midY); ctx.rotate(-Math.PI/2);
+      ctx.fillStyle='#0a2e22'; ctx.fillText(label,0,0);
+      ctx.restore();
     }
-    // خط البُعد نفسه
-    ctx.beginPath();ctx.moveTo(dimX1,dimY1);ctx.lineTo(dimX2,dimY2);ctx.stroke();
-    // أسهم الأطراف (شرطات قطرية صغيرة)
-    function tick(x,y){ctx.beginPath();ctx.moveTo(x-3,y-3);ctx.lineTo(x+3,y+3);ctx.stroke();}
-    tick(dimX1,dimY1); tick(dimX2,dimY2);
-    // الرقم في صندوق أبيض
-    var label=lenCm+'';
-    var tw=ctx.measureText(label).width+8;
-    ctx.save();
-    ctx.fillStyle='#fff';
-    ctx.fillRect(tx-(isH?tw/2:9),ty-(isH?8:7),isH?tw:18,15);
-    ctx.fillStyle='#1a2e26';
-    if(!isH)ctx.translate(tx,ty),ctx.rotate(-Math.PI/2),ctx.fillText(label,0,0);
-    else ctx.fillText(label,tx,ty);
-    ctx.restore();
   });
+  ctx.restore();
+}
+// شرطة طرف خط البُعد (45°)
+function dwDimTick(ctx,x,y,isH){
+  ctx.save();
+  ctx.strokeStyle='#5a6b64'; ctx.lineWidth=1.2;
+  ctx.beginPath();ctx.moveTo(x-4,y-4);ctx.lineTo(x+4,y+4);ctx.stroke();
   ctx.restore();
 }
 // تحديد عمق المخزن — يحدد المسافة الآمنة للفتحات (عمق + هامش)
