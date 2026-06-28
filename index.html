@@ -11456,7 +11456,7 @@ var DW={
   objects:[],
   tool:'wall',
   color:'#0a2e22', size:3,
-  showGrid:true, showRuler:true, showAngles:false,
+  showGrid:true, showRuler:true, showAngles:false, showDims:false,
   cabDepth:60,
   safetyMargin:20,
   pxPerCm:1,
@@ -11554,6 +11554,7 @@ function dwRender(){
     if(prev){ctx.globalAlpha=0.6; dwDrawObject(prev,false); ctx.globalAlpha=1;}
   }
   dwDrawAngles();
+  dwDrawDimensions();
   ctx.restore();
   dwDrawRuler();
 }
@@ -11957,6 +11958,7 @@ function openDrawPad(clientId){
         '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="dw-chip dw-chip-on">⊞ شبكة</button>'+
         '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="dw-chip dw-chip-on">📐 انطباق</button>'+
         '<button onclick="dwToggleAngles()" id="dw-angles-btn" class="dw-chip">📐 الزوايا</button>'+
+        '<button onclick="dwToggleDims()" id="dw-dims-btn" class="dw-chip">📏 الأبعاد</button>'+
         '<div class="dw-divider"></div>'+
         // إجراءات العنصر
         '<button onclick="dwEditSelected()" class="dw-chip dw-chip-gold">✏️ تعديل</button>'+
@@ -12561,6 +12563,69 @@ function dwToggleAngles(){
   var b=document.getElementById('dw-angles-btn');
   if(b)b.className='dw-chip'+(DW.showAngles?' dw-chip-on':'');
   dwRender();
+}
+function dwToggleDims(){
+  DW.showDims=!DW.showDims;
+  var b=document.getElementById('dw-dims-btn');
+  if(b)b.className='dw-chip'+(DW.showDims?' dw-chip-on':'');
+  dwRender();
+}
+// رسم خطوط الأبعاد المعمارية خارج الرسمة (مثل المخططات الاحترافية)
+function dwDrawDimensions(){
+  if(!DW.showDims)return;
+  var ctx=DW.ctx;
+  var walls=DW.objects.filter(function(o){return o.type==='wall'||o.type==='line';});
+  if(!walls.length)return;
+  // نحسب الإطار المحيط بكل الجدران
+  var minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
+  walls.forEach(function(o){
+    minx=Math.min(minx,o.x1,o.x2); maxx=Math.max(maxx,o.x1,o.x2);
+    miny=Math.min(miny,o.y1,o.y2); maxy=Math.max(maxy,o.y1,o.y2);
+  });
+  var off=42; // المسافة خارج الرسمة
+  ctx.save();
+  ctx.strokeStyle='#8a98a0'; ctx.fillStyle='#3a4a44'; ctx.lineWidth=0.8;
+  ctx.font='bold 12px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+
+  walls.forEach(function(o){
+    var dx=o.x2-o.x1, dy=o.y2-o.y1;
+    var lenCm=Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+    if(lenCm<5)return;
+    var isH=Math.abs(dx)>Math.abs(dy); // أفقي أم رأسي
+    var dimX1,dimY1,dimX2,dimY2,tx,ty;
+    if(isH){
+      // جدار أفقي → خط البُعد فوق أو تحت (الأبعد عن المركز)
+      var below=(o.y1+o.y2)/2 > (miny+maxy)/2;
+      var dimY=below?maxy+off:miny-off;
+      dimX1=o.x1; dimX2=o.x2; dimY1=dimY; dimY2=dimY;
+      // خطوط الامتداد (من الجدار لخط البُعد)
+      ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x1,dimY);ctx.moveTo(o.x2,o.y2);ctx.lineTo(o.x2,dimY);ctx.stroke();
+      tx=(o.x1+o.x2)/2; ty=dimY+(below?14:-14);
+    }else{
+      // جدار رأسي → خط البُعد يمين أو يسار
+      var right=(o.x1+o.x2)/2 > (minx+maxx)/2;
+      var dimX=right?maxx+off:minx-off;
+      dimX1=dimX; dimX2=dimX; dimY1=o.y1; dimY2=o.y2;
+      ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(dimX,o.y1);ctx.moveTo(o.x2,o.y2);ctx.lineTo(dimX,o.y2);ctx.stroke();
+      tx=dimX+(right?16:-16); ty=(o.y1+o.y2)/2;
+    }
+    // خط البُعد نفسه
+    ctx.beginPath();ctx.moveTo(dimX1,dimY1);ctx.lineTo(dimX2,dimY2);ctx.stroke();
+    // أسهم الأطراف (شرطات قطرية صغيرة)
+    function tick(x,y){ctx.beginPath();ctx.moveTo(x-3,y-3);ctx.lineTo(x+3,y+3);ctx.stroke();}
+    tick(dimX1,dimY1); tick(dimX2,dimY2);
+    // الرقم في صندوق أبيض
+    var label=lenCm+'';
+    var tw=ctx.measureText(label).width+8;
+    ctx.save();
+    ctx.fillStyle='#fff';
+    ctx.fillRect(tx-(isH?tw/2:9),ty-(isH?8:7),isH?tw:18,15);
+    ctx.fillStyle='#1a2e26';
+    if(!isH)ctx.translate(tx,ty),ctx.rotate(-Math.PI/2),ctx.fillText(label,0,0);
+    else ctx.fillText(label,tx,ty);
+    ctx.restore();
+  });
+  ctx.restore();
 }
 // تحديد عمق المخزن — يحدد المسافة الآمنة للفتحات (عمق + هامش)
 function dwSetCabDepth(val){
