@@ -11783,6 +11783,7 @@ function dwDrawObject(o, selected){
       ctx.fillStyle=o.color;ctx.textBaseline='middle';ctx.fillText(rlabel,rcx,rcy+1);
       ctx.textBaseline='alphabetic';ctx.restore();
     }
+  }else if(o.type==='appliance'){
     ctx.setLineDash([6,4]);
     ctx.strokeRect(Math.min(o.x1,o.x2),Math.min(o.y1,o.y2),Math.abs(dx),Math.abs(dy));
     ctx.setLineDash([]);
@@ -11911,21 +11912,21 @@ function openDrawPad(clientId){
 
   function toolBtn(id,icon,label,active){
     return '<button onclick="dwSetTool(\''+id+'\')" id="dwt-'+id+'" class="dw-tool" data-tool="'+id+'" '+
-      'style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;margin:0 8px;border-radius:10px;border:none;background:'+(active?'rgba(212,175,55,.18)':'transparent')+';cursor:pointer;transition:all .12s;'+(active?'box-shadow:inset 0 0 0 1.5px #d4af37':'')+'">'+
-      '<span style="font-size:18px;line-height:1;filter:'+(active?'none':'grayscale(.2)')+'">'+icon+'</span>'+
-      '<span style="font-size:8.5px;font-weight:700;color:'+(active?'#d4af37':'rgba(255,255,255,.6)')+';white-space:nowrap">'+label+'</span></button>';
+      'style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 2px;margin:2px 7px;border-radius:11px;border:none;background:'+(active?'rgba(212,175,55,.2)':'rgba(255,255,255,.03)')+';cursor:pointer;transition:all .12s;'+(active?'box-shadow:inset 0 0 0 1.5px #d4af37':'')+'">'+
+      '<span style="font-size:19px;line-height:1;filter:'+(active?'none':'grayscale(.15)')+'">'+icon+'</span>'+
+      '<span style="font-size:9px;font-weight:700;color:'+(active?'#e8c860':'rgba(255,255,255,.65)')+';white-space:nowrap">'+label+'</span></button>';
   }
   function dwToolGroup(icon,label){
-    return '<div style="display:flex;align-items:center;gap:4px;padding:8px 10px 4px;margin-top:4px;border-top:1px solid rgba(255,255,255,.08)">'+
-      '<span style="font-size:10px">'+icon+'</span>'+
-      '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.4);letter-spacing:.5px">'+label+'</span></div>';
+    return '<div style="display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 6px 6px;margin:6px 7px 2px;border-top:1px solid rgba(212,175,55,.18)">'+
+      '<span style="font-size:11px">'+icon+'</span>'+
+      '<span style="font-size:9.5px;font-weight:800;color:rgba(212,175,55,.7);letter-spacing:.5px">'+label+'</span></div>';
   }
 
   var modal=document.createElement('div');
   modal.id='draw-pad-modal';
-  modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:6px';
+  modal.style.cssText='position:fixed;inset:0;z-index:99999;background:#0a1410;display:flex';
   modal.innerHTML=
-    '<div style="background:#f0f3f2;border-radius:16px;width:100%;max-width:1340px;height:97vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);color:#1a2e26">'+
+    '<div style="background:#eef2f0;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;color:#1a2e26">'+
       // ═══ الشريط العلوي الفاخر ═══
       '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:linear-gradient(135deg,#072019,#0a8f5c 140%);flex-shrink:0;border-bottom:2px solid #d4af37">'+
         '<div style="display:flex;align-items:center;gap:10px">'+
@@ -11979,7 +11980,7 @@ function openDrawPad(clientId){
       // ═══ الجسم: شريط أدوات جانبي + لوحة ═══
       '<div style="flex:1;display:flex;overflow:hidden;min-height:0">'+
         // ── شريط الأدوات الجانبي (يمين) ──
-        '<div style="width:80px;background:linear-gradient(180deg,#0a2e22,#072019);overflow-y:auto;flex-shrink:0;padding:10px 0;display:flex;flex-direction:column;gap:3px">'+
+        '<div style="width:92px;background:linear-gradient(180deg,#0c2620,#071712);overflow-y:auto;flex-shrink:0;padding:6px 0 18px;display:flex;flex-direction:column">'+
           dwToolGroup('🏗️','هيكل')+
           toolBtn('select','✦','تحديد',true)+
           toolBtn('wall','▭','جدار')+
@@ -11995,7 +11996,7 @@ function openDrawPad(clientId){
           toolBtn('measure','📐','قياس')+
           toolBtn('pen','🖊','حر')+
           toolBtn('eraser','⬜','ممحاة')+
-          dwToolGroup('💧','تمديد')+
+          dwToolGroup('💧','تمديدات')+
           toolBtn('water_hot','🔴','ماء حار')+
           toolBtn('water_cold','🔵','ماء بارد')+
           toolBtn('drain','🕳','صرف')+
@@ -12021,8 +12022,8 @@ function openDrawPad(clientId){
         // ── منطقة اللوحة ──
         '<div style="flex:1;display:flex;flex-direction:column;background:#dde5e2;min-width:0">'+
           '<div id="dw-hint" style="font-size:11px;color:#5a6b64;padding:7px 16px;background:#eaf2ee;border-bottom:1px solid #d8e2dd;flex-shrink:0">💡 الجدار: انقر نقطة البداية ثم انقر النهاية — الطول بالسم والزاوية تنطبق تلقائياً</div>'+
-          '<div style="flex:1;overflow:auto;padding:14px;display:flex;justify-content:center;align-items:flex-start;min-height:0">'+
-            '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1240px;border:1px solid #c4d1cb;border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;box-shadow:0 4px 20px rgba(0,0,0,.08)"></canvas>'+
+          '<div style="flex:1;overflow:auto;padding:18px;display:flex;justify-content:center;align-items:flex-start;min-height:0">'+
+            '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1600px;border:1px solid #c4d1cb;border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;box-shadow:0 6px 28px rgba(0,0,0,.1)"></canvas>'+
           '</div>'+
           // شريط المعلومات الحي
           '<div id="dw-info-bar" style="display:flex;align-items:center;gap:14px;padding:9px 18px;background:linear-gradient(135deg,#072019,#0a2e22);color:#fff;font-size:12px;font-weight:700;flex-shrink:0;flex-wrap:wrap">'+
