@@ -12149,9 +12149,11 @@ function dwInit(){
     }
     if(!DW.drawing){
       // أول ضغطة — تثبيت نقطة البداية
+      // إذا اللوحة فاضية، أول نقطة تبدأ من تقاطع 100/100 (نقطة انطلاق ثابتة)
+      if(DW.objects.length===0){wx=100; wy=100;}
       DW.drawing=true; DW.startX=wx; DW.startY=wy; DW.curX=wx; DW.curY=wy;
       var h=document.getElementById('dw-hint');
-      if(h)h.innerHTML='✏️ حرّك الماوس ثم اضغط لتثبيت النقطة التالية — دبل كليك لإنهاء الرسم';
+      if(h)h.innerHTML='✏️ بدأنا من نقطة 100/100 — حرّك الماوس واضغط لتثبيت النقطة التالية — دبل كليك لإنهاء الرسم';
     }else{
       // ضغطة ثانية — ثبّت الخط وأظهر popup الخيارات
       DW.curX=wx; DW.curY=wy;
@@ -12505,7 +12507,7 @@ function dwSetShapeStyle(style){
 function dwCreateShape(shape){
   function num(id,def){var e=document.getElementById(id);var v=e?parseFloat(e.value):def;return (isNaN(v)||v<=0)?def:v;}
   var p=DW.pxPerCm;
-  var cx=400, cy=380; // نقطة الزاوية (الركن)
+  var cx=100, cy=100; // نقطة الزاوية (الركن) — تبدأ من تقاطع 100/100
   var dir=DW.shapeDir||'br';
   var sx=(dir==='br'||dir==='tr')?1:-1;
   var sy=(dir==='br'||dir==='bl')?1:-1;
