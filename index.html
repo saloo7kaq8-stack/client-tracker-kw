@@ -817,6 +817,19 @@ body.time-sunset #bg-stars{opacity:0.45!important}
 .lux-btn-primary{background:linear-gradient(135deg,#0a8f5c,#0d7a50);color:#fff;box-shadow:0 8px 24px rgba(10,143,92,.35)}
 .lux-btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(10,143,92,.45)}
 .lux-btn-gold{background:linear-gradient(135deg,#d4af37,#b8941f);color:#1a1a1a;box-shadow:0 8px 24px rgba(212,175,55,.35)}
+/* ═══ SLKR Draw UI ═══ */
+.dw-divider{width:1px;height:20px;background:#dce6e2;flex-shrink:0}
+.dw-chip{padding:6px 11px;border-radius:8px;border:1.5px solid #d8e2dd;background:#f7faf9;color:#3a4a44;font-weight:700;font-size:12px;cursor:pointer;transition:all .12s;white-space:nowrap}
+.dw-chip:hover{background:#eef4f1;border-color:#0a8f5c}
+.dw-chip-on{background:rgba(10,143,92,.12);border-color:#0a8f5c;color:#0a7a4f}
+.dw-chip-gold{background:rgba(212,175,55,.15);border-color:#d4af37;color:#9a7d1e}
+.dw-chip-red{color:#e74c3c}
+.dw-chip-red:hover{background:#fdecea;border-color:#e74c3c}
+.dw-icon-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid #d8e2dd;background:#f7faf9;color:#3a4a44;font-weight:800;font-size:15px;cursor:pointer;transition:all .12s;display:inline-flex;align-items:center;justify-content:center}
+.dw-icon-btn:hover{background:#eef4f1;border-color:#0a8f5c}
+.dw-tool:hover{background:rgba(255,255,255,.08)!important}
+.dw-top-btn:hover{filter:brightness(1.08)}
+.dw-color:hover{transform:scale(1.15)}
 .lux-btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(212,175,55,.45)}
 .lux-btn-ghost{background:var(--bg);border:1.5px solid var(--bd);color:var(--tx)}
 .lux-btn-ghost:hover{border-color:var(--lux-gold);transform:translateY(-2px)}
@@ -11886,60 +11899,105 @@ function openDrawPad(clientId){
 
   function toolBtn(id,icon,label,active){
     return '<button onclick="dwSetTool(\''+id+'\')" id="dwt-'+id+'" class="dw-tool" data-tool="'+id+'" '+
-      'style="display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 9px;border-radius:9px;border:1.5px solid '+(active?'#0a8f5c':'var(--bd)')+';background:'+(active?'rgba(10,143,92,.12)':'var(--card)')+';cursor:pointer;min-width:54px;transition:all .15s">'+
-      '<span style="font-size:17px">'+icon+'</span><span style="font-size:9px;font-weight:700;color:var(--tx)">'+label+'</span></button>';
+      'style="display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;margin:0 8px;border-radius:10px;border:none;background:'+(active?'rgba(212,175,55,.18)':'transparent')+';cursor:pointer;transition:all .12s;'+(active?'box-shadow:inset 0 0 0 1.5px #d4af37':'')+'">'+
+      '<span style="font-size:18px;line-height:1;filter:'+(active?'none':'grayscale(.2)')+'">'+icon+'</span>'+
+      '<span style="font-size:8.5px;font-weight:700;color:'+(active?'#d4af37':'rgba(255,255,255,.6)')+';white-space:nowrap">'+label+'</span></button>';
+  }
+  function dwToolGroup(icon,label){
+    return '<div style="display:flex;align-items:center;gap:4px;padding:8px 10px 4px;margin-top:4px;border-top:1px solid rgba(255,255,255,.08)">'+
+      '<span style="font-size:10px">'+icon+'</span>'+
+      '<span style="font-size:9px;font-weight:800;color:rgba(255,255,255,.4);letter-spacing:.5px">'+label+'</span></div>';
   }
 
   var modal=document.createElement('div');
   modal.id='draw-pad-modal';
   modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;padding:6px';
   modal.innerHTML=
-    '<div style="background:#ffffff;border-radius:18px;width:100%;max-width:1300px;max-height:97vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.6);color:#1a2e26">'+
-      // الهيدر
-      '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:linear-gradient(135deg,#0a2e22,#0a8f5c)">'+
-        '<div style="color:#fff;font-weight:900;font-size:16px;display:flex;align-items:center;gap:8px"><span style="font-size:18px">✒️</span> SLKR Draw <span style="font-size:11px;opacity:.7;font-weight:600">— أداة رسم المطابخ</span></div>'+
-        '<button onclick="closeDrawPad()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:32px;height:32px;border-radius:8px;font-size:18px;cursor:pointer">✕</button>'+
+    '<div style="background:#f0f3f2;border-radius:16px;width:100%;max-width:1340px;height:97vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6);color:#1a2e26">'+
+      // ═══ الشريط العلوي الفاخر ═══
+      '<div style="display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:54px;background:linear-gradient(135deg,#072019,#0a8f5c 140%);flex-shrink:0;border-bottom:2px solid #d4af37">'+
+        '<div style="display:flex;align-items:center;gap:10px">'+
+          '<div style="width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#d4af37,#b8932e);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 8px rgba(212,175,55,.4)">✒️</div>'+
+          '<div><div style="color:#fff;font-weight:900;font-size:17px;letter-spacing:.5px;line-height:1">SLKR <span style="color:#d4af37">Draw</span></div>'+
+          '<div style="color:rgba(255,255,255,.55);font-size:9.5px;font-weight:600;margin-top:2px">أداة رسم المطابخ الاحترافية</div></div>'+
+        '</div>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<button class="dw-top-btn" onclick="saveDrawPad()" style="display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:9px;border:none;background:#d4af37;color:#072019;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 2px 8px rgba(212,175,55,.35)">💾 حفظ ورفع</button>'+
+          '<button class="dw-top-btn" onclick="dwPrint()" style="display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:9px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#fff;font-weight:700;font-size:13px;cursor:pointer">🖨️ طباعة</button>'+
+          '<button onclick="closeDrawPad()" style="background:rgba(255,255,255,.12);border:none;color:#fff;width:34px;height:34px;border-radius:9px;font-size:17px;cursor:pointer">✕</button>'+
+        '</div>'+
       '</div>'+
-      // الأدوات
-      '<div style="padding:12px 16px;border-bottom:1px solid #dce6e2">'+
-        '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin-bottom:6px">🏗️ الهيكل</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
-          toolBtn('select','🖱️','تحديد')+
-          toolBtn('pen','🖊️','قلم')+
-          toolBtn('eraser','⬜','مساحة')+
-          toolBtn('wall','🧱','جدار',true)+
+      // ═══ شريط الإجراءات الثانوي ═══
+      '<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#fff;border-bottom:1px solid #e2e9e6;flex-shrink:0;flex-wrap:wrap">'+
+        // ألوان
+        '<div style="display:flex;gap:5px;align-items:center">'+
+          ['#0a2e22','#e74c3c','#2980b9','#27ae60','#f39c12','#000000'].map(function(col){
+            return '<button onclick="dwSetColor(\''+col+'\')" data-col="'+col+'" class="dw-color" style="width:22px;height:22px;border-radius:50%;background:'+col+';border:2.5px solid '+(col==='#0a2e22'?'#d4af37':'transparent')+';cursor:pointer;transition:transform .1s"></button>';
+          }).join('')+
+        '</div>'+
+        '<div class="dw-divider"></div>'+
+        // عمق المخزن
+        '<div style="display:flex;gap:6px;align-items:center"><span style="font-size:11px;color:#5a6b64;font-weight:700">عمق المخزن</span>'+
+          '<select id="dw-cab-depth" onchange="dwSetCabDepth(this.value)" style="padding:5px 9px;border-radius:8px;border:1.5px solid #d8e2dd;background:#f7faf9;color:#1a2e26;font-size:12px;font-weight:700;cursor:pointer">'+
+            '<option value="0">بدون</option><option value="40">40سم (أمان 60)</option><option value="60" selected>60سم (أمان 80)</option><option value="custom">مخصص...</option>'+
+          '</select></div>'+
+        '<div class="dw-divider"></div>'+
+        // أزرار التبديل
+        '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="dw-chip dw-chip-on">⊞ شبكة</button>'+
+        '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="dw-chip dw-chip-on">📐 انطباق</button>'+
+        '<button onclick="dwToggleAngles()" id="dw-angles-btn" class="dw-chip">📐 الزوايا</button>'+
+        '<div class="dw-divider"></div>'+
+        // إجراءات العنصر
+        '<button onclick="dwEditSelected()" class="dw-chip dw-chip-gold">✏️ تعديل</button>'+
+        '<button onclick="dwDuplicateSelected()" class="dw-chip">📋 نسخ</button>'+
+        '<button onclick="dwRotateSelected()" class="dw-chip">🔄 تدوير</button>'+
+        '<button onclick="dwDeleteSelected()" class="dw-chip dw-chip-red">🗑️ حذف</button>'+
+        '<div style="flex:1"></div>'+
+        // تراجع/إعادة + تكبير
+        '<button onclick="dwUndo()" class="dw-icon-btn" title="تراجع">↩️</button>'+
+        '<button onclick="dwRedo()" class="dw-icon-btn" title="إعادة">↪️</button>'+
+        '<div class="dw-divider"></div>'+
+        '<button onclick="dwZoom(-1)" class="dw-icon-btn">−</button>'+
+        '<span id="dw-zoom-label" style="font-size:11px;font-weight:800;min-width:40px;text-align:center;color:#1a2e26">100%</span>'+
+        '<button onclick="dwZoom(1)" class="dw-icon-btn">+</button>'+
+        '<button onclick="dwZoomReset()" class="dw-chip">⊡ ملائمة</button>'+
+        '<button onclick="dwClearAll()" class="dw-chip dw-chip-red">مسح الكل</button>'+
+      '</div>'+
+      // ═══ الجسم: شريط أدوات جانبي + لوحة ═══
+      '<div style="flex:1;display:flex;overflow:hidden;min-height:0">'+
+        // ── شريط الأدوات الجانبي (يمين) ──
+        '<div style="width:80px;background:linear-gradient(180deg,#0a2e22,#072019);overflow-y:auto;flex-shrink:0;padding:10px 0;display:flex;flex-direction:column;gap:3px">'+
+          dwToolGroup('🏗️','هيكل')+
+          toolBtn('select','✦','تحديد',true)+
+          toolBtn('wall','▭','جدار')+
           toolBtn('cabinet','🗄️','خزانة')+
-          toolBtn('column','⬛','عمود')+
-          toolBtn('line','📏','خط')+
-          toolBtn('rect','▭','مستطيل')+
-          toolBtn('lshape','📐','شكل L')+
-          toolBtn('ushape','⊔','شكل U')+
+          toolBtn('column','◼','عمود')+
+          toolBtn('line','╱','خط')+
+          toolBtn('rect','▢','مستطيل')+
+          toolBtn('lshape','L','شكل L')+
+          toolBtn('ushape','U','شكل U')+
           toolBtn('door','🚪','باب')+
           toolBtn('window','🪟','نافذة')+
-          toolBtn('appliance','🔲','جهاز')+
+          toolBtn('appliance','▦','جهاز')+
           toolBtn('measure','📐','قياس')+
-        '</div>'+
-        '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin:9px 0 6px">💧 التمديدات (ماء/صرف/كهرباء/غاز)</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          toolBtn('pen','🖊','حر')+
+          toolBtn('eraser','⬜','ممحاة')+
+          dwToolGroup('💧','تمديد')+
           toolBtn('water_hot','🔴','ماء حار')+
           toolBtn('water_cold','🔵','ماء بارد')+
-          toolBtn('drain','🕳️','صرف')+
-          toolBtn('floor_drain','🚿','بالوعة أرضية')+
+          toolBtn('drain','🕳','صرف')+
+          toolBtn('floor_drain','🚿','بالوعة')+
           toolBtn('elec','⚡','كهرباء')+
-          toolBtn('elec_power','🔌','مخرج جهاز')+
+          toolBtn('elec_power','🔌','مخرج')+
           toolBtn('gas','🔥','غاز')+
-        '</div>'+
-        '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin:9px 0 6px">❄️ التكييف والإضاءة</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          dwToolGroup('❄️','تكييف')+
           toolBtn('supply','🟦','دافع')+
           toolBtn('return','🟥','راجع')+
-          toolBtn('diffuser','❄️','ديفيوزر')+
-          toolBtn('thermostat','🌡️','ثرموستات')+
+          toolBtn('diffuser','❄','ديفيوزر')+
+          toolBtn('thermostat','🌡','حرارة')+
           toolBtn('hood','🔥','شفاط')+
           toolBtn('spotlight','💡','سبوت')+
-        '</div>'+
-        '<div style="font-size:10px;font-weight:800;color:#6b7d76;margin:9px 0 6px">🍳 الأجهزة والمطبخ</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:6px">'+
+          dwToolGroup('🍳','أجهزة')+
           toolBtn('sink','🚰','مجلى')+
           toolBtn('stove','🍳','بوتاجاز')+
           toolBtn('fridge','🧊','ثلاجة')+
@@ -11947,59 +12005,22 @@ function openDrawPad(clientId){
           toolBtn('washer','🌀','غسالة')+
           toolBtn('dishwasher','💧','جلاية')+
         '</div>'+
-      '</div>'+
-      // الخصائص
-      '<div style="display:flex;flex-wrap:wrap;gap:10px;padding:10px 16px;border-bottom:1px solid #dce6e2;align-items:center">'+
-        '<div style="display:flex;gap:4px">'+
-          ['#0a2e22','#e74c3c','#2980b9','#27ae60','#f39c12','#000000'].map(function(col){
-            return '<button onclick="dwSetColor(\''+col+'\')" data-col="'+col+'" class="dw-color" style="width:24px;height:24px;border-radius:50%;background:'+col+';border:3px solid '+(col==='#0a2e22'?'#d4af37':'transparent')+';cursor:pointer"></button>';
-          }).join('')+
+        // ── منطقة اللوحة ──
+        '<div style="flex:1;display:flex;flex-direction:column;background:#dde5e2;min-width:0">'+
+          '<div id="dw-hint" style="font-size:11px;color:#5a6b64;padding:7px 16px;background:#eaf2ee;border-bottom:1px solid #d8e2dd;flex-shrink:0">💡 الجدار: انقر نقطة البداية ثم انقر النهاية — الطول بالسم والزاوية تنطبق تلقائياً</div>'+
+          '<div style="flex:1;overflow:auto;padding:14px;display:flex;justify-content:center;align-items:flex-start;min-height:0">'+
+            '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1240px;border:1px solid #c4d1cb;border-radius:10px;background:#fff;touch-action:none;cursor:crosshair;box-shadow:0 4px 20px rgba(0,0,0,.08)"></canvas>'+
+          '</div>'+
+          // شريط المعلومات الحي
+          '<div id="dw-info-bar" style="display:flex;align-items:center;gap:14px;padding:9px 18px;background:linear-gradient(135deg,#072019,#0a2e22);color:#fff;font-size:12px;font-weight:700;flex-shrink:0;flex-wrap:wrap">'+
+            '<span style="display:flex;align-items:center;gap:5px"><span style="opacity:.55">📍 الموضع</span><span id="dw-pos" style="color:#d4af37">0, 0 سم</span></span>'+
+            '<span style="width:1px;height:14px;background:rgba(255,255,255,.2)"></span>'+
+            '<span id="dw-hover-info" style="flex:1;color:rgba(255,255,255,.75)">حرّك المؤشر فوق عنصر لرؤية تفاصيله</span>'+
+          '</div>'+
         '</div>'+
-        '<div style="width:1px;height:20px;background:#dce6e2"></div>'+
-        '<div style="display:flex;gap:5px;align-items:center"><span style="font-size:11px;color:#6b7d76;font-weight:700">عمق المخزن</span>'+
-          '<select id="dw-cab-depth" onchange="dwSetCabDepth(this.value)" style="padding:5px 8px;border-radius:8px;border:1.5px solid #dce6e2;background:#ffffff;color:#1a2e26;font-size:12px;font-weight:700">'+
-            '<option value="0">بدون</option>'+
-            '<option value="40">40سم (أمان 60)</option>'+
-            '<option value="60" selected>60سم (أمان 80)</option>'+
-            '<option value="custom">مخصص...</option>'+
-          '</select></div>'+
-        '<div style="width:1px;height:20px;background:#dce6e2"></div>'+
-        '<button onclick="dwToggleGrid()" id="dw-grid-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">⊞ شبكة</button>'+
-        '<button onclick="dwToggleSnap()" id="dw-snap-btn" class="lux-btn lux-btn-primary btn-sm" style="padding:6px 10px">📐 انطباق الزوايا</button>'+
-        '<button onclick="dwToggleAngles()" id="dw-angles-btn" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">📐 إظهار الزوايا</button>'+
-        '<button onclick="dwUndo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↩️</button>'+
-        '<button onclick="dwRedo()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">↪️</button>'+
-        '<button onclick="dwEditSelected()" class="lux-btn lux-btn-gold btn-sm" style="padding:6px 10px">✏️ تعديل القياس</button>'+
-        '<button onclick="dwDuplicateSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">📋 نسخ</button>'+
-        '<button onclick="dwRotateSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px">🔄 تدوير</button>'+
-        '<button onclick="dwDeleteSelected()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">🗑️ حذف المحدد</button>'+
-        '<button onclick="dwClearAll()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 10px;color:#e74c3c">مسح الكل</button>'+
-        '<div style="width:1px;height:20px;background:#dce6e2"></div>'+
-        '<div style="display:flex;align-items:center;gap:3px">'+
-          '<button onclick="dwZoom(-1)" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px;font-size:16px;font-weight:900">−</button>'+
-          '<span id="dw-zoom-label" style="font-size:11px;font-weight:800;min-width:42px;text-align:center;color:#1a2e26">100%</span>'+
-          '<button onclick="dwZoom(1)" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 11px;font-size:16px;font-weight:900">+</button>'+
-          '<button onclick="dwZoomReset()" class="lux-btn lux-btn-ghost btn-sm" style="padding:6px 9px;font-size:11px">⊡ ملائمة</button>'+
-        '</div>'+
-      '</div>'+
-      '<div id="dw-hint" style="font-size:11px;color:#6b7d76;padding:6px 16px;background:rgba(10,143,92,.06)">💡 الجدار: اسحب لرسمه — الطول يظهر بالسم والزاوية تنطبق تلقائياً لقيم دقيقة (90/135/180)</div>'+
-      // شريط المعلومات الحي (المؤشر الذكي)
-      '<div id="dw-info-bar" style="display:flex;align-items:center;gap:14px;padding:8px 16px;background:#0a2e22;color:#fff;font-size:12px;font-weight:700;flex-wrap:wrap">'+
-        '<span style="display:flex;align-items:center;gap:5px"><span style="opacity:.6">📍 الموضع:</span><span id="dw-pos">0, 0</span></span>'+
-        '<span style="width:1px;height:14px;background:rgba(255,255,255,.2)"></span>'+
-        '<span id="dw-hover-info" style="flex:1;color:#d4af37">حرّك المؤشر فوق عنصر لرؤية تفاصيله</span>'+
-      '</div>'+
-      // اللوحة
-      '<div style="padding:14px 16px;display:flex;justify-content:center">'+
-        '<canvas id="dw-canvas" width="1240" height="720" style="width:100%;max-width:1240px;border:2px solid #dce6e2;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair"></canvas>'+
-      '</div>'+
-      // الحفظ
-      '<div style="display:flex;gap:10px;padding:0 16px 18px">'+
-        '<button class="lux-btn lux-btn-primary" style="flex:1;padding:13px;font-size:15px" onclick="saveDrawPad()">💾 حفظ ورفع للسحابة</button>'+
-        '<button class="lux-btn lux-btn-gold" onclick="dwPrint()" style="padding:13px 20px">🖨️ طباعة</button>'+
-        '<button class="lux-btn lux-btn-ghost" onclick="closeDrawPad()" style="padding:13px 20px">إلغاء</button>'+
       '</div>'+
     '</div>';
+
   document.body.appendChild(modal);
   setTimeout(dwInit,80);
 }
@@ -12357,8 +12378,12 @@ function dwSetTool(t){
   DW.tool=t; DW.selected=-1;
   document.querySelectorAll('.dw-tool').forEach(function(b){
     var on=b.getAttribute('data-tool')===t;
-    b.style.borderColor=on?'#0a8f5c':'var(--bd)';
-    b.style.background=on?'rgba(10,143,92,.12)':'var(--card)';
+    b.style.background=on?'rgba(212,175,55,.18)':'transparent';
+    b.style.boxShadow=on?'inset 0 0 0 1.5px #d4af37':'none';
+    var icon=b.querySelector('span:first-child');
+    var label=b.querySelector('span:last-child');
+    if(icon)icon.style.filter=on?'none':'grayscale(.2)';
+    if(label)label.style.color=on?'#d4af37':'rgba(255,255,255,.6)';
   });
   var h=document.getElementById('dw-hint');
   if(h&&DW_HINTS[t])h.innerHTML='💡 '+DW_HINTS[t];
@@ -12505,18 +12530,18 @@ function dwSetColor(c){
 function dwToggleGrid(){
   DW.showGrid=!DW.showGrid;
   var b=document.getElementById('dw-grid-btn');
-  if(b)b.className='lux-btn btn-sm '+(DW.showGrid?'lux-btn-primary':'lux-btn-ghost');
+  if(b)b.className='dw-chip'+(DW.showGrid?' dw-chip-on':'');
   dwRender();
 }
 function dwToggleSnap(){
   DW.snapAngle=!DW.snapAngle;
   var b=document.getElementById('dw-snap-btn');
-  if(b)b.className='lux-btn btn-sm '+(DW.snapAngle?'lux-btn-primary':'lux-btn-ghost');
+  if(b)b.className='dw-chip'+(DW.snapAngle?' dw-chip-on':'');
 }
 function dwToggleAngles(){
   DW.showAngles=!DW.showAngles;
   var b=document.getElementById('dw-angles-btn');
-  if(b)b.className='lux-btn btn-sm '+(DW.showAngles?'lux-btn-primary':'lux-btn-ghost');
+  if(b)b.className='dw-chip'+(DW.showAngles?' dw-chip-on':'');
   dwRender();
 }
 // تحديد عمق المخزن — يحدد المسافة الآمنة للفتحات (عمق + هامش)
