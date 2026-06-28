@@ -11486,6 +11486,23 @@ function dwSnap(v){
   var g=DW.snapGrid; // بالسم
   return Math.round(v/g)*g;
 }
+// انطباق على نقاط نهايات/بدايات الجدران والخطوط الموجودة (Object Snap)
+function dwSnapToPoints(wx,wy){
+  var threshold=14/DW.view.zoom; // مسافة الالتقاط بالبكسل
+  var best=null, bestDist=threshold;
+  var lineTypes=['wall','line','measure','cabinet','rect','column','appliance','door','window'];
+  for(var i=0;i<DW.objects.length;i++){
+    var o=DW.objects[i];
+    if(lineTypes.indexOf(o.type)===-1)continue;
+    // نقاط البداية والنهاية لكل عنصر
+    var pts=[[o.x1,o.y1],[o.x2,o.y2]];
+    for(var k=0;k<pts.length;k++){
+      var d=Math.sqrt(Math.pow(wx-pts[k][0],2)+Math.pow(wy-pts[k][1],2));
+      if(d<bestDist){bestDist=d; best={x:pts[k][0],y:pts[k][1]};}
+    }
+  }
+  return best;
+}
 // انطباق الزاوية لأقرب قيمة شائعة (0,45,90,135,180...)
 function dwSnapAngle(x1,y1,x2,y2){
   var dx=x2-x1, dy=y2-y1;
@@ -12077,6 +12094,9 @@ function dwInit(){
     e.preventDefault();
     var p=getXY(e); var w=dwToWorld(p.sx,p.sy);
     var wx=dwSnap(w.x), wy=dwSnap(w.y);
+    // انطباق على نقاط نهايات الجدران الموجودة (Object Snap) — أولوية أعلى من الشبكة
+    var snapPt=dwSnapToPoints(w.x,w.y);
+    if(snapPt){wx=snapPt.x; wy=snapPt.y;}
     // القلم والمساحة — يشتغلون بدون سحب
     if(DW.tool==='pen'){
       DW.drawing=true; DW.penPath=[{x:wx,y:wy}];
@@ -12143,15 +12163,16 @@ function dwInit(){
           if(sill!==null&&!isNaN(parseFloat(sill)))obj.sill=parseFloat(sill);
         }
         if(obj){DW.objects.push(obj); dwPushHistory();}
-        // احفظ نقطة النهاية كبداية جديدة
-        DW.startX=DW.curX; DW.startY=DW.curY;
-        // احسب الزاوية الحالية
-        var adx=DW.curX-obj.x1, ady=DW.curY-obj.y1;
+        // نقطة النهاية الفعلية (بعد انطباق الزاوية) — تصير بداية الجدار التالي
+        var endX=obj?obj.x2:DW.curX, endY=obj?obj.y2:DW.curY;
+        DW.startX=endX; DW.startY=endY; DW.curX=endX; DW.curY=endY;
+        // احسب الزاوية والطول الفعليين
+        var adx=endX-(obj?obj.x1:DW.startX), ady=endY-(obj?obj.y1:DW.startY);
         var curAng=Math.round(Math.atan2(ady,adx)*180/Math.PI);
         if(curAng<0)curAng+=360;
-        var lenCm=Math.round(dist/DW.pxPerCm);
+        var lenCm=Math.round(Math.sqrt(adx*adx+ady*ady)/DW.pxPerCm);
         // أظهر popup الخيارات
-        dwShowContinuePopup(DW.curX, DW.curY, curAng, lenCm, p.clientX||p.sx, p.clientY||p.sy);
+        dwShowContinuePopup(endX, endY, curAng, lenCm, p.clientX||p.sx, p.clientY||p.sy);
       }
       dwRender();
     }
@@ -12198,6 +12219,9 @@ function dwInit(){
     }
     if(!DW.drawing)return; e.preventDefault();
     DW.curX=dwSnap(wInfo.x); DW.curY=dwSnap(wInfo.y);
+    // انطباق على نقاط النهايات الموجودة (للمعاينة)
+    var snapMv=dwSnapToPoints(wInfo.x,wInfo.y);
+    if(snapMv){DW.curX=snapMv.x; DW.curY=snapMv.y;}
     // إذا الزاوية مجبرة (اختار من الـ popup) — نثبّت الاتجاه
     if(DW._forcedAngle!=null){
       var fRad=DW._forcedAngle*Math.PI/180;
