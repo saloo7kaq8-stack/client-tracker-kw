@@ -12625,11 +12625,27 @@ function dwToggleDims(){
   if(b)b.className='dw-chip'+(DW.showDims?' dw-chip-on':'');
   dwRender();
 }
+// استخراج الأضلاع للأبعاد — الخطوط كما هي، المستطيل ضلعين ممثّلين (عرض+ارتفاع) لتفادي التكرار
+function dwGetSegments(){
+  var segs=[];
+  DW.objects.forEach(function(o){
+    if(o.type==='wall'||o.type==='line'){
+      segs.push({x1:o.x1,y1:o.y1,x2:o.x2,y2:o.y2});
+    }else if(o.type==='cabinet'||o.type==='rect'||o.type==='column'){
+      var ax=Math.min(o.x1,o.x2), ay=Math.min(o.y1,o.y2);
+      var bx=Math.max(o.x1,o.x2), by=Math.max(o.y1,o.y2);
+      segs.push({x1:ax,y1:ay,x2:bx,y2:ay}); // علوي (يمثّل العرض)
+      segs.push({x1:ax,y1:ay,x2:ax,y2:by}); // يسار (يمثّل الارتفاع)
+    }
+  });
+  return segs;
+}
+
 // رسم خطوط الأبعاد المعمارية خارج الرسمة (مثل المخططات الاحترافية)
 function dwDrawDimensions(){
   if(!DW.showDims)return;
   var ctx=DW.ctx;
-  var walls=DW.objects.filter(function(o){return o.type==='wall';});
+  var walls=dwGetSegments();
   if(!walls.length)return;
   // الإطار المحيط بكل الجدران
   var minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
@@ -12731,7 +12747,16 @@ function dwSafeDist(){return DW.cabDepth>0?DW.cabDepth+DW.safetyMargin:0;}
 function dwDrawAngles(){
   if(!DW.showAngles)return;
   var ctx=DW.ctx;
-  var walls=DW.objects.filter(function(o){return o.type==='wall';});
+  // كل الأضلاع (المستطيل بأضلاعه الأربعة عشان الأركان تطلع 90)
+  var walls=[];
+  DW.objects.forEach(function(o){
+    if(o.type==='wall'||o.type==='line'){
+      walls.push({x1:o.x1,y1:o.y1,x2:o.x2,y2:o.y2});
+    }else if(o.type==='cabinet'||o.type==='rect'||o.type==='column'){
+      var ax=Math.min(o.x1,o.x2),ay=Math.min(o.y1,o.y2),bx=Math.max(o.x1,o.x2),by=Math.max(o.y1,o.y2);
+      walls.push({x1:ax,y1:ay,x2:bx,y2:ay},{x1:bx,y1:ay,x2:bx,y2:by},{x1:bx,y1:by,x2:ax,y2:by},{x1:ax,y1:by,x2:ax,y2:ay});
+    }
+  });
   var drawn={}; // لتفادي تكرار نفس الركن
   for(var i=0;i<walls.length;i++){
     for(var j=i+1;j<walls.length;j++){
