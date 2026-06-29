@@ -13144,7 +13144,7 @@ async function openMeasForClient(id){
       '</div>'+
       fg('مكان الديفيوزر','m-diffuser',m.diffuser,'بالزاوية، بعيد عن الخزائن/الباب/الثرموستات'))+
 
-    sec('🪟','الشباك والإضاءة','💡 السبوت لايت يُؤخّر عن الديكور 80سم (وليس 60) لأن عمق الخزانة 60سم حتى لا يتعارض معها',
+    sec('🪟','الشباك والإضاءة','💡 بُعد السبوت عن حافة الديكور يكون 80سم (وليس 60) لأن عمق الخزانة 60سم حتى لا يتعارض معها',
       '<div class="meas-grid">'+
         fg('ارتفاع جلسة الشباك من الأرض (سم)','m-window-h',m.windowH,'من الأرض لبداية الشباك','number')+
         '<div class="meas-fg"><label class="meas-fl">يوجد سبوت لايت؟</label><select class="meas-in" id="m-spot" onchange="measToggleSpot()"><option value="no"'+(m.spot==='yes'?'':' selected')+'>لا</option><option value="yes"'+(m.spot==='yes'?' selected':'')+'>نعم</option></select></div>'+
@@ -13152,8 +13152,8 @@ async function openMeasForClient(id){
       // السبوت لايت الذكي
       '<div id="m-spot-box" style="display:'+(m.spot==='yes'?'block':'none')+'">'+
         '<div class="meas-grid">'+
-          // تأخير السبوت — خيارات
-          '<div class="meas-fg"><label class="meas-fl">تأخير السبوت عن الديكور (سم)</label>'+
+          // بُعد السبوت — خيارات
+          '<div class="meas-fg"><label class="meas-fl">بُعد السبوت عن حافة الديكور (سم)</label>'+
             '<select class="meas-in" id="m-spot-setback" onchange="checkSpotSetback()">'+
               ['40','60','80','وسط الديكور'].map(function(v){return '<option value="'+v+'"'+((m.spotSetback||'80')===v?' selected':'')+'>'+v+(v==='وسط الديكور'?'':'سم')+'</option>';}).join('')+
             '</select>'+
@@ -13342,7 +13342,7 @@ function checkHoodH(){
   }
 }
 
-// ── التحقق الذكي: تأخير السبوت لايت (يجب 80سم) ──
+// ── تأكيد بُعد السبوت عن حافة الديكور ──
 function checkSpotSetback(){
   var v=(document.getElementById('m-spot-setback')||{}).value||'';
   var msg=document.getElementById('spot-msg');
@@ -13351,7 +13351,7 @@ function checkSpotSetback(){
   // تأكيد فقط — بدون تحذير
   msg.className='meas-check-msg ok';
   if(v==='وسط الديكور')msg.innerHTML='✓ تم اختيار: السبوت في وسط الديكور';
-  else msg.innerHTML='✓ تم اختيار: تأخير '+v+'سم عن الديكور';
+  else msg.innerHTML='✓ تم اختيار: بُعد '+v+'سم عن حافة الديكور';
 }
 // إظهار/إخفاء تفاصيل ميول الجدران
 function measToggleWallSlope(){
@@ -13450,7 +13450,7 @@ function printMeasurement(){
     ['موظف القياس',g('m-measurer')],['تاريخ القياس',g('m-date')],
     ['مكان فتحة الشفاط',g('m-hood-loc')],['ارتفاع الشفاط (سم)',g('m-hood-h')],
     ['مكان الدافع',g('m-supply')],['مكان الراجع',g('m-return')],['مكان الديفيوزر',g('m-diffuser')],
-    ['ارتفاع جلسة الشباك (سم)',g('m-window-h')],['تأخير السبوت لايت (سم)',g('m-spot')==='yes'?g('m-spot-setback'):'لا يوجد'],
+    ['ارتفاع جلسة الشباك (سم)',g('m-window-h')],['بُعد السبوت عن حافة الديكور (سم)',g('m-spot')==='yes'?g('m-spot-setback'):'لا يوجد'],
     ['نوع الإضاءة',g('m-spot')==='yes'?g('m-spot-type'):'—'],['لون السبوت',g('m-spot')==='yes'?g('m-spot-color'):'—'],
     ['— القياس النهائي —','—'],
     ['تشطيب الأرضيات/الديكور',g('m-fin-floor')],['نقاط الكهرباء',g('m-fin-elec')],['نقاط السباكة',g('m-fin-plumb')],
