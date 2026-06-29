@@ -11502,6 +11502,29 @@ function dwSnapToPoints(wx,wy){
   }
   return best;
 }
+// مسافة نقطة لأقرب جزء من العنصر (للممحاة الدقيقة)
+function dwDistToObject(o,px,py){
+  var POINT=['water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
+  if(POINT.indexOf(o.type)!==-1){
+    return Math.sqrt(Math.pow(px-o.x1,2)+Math.pow(py-o.y1,2));
+  }
+  var BOX=['rect','cabinet','appliance','column','sink','stove','fridge','oven','washer','dishwasher','door','window'];
+  if(BOX.indexOf(o.type)!==-1){
+    var minx=Math.min(o.x1,o.x2),maxx=Math.max(o.x1,o.x2);
+    var miny=Math.min(o.y1,o.y2),maxy=Math.max(o.y1,o.y2);
+    var ddx=Math.max(minx-px,0,px-maxx);
+    var ddy=Math.max(miny-py,0,py-maxy);
+    return Math.sqrt(ddx*ddx+ddy*ddy);
+  }
+  // خط/جدار/قياس — أقرب نقطة على القطعة المستقيمة
+  var ax=o.x1,ay=o.y1,bx=o.x2,by=o.y2;
+  var vx=bx-ax,vy=by-ay;
+  var L2=vx*vx+vy*vy;
+  if(L2===0)return Math.sqrt(Math.pow(px-ax,2)+Math.pow(py-ay,2));
+  var t=Math.max(0,Math.min(1,((px-ax)*vx+(py-ay)*vy)/L2));
+  var projx=ax+t*vx, projy=ay+t*vy;
+  return Math.sqrt(Math.pow(px-projx,2)+Math.pow(py-projy,2));
+}
 // انطباق الزاوية لأقرب قيمة شائعة (0,45,90,135,180...)
 function dwSnapAngle(x1,y1,x2,y2){
   var dx=x2-x1, dy=y2-y1;
@@ -11776,15 +11799,17 @@ function dwDrawObject(o, selected){
   if(o.type==='wall'){
     ctx.lineWidth=Math.max((o.size||3)+5,9);
     ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();
-    // قياس الطول بالسم + الزاوية
-    var mx=(o.x1+o.x2)/2, my=(o.y1+o.y2)/2;
-    var lenCm=o.lenCm||Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
-    ctx.font='bold 12px Tajawal,Arial'; ctx.textAlign='center';
-    var label=lenCm+' سم';
-    var tw=ctx.measureText(label).width+10;
-    ctx.fillStyle='#fff'; ctx.fillRect(mx-tw/2,my-22,tw,16);
-    ctx.strokeStyle=o.color; ctx.lineWidth=1; ctx.strokeRect(mx-tw/2,my-22,tw,16);
-    ctx.fillStyle=o.color; ctx.fillText(label,mx,my-10);
+    // قياس الطول على الجدار — يظهر فقط إذا الأبعاد الخارجية مطفّية (تفادي التكرار)
+    if(!DW.showDims){
+      var mx=(o.x1+o.x2)/2, my=(o.y1+o.y2)/2;
+      var lenCm=o.lenCm||Math.round(Math.sqrt(dx*dx+dy*dy)/DW.pxPerCm);
+      ctx.font='bold 12px Tajawal,Arial'; ctx.textAlign='center';
+      var label=lenCm+' سم';
+      var tw=ctx.measureText(label).width+10;
+      ctx.fillStyle='#fff'; ctx.fillRect(mx-tw/2,my-22,tw,16);
+      ctx.strokeStyle=o.color; ctx.lineWidth=1; ctx.strokeRect(mx-tw/2,my-22,tw,16);
+      ctx.fillStyle=o.color; ctx.fillText(label,mx,my-10);
+    }
   }else if(o.type==='line'){
     ctx.beginPath();ctx.moveTo(o.x1,o.y1);ctx.lineTo(o.x2,o.y2);ctx.stroke();
   }else if(o.type==='rect'||o.type==='cabinet'){
@@ -12235,10 +12260,9 @@ function dwInit(){
     // المساحة — تحذف العناصر اللي تلمسها
     if(DW.tool==='eraser' && DW.erasing){
       e.preventDefault();
-      var er=20/DW.view.zoom;
+      var er=14/DW.view.zoom;
       DW.objects=DW.objects.filter(function(o){
-        var cx=(o.x1+o.x2)/2, cy=(o.y1+o.y2)/2;
-        return Math.sqrt(Math.pow(cx-wInfo.x,2)+Math.pow(cy-wInfo.y,2))>er;
+        return dwDistToObject(o,wInfo.x,wInfo.y) > er;
       });
       dwRender();
       return;
@@ -12605,7 +12629,7 @@ function dwToggleDims(){
 function dwDrawDimensions(){
   if(!DW.showDims)return;
   var ctx=DW.ctx;
-  var walls=DW.objects.filter(function(o){return o.type==='wall'||o.type==='line';});
+  var walls=DW.objects.filter(function(o){return o.type==='wall';});
   if(!walls.length)return;
   // الإطار المحيط بكل الجدران
   var minx=Infinity,miny=Infinity,maxx=-Infinity,maxy=-Infinity;
