@@ -11490,7 +11490,7 @@ function dwSnap(v){
 function dwSnapToPoints(wx,wy){
   var threshold=16/DW.view.zoom; // مسافة الالتقاط
   var best=null, bestDist=threshold;
-  var types=['wall','line','measure','cabinet','rect','column'];
+  var types=['wall','line','measure','cabinet','rect','column','water_hot','water_cold','drain','floor_drain','elec','elec_power','gas','supply','return','diffuser','thermostat','hood','spotlight'];
   for(var i=0;i<DW.objects.length;i++){
     var o=DW.objects[i];
     if(types.indexOf(o.type)===-1)continue;
@@ -12125,15 +12125,15 @@ function dwInit(){
       DW.erasing=true; DW.eraserX=wx; DW.eraserY=wy;
       return;
     }
-    // تحقق — إذا الضغط على شكل موجود، اسحبه (بس مو بالقلم أو المساحة)
-    var hitAny=dwHitTest(w.x,w.y);
-    if(hitAny>=0){
-      DW.selected=hitAny;
-      DW.dragging=true;
-      DW.dragLastX=w.x; DW.dragLastY=w.y;
-      dwRender(); return;
-    }
+    // السحب يشتغل فقط مع أداة التحديد — باقي الأدوات تضع عناصرها حتى فوق الجدران
     if(DW.tool==='select'){
+      var hitAny=dwHitTest(w.x,w.y);
+      if(hitAny>=0){
+        DW.selected=hitAny;
+        DW.dragging=true;
+        DW.dragLastX=w.x; DW.dragLastY=w.y;
+        dwRender(); return;
+      }
       DW.selected=-1;
       dwRender(); return;
     }
@@ -12413,9 +12413,10 @@ function dwUpdateInfoBar(wx,wy){
   if(!hover)return;
   var idx=dwHitTest(wx,wy);
   if(idx>=0){
-    hover.innerHTML='🔍 '+dwObjectDetails(DW.objects[idx])+' &nbsp;<span style="opacity:.7;font-size:10px">(دبل-كليك للتعديل)</span>';
+    hover.innerHTML='🔍 '+dwObjectDetails(DW.objects[idx])+' &nbsp;<span style="opacity:.7;font-size:10px">'+(DW.tool==='select'?'(دبل-كليك للتعديل)':'(يمكنك وضع عنصر هنا)')+'</span>';
     hover.style.color='#d4af37';
-    if(DW.cv)DW.cv.style.cursor=DW.tool==='select'?'move':'pointer';
+    // المؤشر: move فقط مع أداة التحديد — باقي الأدوات تبقى crosshair للوضع فوق الجدار
+    if(DW.cv)DW.cv.style.cursor=(DW.tool==='select')?'move':'crosshair';
   }else{
     hover.textContent=DW.tool==='select'?'حرّك المؤشر فوق عنصر لرؤية تفاصيله، أو اسحبه لنقله':'حرّك المؤشر فوق عنصر لرؤية تفاصيله';
     hover.style.color='rgba(255,255,255,.7)';
