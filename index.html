@@ -13151,11 +13151,54 @@ async function openMeasForClient(id){
       '</div>'+
       // السبوت لايت الذكي
       '<div id="m-spot-box" style="display:'+(m.spot==='yes'?'block':'none')+'">'+
-        '<div class="meas-fg"><label class="meas-fl">تأخير السبوت لايت عن الديكور (سم) — يجب أن يكون 80سم</label>'+
-          '<div class="meas-check-wrap"><input class="meas-in" id="m-spot-setback" type="number" value="'+pEsc(m.spotSetback||'80')+'" placeholder="80" oninput="checkSpotSetback()" style="padding-left:42px"><span class="meas-check-badge" id="spot-badge" style="display:none"></span></div>'+
-          '<div class="meas-check-msg" id="spot-msg"></div>'+
+        '<div class="meas-grid">'+
+          // تأخير السبوت — خيارات
+          '<div class="meas-fg"><label class="meas-fl">تأخير السبوت عن الديكور (سم)</label>'+
+            '<select class="meas-in" id="m-spot-setback" onchange="checkSpotSetback()">'+
+              ['40','60','80','وسط الديكور'].map(function(v){return '<option value="'+v+'"'+((m.spotSetback||'80')===v?' selected':'')+'>'+v+(v==='وسط الديكور'?'':'سم')+'</option>';}).join('')+
+            '</select>'+
+            '<div class="meas-check-msg" id="spot-msg" style="margin-top:6px"></div>'+
+          '</div>'+
+          // نوع الإضاءة
+          '<div class="meas-fg"><label class="meas-fl">نوع الإضاءة</label>'+
+            '<select class="meas-in" id="m-spot-type">'+
+              ['سبوت لايت عادي','إضاءة سكة مغناطيسية (Magnetic Track)','نظام إضاءة المسار (Track Light)','سبوت سكة (Spot Track)','سكة مخفية داخل الجبس (Recessed)'].map(function(v){return '<option value="'+pEsc(v)+'"'+((m.spotType||'سبوت لايت عادي')===v?' selected':'')+'>'+v+'</option>';}).join('')+
+            '</select>'+
+          '</div>'+
+          // لون السبوت
+          '<div class="meas-fg"><label class="meas-fl">لون السبوت</label>'+
+            '<select class="meas-in" id="m-spot-color">'+
+              ['أبيض','أسود'].map(function(v){return '<option value="'+v+'"'+((m.spotColor||'أبيض')===v?' selected':'')+'>'+v+'</option>';}).join('')+
+            '</select>'+
+          '</div>'+
         '</div>'+
       '</div>')+
+
+    // ── القياس النهائي (بعد التشطيب) ──
+    sec('🏁','القياس النهائي (بعد التشطيب)','💡 يُملأ عندما يكون المطبخ خالص تشطيب — أرضيات وديكور ونقاط جاهزة، للتأكد من المقاسات النهائية قبل التصنيع',
+      '<div class="meas-grid">'+
+        fg('تشطيب الأرضيات والديكور','m-fin-floor',m.finFloor,'نوع الأرضية، مستوى التشطيب، الديكور')+
+        fg('نقاط الكهرباء','m-fin-elec',m.finElec,'مواقع وعدد نقاط الكهرباء النهائية')+
+        fg('نقاط السباكة','m-fin-plumb',m.finPlumb,'مواقع نقاط السباكة (ماء/صرف) النهائية')+
+      '</div>'+
+      '<div class="meas-grid" style="margin-top:12px">'+
+        // ميول الجدران
+        '<div class="meas-fg"><label class="meas-fl">الجدران فيها ميول؟</label>'+
+          '<select class="meas-in" id="m-fin-wall-slope" onchange="measToggleWallSlope()"><option value="no"'+(m.finWallSlope==='yes'?'':' selected')+'>لا</option><option value="yes"'+(m.finWallSlope==='yes'?' selected':'')+'>نعم</option></select>'+
+        '</div>'+
+        // ميول السقف
+        '<div class="meas-fg"><label class="meas-fl">السقف فيه ميول؟</label>'+
+          '<select class="meas-in" id="m-fin-ceil-slope" onchange="measToggleCeilSlope()"><option value="no"'+(m.finCeilSlope==='yes'?'':' selected')+'>لا</option><option value="yes"'+(m.finCeilSlope==='yes'?' selected':'')+'>نعم</option></select>'+
+        '</div>'+
+      '</div>'+
+      // تفاصيل الميول (تظهر عند نعم)
+      '<div id="m-wall-slope-box" style="display:'+(m.finWallSlope==='yes'?'block':'none')+';margin-top:10px">'+
+        fg('تفاصيل ميول الجدران','m-fin-wall-slope-det',m.finWallSlopeDet,'أين الميل ومقداره وتأثيره على التركيب')+
+      '</div>'+
+      '<div id="m-ceil-slope-box" style="display:'+(m.finCeilSlope==='yes'?'block':'none')+';margin-top:10px">'+
+        fg('تفاصيل ميول السقف','m-fin-ceil-slope-det',m.finCeilSlopeDet,'أين الميل ومقداره وتأثيره على الخزائن العلوية')+
+      '</div>'+
+      fg('ملاحظات القياس النهائي','m-fin-note',m.finNote,'أي ملاحظات إضافية عن القياس النهائي'))+
 
     sec('📏','القياسات العامة','',
       '<div class="meas-fg"><label class="meas-fl">أبعاد وملاحظات القياس (جدران، زوايا، فتحات، سباكة، كهرباء، غاز)</label>'+
@@ -13164,13 +13207,21 @@ async function openMeasForClient(id){
     // ── المرفقات: صور/فيديو + رسمة KitchenDraw ──
     sec('📎','الصور والفيديو والرسومات','📤 تُرفع للسحابة وتُحفظ في ملف العميل — تظهر لكل الأجهزة',
       '<div style="display:grid;gap:14px">'+
-        // صور وفيديو
+        // صور القياس الأولي (المطبخ أسود)
         '<div style="border:1.5px dashed var(--bd);border-radius:12px;padding:16px;text-align:center;background:var(--bg)">'+
-          '<div style="font-size:32px;margin-bottom:6px">📸🎥</div>'+
-          '<div style="font-weight:800;font-size:14px;margin-bottom:4px">صور وفيديو الموقع</div>'+
-          '<div style="font-size:11px;color:var(--mt);margin-bottom:12px">صوّر الموقع من عدة زوايا — الحد الأقصى 50MB للملف</div>'+
-          '<input type="file" id="meas-media-input" accept="image/*,video/*" multiple style="display:none" onchange="uploadMeasFiles('+id+',this,\'صور/فيديو القياس\')">'+
-          '<button class="lux-btn lux-btn-primary" onclick="document.getElementById(\'meas-media-input\').click()" style="padding:10px 20px">📤 رفع صور / فيديو</button>'+
+          '<div style="font-size:32px;margin-bottom:6px">📸</div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:4px">صور القياس الأولي (المطبخ أسود)</div>'+
+          '<div style="font-size:11px;color:var(--mt);margin-bottom:12px">صوّر الموقع على الطوب/الأسمنت قبل التشطيب — حتى 50MB للملف</div>'+
+          '<input type="file" id="meas-media-input" accept="image/*,video/*" multiple style="display:none" onchange="uploadMeasFiles('+id+',this,\'صور القياس الأولي\')">'+
+          '<button class="lux-btn lux-btn-primary" onclick="document.getElementById(\'meas-media-input\').click()" style="padding:10px 20px">📤 رفع صور القياس الأولي</button>'+
+        '</div>'+
+        // صور القياس النهائي (بعد التشطيب)
+        '<div style="border:1.5px dashed #d4af37;border-radius:12px;padding:16px;text-align:center;background:rgba(212,175,55,.06)">'+
+          '<div style="font-size:32px;margin-bottom:6px">🏁</div>'+
+          '<div style="font-weight:800;font-size:14px;margin-bottom:4px">صور القياس النهائي (بعد التشطيب)</div>'+
+          '<div style="font-size:11px;color:var(--mt);margin-bottom:12px">صوّر بعد التشطيب — أرضيات وديكور ونقاط جاهزة — حتى 50MB للملف</div>'+
+          '<input type="file" id="meas-final-input" accept="image/*,video/*" multiple style="display:none" onchange="uploadMeasFiles('+id+',this,\'صور القياس النهائي\')">'+
+          '<button class="lux-btn lux-btn-gold" onclick="document.getElementById(\'meas-final-input\').click()" style="padding:10px 20px">📤 رفع صور القياس النهائي</button>'+
         '</div>'+
         // لوحة الرسم المباشرة على التابلت
         '<div style="border:1.5px dashed var(--m-em,#0a8f5c);border-radius:12px;padding:16px;text-align:center;background:rgba(10,143,92,.06)">'+
@@ -13219,6 +13270,8 @@ async function openMeasForClient(id){
   setTimeout(function(){
     if(m.waiverType&&m.waiverType!=='none')_initSignPad(m.signature);
     checkHoodH();checkSpotSetback();
+    if(typeof measToggleWallSlope==='function')measToggleWallSlope();
+    if(typeof measToggleCeilSlope==='function')measToggleCeilSlope();
     loadMeasFiles(id);
     // ربط onchange للتاريخ
     var dEl=document.getElementById('m-date');
@@ -13291,18 +13344,26 @@ function checkHoodH(){
 
 // ── التحقق الذكي: تأخير السبوت لايت (يجب 80سم) ──
 function checkSpotSetback(){
-  var v=+(document.getElementById('m-spot-setback')||{}).value||0;
-  var badge=document.getElementById('spot-badge'), msg=document.getElementById('spot-msg');
-  if(!badge||!msg)return;
-  if(!v){badge.style.display='none';msg.textContent='';msg.className='meas-check-msg';return;}
-  badge.style.display='flex';
-  if(v>=80){
-    badge.className='meas-check-badge meas-check-ok';badge.textContent='✓';
-    msg.className='meas-check-msg ok';msg.innerHTML='✓ صحيح — لا يتعارض مع الخزانة (عمقها 60سم)';
-  }else{
-    badge.className='meas-check-badge meas-check-bad';badge.textContent='!';
-    msg.className='meas-check-msg bad';msg.innerHTML='⚠️ خطأ — يجب 80سم على الأقل (عمق الخزانة 60سم، سيتعارض معها)';
-  }
+  var v=(document.getElementById('m-spot-setback')||{}).value||'';
+  var msg=document.getElementById('spot-msg');
+  if(!msg)return;
+  if(!v){msg.textContent='';msg.className='meas-check-msg';return;}
+  // تأكيد فقط — بدون تحذير
+  msg.className='meas-check-msg ok';
+  if(v==='وسط الديكور')msg.innerHTML='✓ تم اختيار: السبوت في وسط الديكور';
+  else msg.innerHTML='✓ تم اختيار: تأخير '+v+'سم عن الديكور';
+}
+// إظهار/إخفاء تفاصيل ميول الجدران
+function measToggleWallSlope(){
+  var v=(document.getElementById('m-fin-wall-slope')||{}).value;
+  var box=document.getElementById('m-wall-slope-box');
+  if(box)box.style.display=(v==='yes')?'block':'none';
+}
+// إظهار/إخفاء تفاصيل ميول السقف
+function measToggleCeilSlope(){
+  var v=(document.getElementById('m-fin-ceil-slope')||{}).value;
+  var box=document.getElementById('m-ceil-slope-box');
+  if(box)box.style.display=(v==='yes')?'block':'none';
 }
 
 
@@ -13351,6 +13412,11 @@ function saveMeasurement(){
     hoodLoc:g('m-hood-loc'),hoodH:g('m-hood-h'),hoodNote:g('m-hood-note'),
     supply:g('m-supply'),'return':g('m-return'),diffuser:g('m-diffuser'),
     windowH:g('m-window-h'),spot:g('m-spot'),spotSetback:g('m-spot-setback'),
+    spotType:g('m-spot-type'),spotColor:g('m-spot-color'),
+    finFloor:g('m-fin-floor'),finElec:g('m-fin-elec'),finPlumb:g('m-fin-plumb'),
+    finWallSlope:g('m-fin-wall-slope'),finWallSlopeDet:g('m-fin-wall-slope-det'),
+    finCeilSlope:g('m-fin-ceil-slope'),finCeilSlopeDet:g('m-fin-ceil-slope-det'),
+    finNote:g('m-fin-note'),
     general:g('m-general'),
     waiverType:waiverType,waiverNotes:g('m-waiver-notes'),waiverName:g('m-waiver-name'),signature:signature,
     savedBy:currentUser?currentUser.name:'',savedAt:new Date().toISOString()
@@ -13385,6 +13451,12 @@ function printMeasurement(){
     ['مكان فتحة الشفاط',g('m-hood-loc')],['ارتفاع الشفاط (سم)',g('m-hood-h')],
     ['مكان الدافع',g('m-supply')],['مكان الراجع',g('m-return')],['مكان الديفيوزر',g('m-diffuser')],
     ['ارتفاع جلسة الشباك (سم)',g('m-window-h')],['تأخير السبوت لايت (سم)',g('m-spot')==='yes'?g('m-spot-setback'):'لا يوجد'],
+    ['نوع الإضاءة',g('m-spot')==='yes'?g('m-spot-type'):'—'],['لون السبوت',g('m-spot')==='yes'?g('m-spot-color'):'—'],
+    ['— القياس النهائي —','—'],
+    ['تشطيب الأرضيات/الديكور',g('m-fin-floor')],['نقاط الكهرباء',g('m-fin-elec')],['نقاط السباكة',g('m-fin-plumb')],
+    ['ميول الجدران',g('m-fin-wall-slope')==='yes'?('نعم — '+g('m-fin-wall-slope-det')):'لا'],
+    ['ميول السقف',g('m-fin-ceil-slope')==='yes'?('نعم — '+g('m-fin-ceil-slope-det')):'لا'],
+    ['ملاحظات القياس النهائي',g('m-fin-note')],
     ['القياسات العامة',g('m-general')]
   ];
   var w=window.open('','_blank');
