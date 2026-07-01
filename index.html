@@ -12787,9 +12787,9 @@ function dwDrawAngles(){
             ctx.save();
             ctx.strokeStyle='#e74c3c'; ctx.fillStyle='#e74c3c'; ctx.lineWidth=1.5;
             var a1=Math.min(ang1,ang2), a2=Math.max(ang1,ang2);
-            ctx.beginPath();ctx.arc(jx,jy,24,a1,a2);ctx.stroke();
+            ctx.beginPath();ctx.arc(jx,jy,20,a1,a2);ctx.stroke();
             var midAng=(ang1+ang2)/2;
-            var lx=jx+Math.cos(midAng)*40, ly=jy+Math.sin(midAng)*40;
+            var lx=jx+Math.cos(midAng)*58, ly=jy+Math.sin(midAng)*58;
             ctx.font='bold 13px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
             ctx.fillStyle='#fff'; ctx.fillRect(lx-19,ly-10,38,20);
             ctx.strokeStyle='#e74c3c'; ctx.lineWidth=1.2; ctx.strokeRect(lx-19,ly-10,38,20);
@@ -13059,6 +13059,27 @@ function dwBuildMeasList(){
     bw.items.sort(function(a,b){return a.distCm-b.distCm;});
     result.push(bw); // نُبقي كل الجدران (حتى الفارغة) لعرض الطول
   });
+  // الأعمدة — قسم منفصل: أبعاد العمود + بُعده عن أقرب جدارين (المعيار المعتمد)
+  var columns=DW.objects.filter(function(o){return o.type==='column';});
+  if(columns.length){
+    var colData=columns.map(function(o,i){
+      var w=Math.round(Math.abs(o.x2-o.x1)/p), h=Math.round(Math.abs(o.y2-o.y1)/p);
+      var cx=(o.x1+o.x2)/2, cy=(o.y1+o.y2)/2;
+      // أقرب جدارين (أفقي ورأسي) ومسافة العمود عنهما
+      var nearH=null, nearHd=Infinity, nearV=null, nearVd=Infinity;
+      walls.forEach(function(wl){
+        var d=perpDist(wl,cx,cy);
+        var isH=Math.abs(wl.x2-wl.x1)>Math.abs(wl.y2-wl.y1);
+        if(isH && d<nearHd){nearHd=d; nearH=wl;}
+        if(!isH && d<nearVd){nearVd=d; nearV=wl;}
+      });
+      var dists=[];
+      if(nearH){var hdir=(cy<((nearH.y1+nearH.y2)/2))?'العلوي':'السفلي'; dists.push({label:'من الجدار '+hdir,val:Math.round(nearHd/p)});}
+      if(nearV){var vdir=(cx<((nearV.x1+nearV.x2)/2))?'الأيسر':'الأيمن'; dists.push({label:'من الجدار '+vdir,val:Math.round(nearVd/p)});}
+      return {w:w,h:h,dists:dists,idx:i+1};
+    });
+    result.push({isColumns:true,columns:colData});
+  }
   return result;
 }
 // توليد HTML لقائمة القياس
@@ -13071,13 +13092,34 @@ function dwElemIcon(type){
 }
 function dwMeasListHTML(){
   var list=dwBuildMeasList();
-  var withItems=list.filter(function(w){return w.items.length;});
-  if(!withItems.length)return '<div style="color:#94a3a0;font-size:12px;padding:20px 10px;text-align:center;line-height:1.7">📐<br>ارسم جدراناً وضع عليها عناصر<br>(كهرباء، ماء، شباك...)<br>لتظهر تفاصيل القياس هنا</div>';
+  var hasContent=list.some(function(w){return (w.items&&w.items.length)||w.isColumns;});
+  if(!hasContent)return '<div style="color:#94a3a0;font-size:12px;padding:20px 10px;text-align:center;line-height:1.7">📐<br>ارسم جدراناً وضع عليها عناصر<br>(كهرباء، ماء، شباك...)<br>لتظهر تفاصيل القياس هنا</div>';
   var html='';
   list.forEach(function(w){
-    if(!w.items.length)return;
+    // قسم الأعمدة
+    if(w.isColumns){
+      html+='<div style="margin-bottom:14px;border:1px solid #d8ccb0;border-radius:11px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)">'+
+        '<div style="background:linear-gradient(135deg,#6b5a2e,#a08535);color:#fff;padding:9px 12px;font-size:13px;font-weight:800">🏛️ الأعمدة</div>'+
+        '<div style="background:#fff">';
+      w.columns.forEach(function(col,ci){
+        html+='<div style="padding:10px 12px;'+(ci<w.columns.length-1?'border-bottom:1px solid #f2f6f4':'')+'">'+
+          '<div style="display:flex;align-items:center;gap:9px;margin-bottom:6px">'+
+            '<span style="width:28px;height:28px;border-radius:8px;background:#f5efe0;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🏛️</span>'+
+            '<div style="font-size:12.5px;font-weight:800;color:#1a2e26">عمود '+col.idx+'</div>'+
+            '<div style="margin-right:auto;font-size:13px;font-weight:900;color:#a08535">'+col.w+'×'+col.h+'<span style="font-size:10px">سم</span></div>'+
+          '</div>'+
+          '<div style="display:flex;gap:14px;padding-right:37px">';
+        col.dists.forEach(function(d){
+          html+='<div style="font-size:10.5px;color:#7d8c86"><span style="color:#aab4b0">'+pEsc(d.label)+':</span> <b style="color:#0a8f5c">'+d.val+'سم</b></div>';
+        });
+        html+='</div></div>';
+      });
+      html+='</div></div>';
+      return;
+    }
+    // الجدران
+    if(!w.items||!w.items.length)return;
     html+='<div style="margin-bottom:14px;border:1px solid #e2e9e6;border-radius:11px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)">'+
-      // ترويسة الجدار
       '<div style="background:linear-gradient(135deg,#0a2e22,#0a8f5c);color:#fff;padding:9px 12px;display:flex;justify-content:space-between;align-items:center">'+
         '<span style="font-size:13px;font-weight:800">'+pEsc(w.name)+'</span>'+
         '<span style="font-size:11px;background:rgba(255,255,255,.2);padding:2px 9px;border-radius:20px;font-weight:700">'+w.lenCm+'سم</span>'+
@@ -13087,14 +13129,11 @@ function dwMeasListHTML(){
     w.items.forEach(function(it,i){
       var fromPrev=it.distCm-prev;
       html+='<div style="display:flex;align-items:center;gap:9px;padding:9px 12px;'+(i<w.items.length-1?'border-bottom:1px solid #f2f6f4':'')+'">'+
-        // أيقونة دائرية
         '<span style="width:28px;height:28px;border-radius:8px;background:#f0f7f4;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">'+dwElemIcon(it.type)+'</span>'+
-        // الاسم والتفصيل
         '<div style="flex:1;min-width:0">'+
           '<div style="font-size:12.5px;font-weight:800;color:#1a2e26">'+pEsc(it.name)+'</div>'+
           (it.extra?'<div style="font-size:10.5px;color:#7d8c86;margin-top:1px">'+pEsc(it.extra)+'</div>':'')+
         '</div>'+
-        // المسافة
         '<div style="text-align:left;flex-shrink:0">'+
           '<div style="font-size:14px;font-weight:900;color:#0a8f5c;line-height:1">'+it.distCm+'<span style="font-size:10px">سم</span></div>'+
           '<div style="font-size:9.5px;color:#aab4b0;margin-top:2px">'+(i===0?'من الزاوية':'+'+fromPrev+'سم')+'</div>'+
@@ -13110,11 +13149,20 @@ function dwMeasListHTML(){
 // نسخة الطباعة لقائمة القياس
 function dwMeasListPrintHTML(){
   var list=dwBuildMeasList();
-  var withItems=list.filter(function(w){return w.items.length;});
-  if(!withItems.length)return '<div style="color:#888">لا توجد عناصر مقاسة على الجدران</div>';
+  var hasContent=list.some(function(w){return (w.items&&w.items.length)||w.isColumns;});
+  if(!hasContent)return '<div style="color:#888">لا توجد عناصر مقاسة على الجدران</div>';
   var html='';
   list.forEach(function(w){
-    if(!w.items.length)return;
+    if(w.isColumns){
+      html+='<div class="mwall"><div class="mwall-h">🏛️ الأعمدة</div>';
+      w.columns.forEach(function(col){
+        var dtxt=col.dists.map(function(d){return d.label+' '+d.val+'سم';}).join(' • ');
+        html+='<div class="mrow"><b>عمود '+col.idx+' ('+col.w+'×'+col.h+'سم)</b><span>'+dtxt+'</span></div>';
+      });
+      html+='</div>';
+      return;
+    }
+    if(!w.items||!w.items.length)return;
     html+='<div class="mwall"><div class="mwall-h">'+pEsc(w.name)+' — الطول '+w.lenCm+'سم</div>';
     var prev=0;
     w.items.forEach(function(it,i){
