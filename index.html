@@ -12715,7 +12715,7 @@ function dwDrawDimensions(){
   }
 
   // الجدران والخطوط: الإطار العام، كل ضلع على الجهة الأبعد
-  var lines=DW.objects.filter(function(o){return o.type==='wall'||o.type==='line';});
+  var lines=DW.objects.filter(function(o){return o.type==='wall'||o.type==='line'||o.type==='measure';});
   if(lines.length){
     var lminx=Infinity,lminy=Infinity,lmaxx=-Infinity,lmaxy=-Infinity;
     lines.forEach(function(o){lminx=Math.min(lminx,o.x1,o.x2);lmaxx=Math.max(lmaxx,o.x1,o.x2);lminy=Math.min(lminy,o.y1,o.y2);lmaxy=Math.max(lmaxy,o.y1,o.y2);});
