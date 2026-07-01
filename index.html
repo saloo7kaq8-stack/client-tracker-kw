@@ -11456,7 +11456,7 @@ var DW={
   objects:[],
   tool:'wall',
   color:'#0a2e22', size:3,
-  showGrid:true, showRuler:true, showAngles:false, showDims:false,
+  showGrid:true, showRuler:true, showAngles:false, showDims:false, showLabels:false,
   cabDepth:60,
   safetyMargin:20,
   pxPerCm:1,
@@ -11713,7 +11713,7 @@ function dwDrawSymbol(o){
   var ctx=DW.ctx, x=o.x1, y=o.y1, t=o.type;
   ctx.save();
   ctx.lineWidth=2; ctx.font='bold 9px Tajawal,Arial'; ctx.textAlign='center';
-  function lbl(text,col){ctx.fillStyle=col;ctx.fillText(text,x,y+22);}
+  function lbl(text,col){if(!DW.showLabels)return;ctx.fillStyle=col;ctx.fillText(text,x,y+22);}
   if(t==='water_hot'){
     ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(x,y,9,0,2*Math.PI);ctx.fill();
     ctx.fillStyle='#fff';ctx.font='bold 11px Arial';ctx.fillText('H',x,y+4);lbl('ماء حار','#e74c3c');
@@ -11762,8 +11762,10 @@ function dwDrawSymbol(o){
     ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,8,0,2*Math.PI);ctx.fill();
     ctx.strokeStyle=col;ctx.lineWidth=1.5;
     for(var a=0;a<8;a++){var ang=a*Math.PI/4;ctx.beginPath();ctx.moveTo(x+Math.cos(ang)*11,y+Math.sin(ang)*11);ctx.lineTo(x+Math.cos(ang)*15,y+Math.sin(ang)*15);ctx.stroke();}
-    ctx.fillStyle=col;ctx.font='bold 9px Tajawal,Arial';
-    ctx.fillText(o.ok===true?'سبوت ✓':(o.ok===false?'سبوت ✗':'سبوت'),x,y+26);
+    if(DW.showLabels){
+      ctx.fillStyle=col;ctx.font='bold 9px Tajawal,Arial';
+      ctx.fillText(o.ok===true?'سبوت ✓':(o.ok===false?'سبوت ✗':'سبوت'),x,y+26);
+    }
   }
   ctx.restore();
 }
@@ -12011,6 +12013,7 @@ function openDrawPad(clientId){
         '<button onclick="dwToggleAngles()" id="dw-angles-btn" class="dw-chip">📐 الزوايا</button>'+
         '<button onclick="dwToggleDims()" id="dw-dims-btn" class="dw-chip">📏 الأبعاد</button>'+
         '<button onclick="dwToggleMeasList()" id="dw-measlist-btn" class="dw-chip">📋 قائمة القياس</button>'+
+        '<button onclick="dwToggleLabels()" id="dw-labels-btn" class="dw-chip">🏷️ الأسماء</button>'+
         '<div class="dw-divider"></div>'+
         // إجراءات العنصر
         '<button onclick="dwEditSelected()" class="dw-chip dw-chip-gold">✏️ تعديل</button>'+
@@ -12986,6 +12989,13 @@ function closeDrawPad(){
 }
 
 // طباعة المخطط
+// إظهار/إخفاء الأسماء داخل الرسمة
+function dwToggleLabels(){
+  DW.showLabels=!DW.showLabels;
+  var b=document.getElementById('dw-labels-btn');
+  if(b)b.className='dw-chip'+(DW.showLabels?' dw-chip-on':'');
+  dwRender();
+}
 // إظهار/إخفاء لوحة قائمة القياس
 function dwToggleMeasList(){
   var panel=document.getElementById('dw-measlist-panel');
