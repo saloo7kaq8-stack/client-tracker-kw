@@ -12755,15 +12755,9 @@ function dwSafeDist(){return DW.cabDepth>0?DW.cabDepth+DW.safetyMargin:0;}
 function dwDrawAngles(){
   if(!DW.showAngles)return;
   var ctx=DW.ctx;
-  // كل الأضلاع (المستطيل بأضلاعه الأربعة عشان الأركان تطلع 90)
-  var walls=[];
-  DW.objects.forEach(function(o){
-    if(o.type==='wall'||o.type==='line'){
-      walls.push({x1:o.x1,y1:o.y1,x2:o.x2,y2:o.y2});
-    }else if(o.type==='cabinet'||o.type==='rect'||o.type==='column'){
-      var ax=Math.min(o.x1,o.x2),ay=Math.min(o.y1,o.y2),bx=Math.max(o.x1,o.x2),by=Math.max(o.y1,o.y2);
-      walls.push({x1:ax,y1:ay,x2:bx,y2:ay},{x1:bx,y1:ay,x2:bx,y2:by},{x1:bx,y1:by,x2:ax,y2:by},{x1:ax,y1:by,x2:ax,y2:ay});
-    }
+  // الزوايا للجدران فقط — الخزائن/المستطيلات زواياها 90° معروفة، عرضها يسبب فوضى
+  var walls=DW.objects.filter(function(o){return o.type==='wall';}).map(function(o){
+    return {x1:o.x1,y1:o.y1,x2:o.x2,y2:o.y2};
   });
   var drawn={}; // لتفادي تكرار نفس الركن
   for(var i=0;i<walls.length;i++){
@@ -12785,7 +12779,7 @@ function dwDrawAngles(){
             var deg=Math.abs((ang2-ang1)*180/Math.PI);
             if(deg>180)deg=360-deg;
             deg=Math.round(deg);
-            if(deg<1||deg>359)return; // تجاهل الزوايا التافهة
+            if(deg<8||deg>352||(deg>172&&deg<188))return; // تجاهل الزوايا المستقيمة (0/180) والتافهة
             drawn[key]=true;
             ctx.save();
             ctx.strokeStyle='#e74c3c'; ctx.fillStyle='#e74c3c'; ctx.lineWidth=1.5;
