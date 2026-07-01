@@ -12709,8 +12709,12 @@ function dwDrawDimensions(){
       ctx.moveTo(dimX,yT); ctx.lineTo(dimX,midY-gap);
       ctx.moveTo(dimX,midY+gap); ctx.lineTo(dimX,yB); ctx.stroke();
       dwDimTick(ctx,dimX,yT,false); dwDimTick(ctx,dimX,yB,false);
-      ctx.save();ctx.translate(dimX,midY);ctx.rotate(-Math.PI/2);
-      ctx.fillStyle='#0a2e22';ctx.fillText(label,0,0);ctx.restore();
+      // الرقم أفقي على السطر (غير مدوّر) مع خلفية بيضاء للوضوح
+      ctx.save();
+      var vlw=ctx.measureText(label).width+8;
+      ctx.fillStyle='#fff'; ctx.fillRect(dimX-vlw/2,midY-9,vlw,18);
+      ctx.fillStyle='#0a2e22'; ctx.fillText(label,dimX,midY);
+      ctx.restore();
     }
   }
 
