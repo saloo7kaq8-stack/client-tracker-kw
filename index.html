@@ -11896,12 +11896,19 @@ function dwDrawObject(o, selected){
     ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(0,5);ctx.stroke();
     ctx.beginPath();ctx.moveTo(wLen,-5);ctx.lineTo(wLen,5);ctx.stroke();
     ctx.restore();
-    var wmx=(o.x1+o.x2)/2, wmy=(o.y1+o.y2)/2;
-    ctx.font='bold 11px Tajawal,Arial'; ctx.textAlign='center';
-    var wLabel='شباك '+wCm+(o.sill?' ↑'+o.sill:'');
-    var wlw=ctx.measureText(wLabel).width+10;
-    ctx.fillStyle='#fff'; ctx.fillRect(wmx-wlw/2,wmy+8,wlw,15);
-    ctx.fillStyle=o.color; ctx.fillText(wLabel,wmx,wmy+19);
+    if(DW.showLabels){
+      var wmx=(o.x1+o.x2)/2, wmy=(o.y1+o.y2)/2;
+      // إزاحة الاسم عمودياً على اتجاه الشباك (عشان ما يتراكب مع الأبعاد)
+      var wperp=wang+Math.PI/2;
+      var woff=18;
+      var wlx=wmx+Math.cos(wperp)*woff, wly=wmy+Math.sin(wperp)*woff;
+      ctx.font='bold 11px Tajawal,Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+      var wLabel='شباك '+wCm+(o.sill?' ↑'+o.sill:'');
+      var wlw=ctx.measureText(wLabel).width+10;
+      ctx.fillStyle='#fff'; ctx.fillRect(wlx-wlw/2,wly-8,wlw,16);
+      ctx.fillStyle=o.color; ctx.fillText(wLabel,wlx,wly);
+      ctx.textBaseline='alphabetic';
+    }
   }else if(['sink','stove','fridge','oven','washer','dishwasher'].indexOf(o.type)!==-1){
     var APP={sink:['مجلى','🚰','#2980b9'],stove:['بوتاجاز','🍳','#e67e22'],fridge:['ثلاجة','🧊','#16a085'],oven:['فرن','🔥','#c0392b'],washer:['غسالة','🌀','#8e44ad'],dishwasher:['جلاية','💧','#2980b9']};
     var ap=APP[o.type];
