@@ -11344,7 +11344,7 @@ function factStat(ico,label,val,color){
 
 // ── بطاقة تصنيع جديدة ──
 function factNewCard(){
-  var activeClients=clients.filter(c=>c.status!=='منتهي');
+  var activeClients=clients.slice();
   window._ncClients=activeClients;
   var ov=document.createElement('div');
   ov.className='ov open'; ov.id='ov-newcard';
@@ -11373,7 +11373,7 @@ function factFilterClients(q){
   var list=window._ncClients||[];
   q=(q||'').trim();
   var filtered = q ? list.filter(c=>c.name.indexOf(q)>-1 || (c.phone||'').indexOf(q)>-1) : list;
-  filtered=filtered.slice(0,50);
+  filtered=filtered.slice(0,100);
   if(!filtered.length){ dd.style.display='none'; return; }
   dd.innerHTML=filtered.map(c=>'<div onclick="factPickClient('+c.id+')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bd);font-size:13px" onmouseover="this.style.background=\'var(--card)\'" onmouseout="this.style.background=\'transparent\'">'+pEsc(c.name)+(c.phone?'<span style="color:var(--mt);font-size:11px"> · '+pEsc(c.phone)+'</span>':'')+'</div>').join('');
   dd.style.display='block';
