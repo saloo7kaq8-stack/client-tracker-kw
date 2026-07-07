@@ -11645,44 +11645,123 @@ function drPrint(){
   var esc=function(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
   var nl=function(s){return esc(s).replace(/\n/g,'<br>');};
 
-  var rows='';
-  if(_drState.tab==='install'){
-    rows=drRow('فرق التركيب',nl(data.teams))+drRow('حالة المشروع',nl(data.status))+drRow('المرحلة الحالية',esc(data.stage))+drRow('نسبة الإنجاز',esc(data.progress)+'%')+drRow('الأعمال المنجزة اليوم',nl(data.done))+drRow('المشاكل',nl(data.problems))+drRow('خطة الغد',nl(data.tomorrow))+drRow('فيديو التوثيق',(data.vid_before?'✅ قبل ':'⬜ قبل ')+(data.vid_during?'✅ أثناء ':'⬜ أثناء ')+(data.vid_after?'✅ بعد':'⬜ بعد'))+drRow('ملاحظات',nl(data.notes));
-  }else if(_drState.tab==='factory'){
-    rows=drRow('حالة العمال','الحاضرون: '+esc(data.present)+' — الغائبون: '+esc(data.absent))+drRow('المشاريع الحالية',nl(data.projects))+drRow('ملخص الإنتاج','عُمل على: '+esc(data.worked)+' — أُنجز: '+esc(data.finished)+' — سُلّم: '+esc(data.delivered))+drRow('فريق المصنع',nl(data.team))+drRow('مستوى الأداء',esc(data.performance))+drRow('المشاكل والتحديات',nl(data.problems))+drRow('المواد والمخزون',nl(data.materials))+drRow('خطة الغد',nl(data.tomorrow))+drRow('ملاحظات اليوم',nl(data.notes));
-  }else if(_drState.tab==='sales'){
-    var stats=[['العملاء الذين تم التواصل معهم',data.s_contacted],['العملاء الجدد',data.s_new],['تم الرد عليهم',data.s_replied],['العقود الموقعة',data.s_contracts],['قيمة العقود (د.ك)',data.s_value],['الاعتمادات المكتملة',data.s_approvals],['محوّلة للقياسات',data.s_measures],['غير جاهزين للقياس',data.s_notready],['المعلقون',data.s_pending]];
-    var statsRows=stats.map(s=>'<tr><td style="padding:8px 12px;border:1px solid #ddd">'+s[0]+'</td><td style="padding:8px 12px;border:1px solid #ddd;text-align:center;font-weight:700">'+esc(s[1]||'0')+'</td></tr>').join('');
-    rows='<tr><td colspan="2" style="padding:0"><table style="width:100%;border-collapse:collapse"><tr><th style="background:#f0f7f2;padding:8px 12px;border:1px solid #ddd">البند</th><th style="background:#f0f7f2;padding:8px 12px;border:1px solid #ddd">العدد</th></tr>'+statsRows+'</table></td></tr>'+drRow('متابعة العملاء',nl(data.followup))+drRow('المطابخ المتأخرة',nl(data.delayed))+drRow('ملاحظات وأوامر',nl(data.ops))+drRow('خطة الغد',nl(data.tomorrow));
+  // ألوان القالب الأصلي
+  var PURPLE='#C189F7', RED='#FF7474', PURPLE_LT='#F0E4FC';
+  var title='تقرير '+tab.name+' - يومي';
+
+  // بناء الجسم بأسلوب القالب الأصلي (صفوف مرقّمة، رؤوس بنفسجية)
+  var rowsHtml='';
+  var rn=0; // رقم البند
+  var numRow=function(label,contentHtml){
+    rn++;
+    return '<tr><td class="num">'+rn+'</td><td class="lbl">'+label+'</td><td class="val" colspan="3">'+(contentHtml||'')+'</td></tr>';
+  };
+  var sectionRow=function(label){
+    rn++;
+    return '<tr><td class="num">'+rn+'</td><td class="sec" colspan="4">'+label+'</td></tr>';
+  };
+
+  if(_drState.tab==='sales'){
+    var stats=[
+      ['عدد العملاء الذين تم التواصل معهم',data.s_contacted],
+      ['عدد العملاء الجدد',data.s_new],
+      ['عدد العملاء الذين تم الرد عليهم',data.s_replied],
+      ['عدد العقود الموقعة',data.s_contracts],
+      ['قيمة العقود الموقعة',data.s_value],
+      ['عدد الاعتمادات المكتملة',data.s_approvals],
+      ['عدد المشاريع المحولة للقياسات',data.s_measures],
+      ['عدد العملاء غير الجاهزين للقياس',data.s_notready],
+      ['عدد العملاء المعلقين',data.s_pending]
+    ];
+    var statRows=stats.map(function(s,i){
+      return '<tr><td class="sc-n">'+(i+1)+'</td><td class="sc-l">'+s[0]+'</td><td class="sc-v">'+esc(s[1]||'0')+'</td><td class="sc-note"></td></tr>';
+    }).join('');
+    // القسم 4: ملخص الإنجاز (جدول بنفسجي الرأس)
+    rowsHtml=
+      sectionRow('أولاً: ملخص الإنجاز اليومي:')+
+      '<tr><td class="num"></td><td colspan="4" style="padding:0"><table class="stat"><tr><th class="ph-cell">البند</th><th class="ph-cell" style="width:90px">العدد</th><th class="ph-cell" style="width:200px">ملاحظات</th></tr>'+
+        stats.map(function(s,i){return '<tr><td class="sc-l"><span class="sc-n">'+(i+1)+'</span> '+s[0]+'</td><td class="sc-v">'+esc(s[1]||'0')+'</td><td class="sc-note"></td></tr>';}).join('')+
+      '</table></td></tr>'+
+      sectionRow('ثانياً: متابعة العملاء الذين تم التواصل معهم:')+
+      '<tr><td class="num"></td><td colspan="4" style="padding:0"><table class="stat"><tr><th class="ph-cell">اسم العميل</th><th class="ph-cell">حالة العميل</th><th class="ph-cell">آخر إجراء</th><th class="ph-cell">الخطوة القادمة</th><th class="ph-cell">ملاحظات</th></tr>'+
+        '<tr><td colspan="5" class="free">'+nl(data.followup)+'</td></tr></table></td></tr>'+
+      sectionRow('ثالثاً: المطابخ المتأخرة:')+
+      '<tr><td class="num"></td><td colspan="4" style="padding:0"><table class="stat"><tr><th class="ph-cell">اسم العميل</th><th class="ph-cell">سبب التعثر</th><th class="ph-cell">الجهة المسؤولة</th><th class="ph-cell">الإجراءات المطلوبة</th></tr>'+
+        '<tr><td colspan="4" class="free">'+nl(data.delayed)+'</td></tr></table></td></tr>'+
+      sectionRow('رابعاً: ملاحظات وأوامر تشغيلية')+
+      '<tr><td class="num"></td><td colspan="4" class="free">'+nl(data.ops)+'</td></tr>'+
+      sectionRow('خامساً: خطة عمل اليوم التالي')+
+      '<tr><td class="num"></td><td colspan="4" class="free">'+nl(data.tomorrow)+'</td></tr>'+
+      // إقرار الموظف (أحمر)
+      sectionRow('إقرار الموظف')+
+      '<tr><td class="num"></td><td colspan="4" class="ackrow">أقر أنا الموقع أدناه بأن جميع البيانات المذكورة أعلاه صحيحة وتعكس الأعمال التي تم تنفيذها خلال يوم العمل.</td></tr>'+
+      '<tr><td class="num">'+(++rn)+'</td><td class="lbl">الاسم</td><td class="val">'+esc(manager)+'</td><td class="ph-cell">التوقيع</td><td class="ph-cell">الوقت</td></tr>'+
+      '<tr><td class="num">'+(++rn)+'</td><td class="lbl">اعتماد الإدارة</td><td class="ph-cell">الاسم</td><td class="ph-cell">التوقيع</td><td></td></tr>';
+  }
+  else if(_drState.tab==='install'){
+    rowsHtml=
+      numRow('اسم فريق التركيبات',nl(data.teams))+
+      numRow('حالة المشروع',nl(data.status))+
+      numRow('المرحلة الحالية',esc(data.stage))+
+      numRow('نسبة الإنجاز',esc(data.progress)+'%')+
+      numRow('الأعمال المنجزة اليوم',nl(data.done))+
+      numRow('المشاكل إن وجدت',nl(data.problems))+
+      numRow('خطة الغد',nl(data.tomorrow))+
+      numRow('فيديو التوثيق (إلزامي)',(data.vid_before?'☑':'☐')+' قبل العمل &nbsp; '+(data.vid_during?'☑':'☐')+' أثناء العمل &nbsp; '+(data.vid_after?'☑':'☐')+' بعد العمل')+
+      numRow('ملاحظات اليومية',nl(data.notes))+
+      '<tr><td class="num"></td><td colspan="4" class="ackrow" style="background:'+PURPLE_LT+';color:#5a2d82">توقيع مسؤول التركيبات: '+esc(manager)+' &nbsp;&nbsp;&nbsp; اعتماد الإدارة: __________</td></tr>';
+  }
+  else if(_drState.tab==='factory'){
+    rowsHtml=
+      numRow('حالة العمال','الحاضرون: <b>'+esc(data.present)+'</b> &nbsp; الغائبون: <b>'+esc(data.absent)+'</b>')+
+      numRow('المشاريع الحالية',nl(data.projects))+
+      numRow('ملخص الإنتاج اليومي','عُمل على: <b>'+esc(data.worked)+'</b> &nbsp; أُنجز: <b>'+esc(data.finished)+'</b> &nbsp; سُلّم للتركيبات: <b>'+esc(data.delivered)+'</b>')+
+      numRow('فريق المصنع — مهام اليوم',nl(data.team))+
+      numRow('مستوى الأداء العام',esc(data.performance))+
+      numRow('المشاكل والتحديات',nl(data.problems))+
+      numRow('المواد والمخزون',nl(data.materials))+
+      numRow('خطة الغد',nl(data.tomorrow))+
+      numRow('ملاحظات اليوم',nl(data.notes))+
+      '<tr><td class="num"></td><td colspan="4" class="ackrow" style="background:'+PURPLE_LT+';color:#5a2d82">توقيع مدير المصنع: '+esc(manager)+' &nbsp;&nbsp;&nbsp; اعتماد الإدارة: __________</td></tr>';
   }
 
   var w=window.open('','_blank');
-  w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>تقرير '+tab.name+' — '+esc(data.date)+'</title>'+
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>'+title+' — '+esc(data.date)+'</title>'+
   '<style>@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap");'+
   '*{margin:0;padding:0;box-sizing:border-box;font-family:Tajawal,sans-serif}'+
-  'body{padding:36px;color:#1a1a1a;line-height:1.7}'+
-  '.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid '+tab.color+';padding-bottom:16px;margin-bottom:20px}'+
-  '.logo{display:flex;align-items:center;gap:12px}.logo-box{width:60px;height:60px;background:linear-gradient(135deg,'+tab.color+','+tab.color+'aa);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px}'+
-  '.logo h1{color:'+tab.color+';font-size:22px;font-weight:900}.logo .sub{color:#888;font-size:11px;letter-spacing:2px}'+
-  '.badge{background:'+tab.color+';color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:14px}'+
-  '.meta{display:flex;gap:20px;background:#f7f7f7;border-radius:10px;padding:12px 18px;margin-bottom:18px;font-size:14px}'+
-  '.meta b{color:'+tab.color+'}'+
-  'table.main{width:100%;border-collapse:collapse}'+
-  'table.main td{border:1px solid #ddd;padding:12px 14px;vertical-align:top;font-size:14px}'+
-  'table.main td.k{background:#f7f7f7;font-weight:700;width:180px;color:#333}'+
-  '.sign{margin-top:30px;display:flex;justify-content:space-between;font-size:13px;color:#555;padding-top:16px;border-top:1px solid #eee}'+
-  '@media print{body{padding:20px}.no-print{display:none}}'+
+  'body{padding:30px;color:#1a1a1a;background:#fff}'+
+  '.title-bar{background:'+PURPLE+';color:#fff;text-align:center;padding:16px;font-size:24px;font-weight:900;border-radius:10px 10px 0 0;letter-spacing:.5px}'+
+  '.hd{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:2px solid '+PURPLE+';background:#faf6ff}'+
+  '.hd .co{font-size:18px;font-weight:900;color:#5a2d82}.hd .sub{font-size:11px;color:#999;letter-spacing:2px}'+
+  '.meta{display:flex;gap:26px;padding:12px 18px;font-size:15px;font-weight:700;background:#faf6ff;border-bottom:2px solid '+PURPLE+'}'+
+  '.meta b{color:'+PURPLE+'}'+
+  'table.main{width:100%;border-collapse:collapse;font-size:14px}'+
+  'table.main td{border:1px solid #d9c2ef;padding:11px 13px;vertical-align:top}'+
+  'td.num{background:'+PURPLE+';color:#fff;font-weight:900;text-align:center;width:42px;font-size:15px}'+
+  'td.lbl{background:'+PURPLE_LT+';font-weight:800;width:230px;color:#3d1a5c}'+
+  'td.val{background:#fff}'+
+  'td.sec{background:'+PURPLE+';color:#fff;font-weight:900;font-size:16px;padding:12px 14px}'+
+  'td.free{background:#fff;min-height:50px;line-height:1.9}'+
+  'td.ackrow{background:'+RED+';color:#fff;font-weight:800;text-align:center;font-size:14px}'+
+  'table.stat{width:100%;border-collapse:collapse}'+
+  'table.stat td,table.stat th{border:1px solid #d9c2ef;padding:10px 12px}'+
+  '.ph-cell{background:'+PURPLE+';color:#fff;font-weight:800;text-align:center;font-size:14px}'+
+  '.sc-n{display:inline-block;background:'+PURPLE+';color:#fff;border-radius:50%;width:22px;height:22px;line-height:22px;text-align:center;font-size:12px;font-weight:800;margin-left:6px}'+
+  '.sc-l{font-weight:600;color:#333}'+
+  '.sc-v{text-align:center;font-weight:900;font-size:16px;color:'+PURPLE+';width:90px;background:#faf6ff}'+
+  '.sc-note{width:200px;background:#fff}'+
+  '.foot{text-align:center;color:#aaa;font-size:11px;margin-top:16px}'+
+  '@media print{body{padding:12px}.no-print{display:none}}'+
   '</style></head><body>'+
-  '<div class="hd"><div class="logo"><div class="logo-box">'+tab.ico+'</div><div><h1>مطابخ العيسى</h1><div class="sub">SLKR — الكويت</div></div></div>'+
-    '<div style="text-align:left"><div class="badge">تقرير '+tab.name+' اليومي</div></div></div>'+
+  '<div class="title-bar">'+title+'</div>'+
+  '<div class="hd"><div><div class="co">مطابخ العيسى</div><div class="sub">SLKR — الكويت</div></div><div style="font-size:38px">'+tab.ico+'</div></div>'+
   '<div class="meta"><div><b>المسؤول:</b> '+esc(manager)+'</div><div><b>التاريخ:</b> '+esc(data.date)+'</div><div><b>بدء العمل:</b> '+esc(data.start)+'</div></div>'+
-  '<table class="main">'+rows+'</table>'+
-  '<div class="sign"><div>توقيع المسؤول: '+esc(manager)+'</div><div>اعتماد الإدارة: ________</div></div>'+
-  '<div class="no-print" style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:14px 36px;background:'+tab.color+';color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">🖨️ طباعة</button></div>'+
+  '<table class="main">'+rowsHtml+'</table>'+
+  '<div class="foot">نظام SLKR — مطابخ العيسى · الكويت</div>'+
+  '<div class="no-print" style="text-align:center;margin-top:22px"><button onclick="window.print()" style="padding:14px 40px;background:'+PURPLE+';color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">🖨️ طباعة</button></div>'+
   '</body></html>');
   w.document.close();
 }
-function drRow(k,v){return '<tr><td class="k">'+k+'</td><td>'+(v||'—')+'</td></tr>';}
 
 // ── تصفّح كل التقارير ──
 async function drBrowseAll(){
