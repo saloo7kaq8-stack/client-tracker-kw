@@ -11481,8 +11481,8 @@ function drInstallForm(){
     '<textarea id="dr_tomorrow" style="'+ta+'">'+drVal('tomorrow')+'</textarea></div>'+
 
   '<div style="'+box+'"><label style="'+lbl+'">🎥 فيديو التوثيق (إلزامي)</label>'+
-    '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px">'+
-      ['before','during','after'].map(function(k,i){var names=['قبل العمل','أثناء العمل','بعد العمل'];return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="dr_vid_'+k+'" '+(drVal('vid_'+k)==='true'?'checked':'')+' style="width:16px;height:16px;accent-color:#2980b9"> فيديو '+names[i]+'</label>';}).join('')+
+    '<div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">'+
+      ['before','during','after'].map(function(k,i){var names=['فيديو قبل البدء بالأعمال أو عند التوصيل','فيديو أثناء التركيبات','فيديو عند الانتهاء من التركيبات والتشطيب وتوقيع التسليم والاستلام'];return '<label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer"><input type="checkbox" id="dr_vid_'+k+'" '+(drVal('vid_'+k)==='true'?'checked':'')+' style="width:16px;height:16px;accent-color:#8e44ad;margin-top:2px"> <span style="font-size:13px">'+names[i]+'</span></label>';}).join('')+
     '</div></div>'+
 
   '<div style="'+box+'"><label style="'+lbl+'">📝 ملاحظات يومية</label>'+
@@ -11707,7 +11707,7 @@ function drPrint(){
       numRow('الأعمال المنجزة اليوم',nl(data.done))+
       numRow('المشاكل إن وجدت',nl(data.problems))+
       numRow('خطة الغد',nl(data.tomorrow))+
-      numRow('فيديو التوثيق (إلزامي)',(data.vid_before?'☑':'☐')+' قبل العمل &nbsp; '+(data.vid_during?'☑':'☐')+' أثناء العمل &nbsp; '+(data.vid_after?'☑':'☐')+' بعد العمل')+
+      numRow('فيديو التوثيق (إلزامي)',(data.vid_before?'☑':'☐')+' فيديو قبل البدء بالأعمال أو عند التوصيل<br>'+(data.vid_during?'☑':'☐')+' فيديو أثناء التركيبات<br>'+(data.vid_after?'☑':'☐')+' فيديو عند الانتهاء من التركيبات والتشطيب وتوقيع التسليم والاستلام')+
       numRow('ملاحظات اليومية',nl(data.notes))+
       '<tr><td class="num"></td><td colspan="4" class="ackrow" style="background:'+PURPLE_LT+';color:#5a2d82">توقيع مسؤول التركيبات: '+esc(manager)+' &nbsp;&nbsp;&nbsp; اعتماد الإدارة: __________</td></tr>';
   }
