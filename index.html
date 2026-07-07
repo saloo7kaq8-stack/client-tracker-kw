@@ -11344,7 +11344,7 @@ async function loadMeasurers(){
 // ══════════════════════════════════════════════════════════
 // 📋 التقارير اليومية (تركيبات / مصنع / مبيعات)
 // ══════════════════════════════════════════════════════════
-var _drState = { tab:'install', date:new Date().toISOString().slice(0,10), current:null };
+var _drState = { tab:'sales', date:new Date().toISOString().slice(0,10), current:null };
 
 var DR_MANAGERS = {
   install: ['م/ وليد'],
@@ -11352,9 +11352,9 @@ var DR_MANAGERS = {
   sales:   ['محمود أبو مسلم','محمد عدنان الدياب']
 };
 var DR_TABS = [
-  {id:'install', name:'التركيبات', ico:'🔧', color:'#2980b9'},
+  {id:'sales',   name:'المبيعات',  ico:'💼', color:'#8e44ad'},
   {id:'factory', name:'المصنع',    ico:'🏭', color:'#8e44ad'},
-  {id:'sales',   name:'المبيعات',  ico:'💼', color:'#27ae60'}
+  {id:'install', name:'التركيبات', ico:'🔧', color:'#8e44ad'}
 ];
 
 async function renderDailyReports(){
