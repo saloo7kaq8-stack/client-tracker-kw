@@ -1163,6 +1163,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     <div class="nav-sec">الإدارة</div>
     <div class="ni" id="nav-kitchens" onclick="go(&#39;kitchens&#39;)"><span class="ni-ico">🍳</span> إدارة المطابخ</div>
     <div class="ni" id="nav-approvals" onclick="go(&#39;approvals&#39;)"><span class="ni-ico">✅</span> الاعتمادات</div>
+    <div class="ni" id="nav-factoryhub" onclick="go(&#39;factoryhub&#39;)" style="background:linear-gradient(135deg,rgba(142,68,173,.12),rgba(230,126,34,.08));border-right:3px solid #8e44ad;font-weight:800"><span class="ni-ico">🏭</span> قسم المصنع</div>
     <div class="ni" id="nav-mfgorder" onclick="go(&#39;mfgorder&#39;)"><span class="ni-ico">🏭</span> أمر التصنيع</div>
     <div class="ni" id="nav-cutting" onclick="go(&#39;cutting&#39;)"><span class="ni-ico">📐</span> Cutting List</div>
     <div class="ni" onclick="openSketchUp()" style="color:#00aaff"><span class="ni-ico">🎨</span> SketchUp <span style="font-size:9px;background:rgba(0,170,255,0.12);border:1px solid rgba(0,170,255,0.3);border-radius:4px;padding:1px 6px;margin-right:2px">FREE</span></div>
@@ -1328,6 +1329,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   <div id="pg-profile" style="display:none"></div>
   <div id="pg-cutting" style="display:none"></div>
   <div id="pg-factory" style="display:none"></div>
+  <div id="pg-factoryhub" style="display:none"></div>
   <div id="pg-factoryreports" style="display:none"></div>
   <div id="pg-dailyreports" style="display:none"></div>
 </main>
@@ -2394,39 +2396,39 @@ const PHASE_MAX_DAYS={1:3,2:7,3:3,4:30,5:14,6:7,7:3,8:28,9:5,10:5,11:5,12:3};
 const USERS={
   'صالح الجاسم':{id:'002',pin:'5678',role:'super_admin',title:'نائب المدير العام',avatar:'ص',
     permissions:{clients:{view:true,add:true,edit:true,delete:true},payments:{view:true,add:true,edit:true,delete:true},contracts:{view:true,print:true,amend:true},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:true},passwords:{view:true,change:true},reports:{view:true,export:true},settings:{view:true,edit:true}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'عيسى العيسى':{id:'001',pin:'1234',role:'manager',title:'المدير العام',avatar:'ع',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:true,add:false,edit:false,delete:false},contracts:{view:true,print:true,amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:true,create:false,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:false},passwords:{view:false,change:false},reports:{view:true,export:true},settings:{view:true,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'بشار دياب عيسى':{id:'K100',pin:'1100',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
     permissions:{clients:{view:true,add:false,edit:false,delete:false,requestEdit:true},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,upload:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
   },
   'حاتم':{id:'K103',pin:'0000',role:'data_entry',title:'إدخال بيانات',avatar:'ح',
     permissions:{clients:{view:true,add:true,edit:true,delete:false},payments:{view:true,add:true,edit:false,delete:false},contracts:{view:true,print:false,amend:false},materials:{view:true,add:true,edit:false},manufacturing:{view:true,create:false,approve:false},invoices:{view:true,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:false,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:false,files:false,cutting:true,factory:false,factoryreports:false}
+    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:false,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:false,files:false,cutting:true,factory:false,factoryhub:false,factoryreports:false}
   },
   'محمود':{id:'K102',pin:'1020',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
   'محمد':{id:'K101',pin:'1010',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 1':{id:'M201',pin:'2001',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 2':{id:'M202',pin:'2002',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 3':{id:'M203',pin:'2003',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   }
 };
 var currentUser=null;
@@ -3615,7 +3617,7 @@ function go(name){
     return;
   }
   curPg=name;
-  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports','dailyreports','pricing','profitreport','measurements'].forEach(p=>{
+  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryhub','factoryreports','dailyreports','pricing','profitreport','measurements'].forEach(p=>{
     const el=document.getElementById('pg-'+p);
     if(el) el.style.display=p===name?'block':'none';
     const nav=document.getElementById('nav-'+p);
@@ -3645,6 +3647,7 @@ function go(name){
     else if(name==='files')renderFilesPage();
     else if(name==='cutting')renderCutting();
     else if(name==='factory')renderFactory();
+    else if(name==='factoryhub')renderFactoryHub();
     else if(name==='factoryreports')renderFactoryReports();
     else if(name==='dailyreports')renderDailyReports();
     else if(name==='measurements')renderMeasurements();
@@ -11191,6 +11194,356 @@ function clReset(){
 let factoryLogs = JSON.parse(localStorage.getItem('slkr_factory_logs')||'[]');
 
 function saveFactoryLogs(){ localStorage.setItem('slkr_factory_logs',JSON.stringify(factoryLogs)); }
+
+
+// ══════════════════════════════════════════════════════════
+// 🏭 قسم المصنع المتكامل
+// ══════════════════════════════════════════════════════════
+
+// دورة التصنيع الكاملة — 8 مراحل رئيسية + 83 خطوة تفصيلية
+var MFG_CYCLE = [
+  {id:1, name:'ما قبل الإنتاج', ico:'📝', color:'#3498db', steps:[
+    'توقيع العقد','استلام الدفعة الأولى','رفع المقاسات','مراجعة المقاسات','التصميم الأولي','تعديل التصميم','اعتماد التصميم','اعتماد الألوان والخامات','اعتماد الأجهزة والإكسسوارات','اعتماد الرخام','إصدار أمر الإنتاج','جدولة التصنيع'
+  ]},
+  {id:2, name:'التخطيط والمشتريات', ico:'🛒', color:'#9b59b6', steps:[
+    'استخراج قائمة المواد (BOM)','إصدار أوامر الشراء','اعتماد الموردين','شراء المواد','استلام المواد','فحص جودة المواد الواردة','إدخال المواد للمخزن','ترميز المواد','صرف المواد للإنتاج'
+  ]},
+  {id:3, name:'التصنيع', ico:'⚙️', color:'#e67e22', steps:[
+    'قص الألواح','فرز القطع','تلزيق الحواف','تنظيف الحواف','CNC','الحفر الإضافي','تركيب الوصلات','التجميع الأولي','فحص المقاسات','الصنفرة','المعجون (عند الحاجة)','الصنفرة الثانية','البرايمر','التجفيف','الصنفرة الثالثة','طبقة اللون','التجفيف','طبقة الحماية','التجفيف النهائي'
+  ]},
+  {id:4, name:'التجميع النهائي', ico:'🔩', color:'#16a085', steps:[
+    'تركيب المفصلات','تركيب السكك','تركيب الأدراج','تركيب الأبواب','تركيب المقابض','تركيب الإكسسوارات','تركيب الإضاءة','تركيب الزجاج','تركيب الأرفف','التنظيف'
+  ]},
+  {id:5, name:'الرخام', ico:'🪨', color:'#7f8c8d', steps:[
+    'أخذ المقاسات','قص الرخام','فتحات الحوض والغاز','التلميع','الفحص','التجهيز للشحن'
+  ]},
+  {id:6, name:'الجودة', ico:'✅', color:'#27ae60', steps:[
+    'فحص المقاسات','فحص اللون','فحص الخدوش','فحص الإكسسوارات','فحص الأبواب','فحص الأدراج','معالجة الملاحظات','الاعتماد النهائي'
+  ]},
+  {id:7, name:'اللوجستيات', ico:'📦', color:'#d35400', steps:[
+    'التنظيف النهائي','التغليف','ترقيم القطع','تجهيز ملحقات التركيب','تجهيز البراغي والإكسسوارات','تحميل السيارة','إصدار إذن الخروج','إرسال فريق التركيب'
+  ]},
+  {id:8, name:'التركيب', ico:'🏠', color:'#2980b9', steps:[
+    'استلام الموقع','تركيب الخزائن السفلية','تركيب الخزائن العلوية','تركيب الرخام','تركيب الأجهزة','ضبط الأبواب','ضبط الأدراج','تنظيف الموقع','فحص العميل','استلام العميل','إغلاق الطلب'
+  ]}
+];
+
+// نقاط التحقق (Gate Checks) - مربوطة بنهاية مراحل معينة
+var MFG_GATES = [
+  {id:'g1', name:'اعتماد التصميم قبل الشراء', afterStage:1},
+  {id:'g2', name:'التأكد من اكتمال المواد قبل القص', afterStage:2},
+  {id:'g3', name:'فحص بعد القص', afterStage:3, mid:true},
+  {id:'g4', name:'فحص بعد الدهان', afterStage:3},
+  {id:'g5', name:'فحص بعد التجميع', afterStage:4},
+  {id:'g6', name:'فحص قبل التغليف', afterStage:6},
+  {id:'g7', name:'فحص قبل التحميل', afterStage:7},
+  {id:'g8', name:'فحص بعد التركيب', afterStage:8}
+];
+
+// حساب رقم الخطوة العام (1-83) وإجمالي الخطوات
+function mfgStepId(stageIdx, stepIdx){ return 's_'+stageIdx+'_'+stepIdx; }
+function mfgTotalSteps(){ return MFG_CYCLE.reduce((s,st)=>s+st.steps.length,0); }
+function mfgCardProgress(card){
+  var done=0, total=mfgTotalSteps();
+  var steps=card.steps||{};
+  MFG_CYCLE.forEach(function(st){ st.steps.forEach(function(_,si){ if(steps[mfgStepId(st.id,si)]) done++; }); });
+  return {done:done, total:total, pct:Math.round(done/total*100)};
+}
+function mfgStageProgress(card, stageId){
+  var st=MFG_CYCLE.find(s=>s.id===stageId); if(!st) return 0;
+  var steps=card.steps||{}, done=0;
+  st.steps.forEach(function(_,si){ if(steps[mfgStepId(stageId,si)]) done++; });
+  return Math.round(done/st.steps.length*100);
+}
+
+var _factoryState = { tab:'board', cards:[], currentCard:null };
+var FACTORY_TABS = [
+  {id:'board',    name:'بطاقات التصنيع', ico:'🗂️'},
+  {id:'cycle',    name:'دورة التصنيع',   ico:'🔄'},
+  {id:'materials',name:'ستور المواد',    ico:'📦'},
+  {id:'orders',   name:'أوامر التصنيع',  ico:'📋'},
+  {id:'report',   name:'التقرير اليومي', ico:'📊'}
+];
+
+// ── الصفحة الرئيسية لقسم المصنع ──
+async function renderFactoryHub(){
+  var el=document.getElementById('pg-factoryhub');
+  if(!el) return;
+  var tabsHtml=FACTORY_TABS.map(t=>
+    '<button onclick="factHubTab(\''+t.id+'\')" style="padding:12px 18px;border:none;border-radius:12px 12px 0 0;background:'+(t.id===_factoryState.tab?'#8e44ad':'var(--card)')+';color:'+(t.id===_factoryState.tab?'#fff':'var(--mt)')+';font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap">'+t.ico+' '+t.name+'</button>'
+  ).join('');
+  el.innerHTML=
+    '<div class="ph"><div><div class="ph-t">🏭 قسم المصنع</div><div class="ph-s">كل ما يخص المصنع في مكان واحد — بطاقات التصنيع · الدورة · المواد · الأوامر · التقارير</div></div></div>'+
+    '<div style="display:flex;gap:4px;overflow-x:auto;margin-bottom:0">'+tabsHtml+'</div>'+
+    '<div style="background:var(--bg);border:2px solid #8e44ad;border-radius:0 16px 16px 16px;padding:20px;min-height:400px" id="facthub-body"><div style="text-align:center;padding:40px;color:var(--mt)">جارِ التحميل...</div></div>';
+  factHubLoadTab();
+}
+
+function factHubTab(id){ _factoryState.tab=id; renderFactoryHub(); }
+
+async function factHubLoadTab(){
+  var body=document.getElementById('facthub-body');
+  if(!body) return;
+  var tab=_factoryState.tab;
+  if(tab==='board') await factRenderBoard(body);
+  else if(tab==='cycle') factRenderCycle(body);
+  else if(tab==='materials') factRenderMaterials(body);
+  else if(tab==='orders') factRenderOrders(body);
+  else if(tab==='report') factRenderReport(body);
+}
+
+// ══ تبويب 1: بطاقات التصنيع (لوحة Kanban) ══
+async function factLoadCards(){
+  try{
+    var {data,error}=await sb.from('mfg_cards').select('*').order('updated_at',{ascending:false});
+    if(error) throw error;
+    _factoryState.cards=data||[];
+  }catch(e){ _factoryState.cards=[]; }
+}
+
+async function factRenderBoard(body){
+  await factLoadCards();
+  var cards=_factoryState.cards.filter(c=>c.status==='نشط');
+  var done=_factoryState.cards.filter(c=>c.status==='منجز').length;
+
+  // إحصائيات علوية
+  var stats='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px">'+
+    factStat('🗂️','مطابخ نشطة',cards.length,'#8e44ad')+
+    factStat('✅','منجزة',done,'#27ae60')+
+    factStat('⚙️','قيد التصنيع',cards.filter(c=>c.stage>=2&&c.stage<=4).length,'#e67e22')+
+    factStat('🏠','قيد التركيب',cards.filter(c=>c.stage>=8).length,'#2980b9')+
+  '</div>';
+
+  var addBtn='<button onclick="factNewCard()" style="padding:11px 20px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer;margin-bottom:18px">➕ بطاقة تصنيع جديدة</button>';
+
+  // أعمدة Kanban للمراحل الـ8
+  var columns=MFG_CYCLE.map(function(st){
+    var stageCards=cards.filter(c=>c.stage===st.id);
+    var cardsHtml=stageCards.map(function(c){
+      var p=mfgCardProgress(c);
+      var pr=c.priority==='عاجل'?'border-right:4px solid #e74c3c':(c.priority==='مرتفع'?'border-right:4px solid #f39c12':'border-right:4px solid '+st.color);
+      return '<div onclick="factOpenCard('+c.id+')" style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:10px;cursor:pointer;'+pr+';box-shadow:0 1px 4px rgba(0,0,0,.06)">'+
+        '<div style="font-weight:700;font-size:13px;color:var(--tx);margin-bottom:4px">'+pEsc(c.client_name||'—')+'</div>'+
+        (c.kitchen_desc?'<div style="font-size:11px;color:var(--mt);margin-bottom:6px">'+pEsc(c.kitchen_desc)+'</div>':'')+
+        '<div style="height:6px;background:var(--card);border-radius:3px;overflow:hidden;margin-bottom:4px"><div style="height:100%;width:'+p.pct+'%;background:'+st.color+'"></div></div>'+
+        '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mt)"><span>'+p.pct+'%</span>'+(c.priority==='عاجل'?'<span style="color:#e74c3c;font-weight:700">🔴 عاجل</span>':'')+'</div>'+
+      '</div>';
+    }).join('')||'<div style="text-align:center;padding:16px;color:var(--mt);font-size:11px">—</div>';
+    return '<div style="min-width:220px;flex-shrink:0"><div style="background:'+st.color+';color:#fff;padding:10px 12px;border-radius:10px 10px 0 0;font-weight:800;font-size:13px;display:flex;justify-content:space-between;align-items:center">'+
+      '<span>'+st.ico+' '+st.name+'</span><span style="background:rgba(255,255,255,.3);border-radius:10px;padding:1px 8px;font-size:11px">'+stageCards.length+'</span></div>'+
+      '<div style="background:var(--card);padding:10px;border-radius:0 0 10px 10px;min-height:120px;max-height:500px;overflow-y:auto">'+cardsHtml+'</div></div>';
+  }).join('');
+
+  body.innerHTML=stats+addBtn+
+    '<div style="display:flex;gap:12px;overflow-x:auto;padding-bottom:12px">'+columns+'</div>';
+}
+
+function factStat(ico,label,val,color){
+  return '<div style="background:var(--card);border-radius:12px;padding:14px;text-align:center;border-top:3px solid '+color+'"><div style="font-size:24px">'+ico+'</div><div style="font-size:26px;font-weight:900;color:'+color+'">'+val+'</div><div style="font-size:11px;color:var(--mt)">'+label+'</div></div>';
+}
+
+// ── بطاقة تصنيع جديدة ──
+function factNewCard(){
+  var activeClients=clients.filter(c=>c.status!=='منتهي');
+  var opts=activeClients.map(c=>'<option value="'+c.id+'">'+pEsc(c.name)+'</option>').join('');
+  var ov=document.createElement('div');
+  ov.className='ov open'; ov.id='ov-newcard';
+  ov.onclick=function(e){if(e.target===ov)ov.remove();};
+  ov.innerHTML='<div class="modal" style="max-width:520px"><div class="m-hdr"><div class="m-title">➕ بطاقة تصنيع جديدة</div><button class="m-close" onclick="document.getElementById(\'ov-newcard\').remove()">✕</button></div>'+
+    '<div class="m-body">'+
+      '<label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">العميل</label>'+
+      '<select id="nc_client" class="fi" style="width:100%;margin-bottom:12px" onchange="factNcClientChange()"><option value="">— اختر العميل —</option>'+opts+'</select>'+
+      '<label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">وصف المطبخ</label>'+
+      '<input id="nc_desc" class="fi" style="width:100%;margin-bottom:12px" placeholder="مثال: رئيسي + ديرتي">'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
+        '<div><label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">الأولوية</label><select id="nc_priority" class="fi" style="width:100%"><option>عادي</option><option>مرتفع</option><option>عاجل</option></select></div>'+
+        '<div><label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">تاريخ التسليم</label><input type="date" id="nc_due" class="fi" style="width:100%"></div>'+
+      '</div>'+
+      '<button onclick="factCreateCard()" style="width:100%;padding:13px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer">إنشاء البطاقة</button>'+
+    '</div></div>';
+  document.body.appendChild(ov);
+}
+function factNcClientChange(){
+  var cid=+document.getElementById('nc_client').value;
+  var c=clients.find(x=>x.id===cid);
+  if(c && c.kitTypes && c.kitTypes.length){
+    document.getElementById('nc_desc').value=c.kitTypes.join(' + ');
+  }
+}
+async function factCreateCard(){
+  var cid=+document.getElementById('nc_client').value;
+  if(!cid){toast('اختر العميل','err');return;}
+  var c=clients.find(x=>x.id===cid);
+  var card={client_id:cid, client_name:c?c.name:'', kitchen_desc:document.getElementById('nc_desc').value,
+    stage:1, steps:{}, gates:{}, priority:document.getElementById('nc_priority').value,
+    start_date:new Date().toISOString().slice(0,10), due_date:document.getElementById('nc_due').value||null, status:'نشط'};
+  try{
+    var {error}=await sb.from('mfg_cards').insert(card);
+    if(error) throw error;
+    document.getElementById('ov-newcard').remove();
+    toast('✅ تم إنشاء بطاقة التصنيع','ok');
+    factRenderBoard(document.getElementById('facthub-body'));
+  }catch(e){ toast('⚠️ خطأ: '+e.message,'err'); }
+}
+
+// ── فتح بطاقة تصنيع (التفاصيل + الخطوات) ──
+async function factOpenCard(id){
+  await factLoadCards();
+  var card=_factoryState.cards.find(c=>c.id===id);
+  if(!card){toast('البطاقة غير موجودة','err');return;}
+  _factoryState.currentCard=card;
+  var p=mfgCardProgress(card);
+
+  // أقسام المراحل الـ8 مع خطواتها
+  var stagesHtml=MFG_CYCLE.map(function(st){
+    var sp=mfgStageProgress(card,st.id);
+    var isCurrent=card.stage===st.id;
+    var stepsHtml=st.steps.map(function(step,si){
+      var sid=mfgStepId(st.id,si);
+      var checked=(card.steps||{})[sid];
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;cursor:pointer;'+(checked?'background:rgba(39,174,96,.08)':'')+'">'+
+        '<input type="checkbox" '+(checked?'checked':'')+' onchange="factToggleStep('+id+',\''+sid+'\',this.checked)" style="width:16px;height:16px;accent-color:'+st.color+'">'+
+        '<span style="font-size:12px;'+(checked?'color:var(--mt);text-decoration:line-through':'color:var(--tx)')+'">'+(si+1)+'. '+step+'</span>'+
+      '</label>';
+    }).join('');
+    // gate check لهالمرحلة
+    var gate=MFG_GATES.find(g=>g.afterStage===st.id && !g.mid);
+    var gateHtml=gate?'<div style="margin-top:8px;padding:8px 12px;background:rgba(231,76,60,.06);border-radius:8px;border:1px dashed rgba(231,76,60,.3)"><label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" '+((card.gates||{})[gate.id]?'checked':'')+' onchange="factToggleGate('+id+',\''+gate.id+'\',this.checked)" style="width:16px;height:16px;accent-color:#e74c3c"><span style="font-size:12px;font-weight:700;color:#c0392b">🚦 '+gate.name+'</span></label></div>':'';
+
+    return '<details '+(isCurrent?'open':'')+' style="margin-bottom:10px;background:var(--card);border-radius:12px;overflow:hidden;border:'+(isCurrent?'2px solid '+st.color:'1px solid var(--bd)')+'">'+
+      '<summary style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:'+(isCurrent?st.color+'15':'transparent')+'">'+
+        '<span style="font-weight:800;color:'+st.color+'">'+st.ico+' المرحلة '+st.id+': '+st.name+'</span>'+
+        '<span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mt)">'+sp+'%</span>'+(isCurrent?'<span style="background:'+st.color+';color:#fff;font-size:10px;padding:2px 8px;border-radius:8px">الحالية</span>':'')+'</span>'+
+      '</summary>'+
+      '<div style="padding:10px 14px 14px">'+stepsHtml+gateHtml+
+        '<div style="margin-top:10px;display:flex;gap:8px">'+
+          (st.id>1?'<button onclick="factSetStage('+id+','+(st.id)+')" style="flex:1;padding:8px;background:var(--bg);border:1px solid '+st.color+';color:'+st.color+';border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📍 اجعلها المرحلة الحالية</button>':'')+
+        '</div>'+
+      '</div>'+
+    '</details>';
+  }).join('');
+
+  var ov=document.createElement('div');
+  ov.className='ov open'; ov.id='ov-card';
+  ov.onclick=function(e){if(e.target===ov)ov.remove();};
+  ov.innerHTML='<div class="modal" style="max-width:640px;max-height:90vh;overflow-y:auto">'+
+    '<div class="m-hdr"><div class="m-title">🗂️ '+pEsc(card.client_name)+'</div><button class="m-close" onclick="document.getElementById(\'ov-card\').remove()">✕</button></div>'+
+    '<div class="m-body">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px">'+
+        '<div><div style="font-size:12px;color:var(--mt)">'+pEsc(card.kitchen_desc||'')+'</div><div style="font-size:11px;color:var(--mt);margin-top:4px">التسليم: '+(card.due_date||'—')+' · '+card.priority+'</div></div>'+
+        '<div style="text-align:center"><div style="font-size:28px;font-weight:900;color:#8e44ad">'+p.pct+'%</div><div style="font-size:10px;color:var(--mt)">'+p.done+'/'+p.total+' خطوة</div></div>'+
+      '</div>'+
+      '<div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:'+p.pct+'%;background:linear-gradient(90deg,#8e44ad,#e67e22)"></div></div>'+
+      stagesHtml+
+      '<div style="display:flex;gap:10px;margin-top:16px">'+
+        '<button onclick="factCompleteCard('+id+')" style="flex:1;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer">✅ إنجاز البطاقة</button>'+
+        '<button onclick="factDeleteCard('+id+')" style="padding:12px 18px;background:rgba(231,76,60,.1);color:#e74c3c;border:none;border-radius:10px;font-weight:700;cursor:pointer">🗑️</button>'+
+      '</div>'+
+    '</div></div>';
+  document.body.appendChild(ov);
+}
+
+async function factToggleStep(id,sid,checked){
+  var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
+  if(!card.steps)card.steps={};
+  if(checked)card.steps[sid]=true; else delete card.steps[sid];
+  // auto-advance: لو خلص كل خطوات المرحلة الحالية، ينتقل للتالية
+  await factSaveCard(card,true);
+  factOpenCardRefresh(id);
+}
+async function factToggleGate(id,gid,checked){
+  var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
+  if(!card.gates)card.gates={};
+  if(checked)card.gates[gid]=true; else delete card.gates[gid];
+  await factSaveCard(card,true);
+}
+async function factSetStage(id,stage){
+  var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
+  card.stage=stage;
+  await factSaveCard(card);
+  factOpenCardRefresh(id);
+  toast('📍 تم تحديث المرحلة','ok');
+}
+async function factCompleteCard(id){
+  var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
+  card.status='منجز'; card.stage=8;
+  await factSaveCard(card);
+  document.getElementById('ov-card').remove();
+  toast('✅ تم إنجاز المطبخ','ok');
+  factRenderBoard(document.getElementById('facthub-body'));
+}
+async function factDeleteCard(id){
+  if(!confirm('حذف بطاقة التصنيع؟'))return;
+  try{ await sb.from('mfg_cards').delete().eq('id',id);
+    document.getElementById('ov-card').remove();
+    toast('حُذفت البطاقة','ok');
+    factRenderBoard(document.getElementById('facthub-body'));
+  }catch(e){toast('خطأ','err');}
+}
+async function factSaveCard(card,silent){
+  card.updated_at=new Date().toISOString();
+  try{
+    var {error}=await sb.from('mfg_cards').update({stage:card.stage,steps:card.steps,gates:card.gates,status:card.status,updated_at:card.updated_at}).eq('id',card.id);
+    if(error)throw error;
+    if(!silent)toast('💾 حُفظ','ok');
+  }catch(e){ if(!silent)toast('⚠️ خطأ في الحفظ','err'); }
+}
+async function factOpenCardRefresh(id){
+  var open=document.getElementById('ov-card');
+  if(open){open.remove(); factOpenCard(id);}
+}
+
+// ══ تبويب 2: دورة التصنيع (مرجع الـ83 خطوة) ══
+function factRenderCycle(body){
+  var total=mfgTotalSteps();
+  var cyclesHtml=MFG_CYCLE.map(function(st){
+    var stepsHtml=st.steps.map((s,i)=>'<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13px"><span style="display:inline-block;width:24px;height:24px;line-height:24px;text-align:center;background:'+st.color+'22;color:'+st.color+';border-radius:50%;font-size:11px;font-weight:700;flex-shrink:0">'+(i+1)+'</span>'+s+'</div>').join('');
+    return '<div style="background:var(--card);border-radius:14px;padding:18px;margin-bottom:14px;border-right:5px solid '+st.color+'">'+
+      '<div style="font-size:16px;font-weight:800;color:'+st.color+';margin-bottom:12px">'+st.ico+' المرحلة '+st.id+': '+st.name+' <span style="font-size:12px;color:var(--mt);font-weight:400">('+st.steps.length+' خطوة)</span></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 20px">'+stepsHtml+'</div>'+
+    '</div>';
+  }).join('');
+  var gatesHtml=MFG_GATES.map(g=>'<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(231,76,60,.06);border-radius:8px;margin-bottom:6px"><span style="font-size:16px">🚦</span><span style="font-size:13px;font-weight:600">'+g.name+'</span></div>').join('');
+
+  body.innerHTML=
+    '<div style="background:linear-gradient(135deg,#8e44ad,#e67e22);color:#fff;border-radius:14px;padding:20px;margin-bottom:18px;text-align:center">'+
+      '<div style="font-size:22px;font-weight:900">دورة تصنيع المطابخ الكاملة</div>'+
+      '<div style="font-size:14px;opacity:.9;margin-top:4px">8 مراحل رئيسية · '+total+' خطوة تفصيلية · 8 نقاط تحقق</div></div>'+
+    cyclesHtml+
+    '<div style="background:var(--card);border-radius:14px;padding:18px;margin-top:8px">'+
+      '<div style="font-size:16px;font-weight:800;color:#e74c3c;margin-bottom:12px">🚦 نقاط التحقق (Gate Checks)</div>'+gatesHtml+
+    '</div>';
+}
+
+// ══ تبويب 3: ستور المواد (رابط للصفحة الكاملة) ══
+function factRenderMaterials(body){
+  var priced = (typeof STORE!=='undefined')?STORE.filter(m=>m.p>0).length:0;
+  var total = (typeof STORE!=='undefined')?STORE.length:0;
+  body.innerHTML='<div style="text-align:center;padding:30px">'+
+    '<div style="font-size:48px;margin-bottom:12px">📦</div>'+
+    '<div style="font-size:18px;font-weight:800;color:var(--tx);margin-bottom:6px">ستور المواد</div>'+
+    '<div style="font-size:13px;color:var(--mt);margin-bottom:20px">'+total+' مادة · '+priced+' مسعّرة</div>'+
+    '<button onclick="go(\'materials\')" style="padding:13px 28px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;font-size:15px">فتح ستور المواد الكامل ←</button>'+
+    '</div>';
+}
+
+// ══ تبويب 4: أوامر التصنيع (رابط للصفحة الكاملة) ══
+function factRenderOrders(body){
+  body.innerHTML='<div style="text-align:center;padding:30px">'+
+    '<div style="font-size:48px;margin-bottom:12px">📋</div>'+
+    '<div style="font-size:18px;font-weight:800;color:var(--tx);margin-bottom:6px">أوامر التصنيع</div>'+
+    '<div style="font-size:13px;color:var(--mt);margin-bottom:20px">أوامر التصنيع المُصدرة للمصنع</div>'+
+    '<button onclick="go(\'mfgorder\')" style="padding:13px 28px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;font-size:15px">فتح أوامر التصنيع ←</button>'+
+    '</div>';
+}
+
+// ══ تبويب 5: التقرير اليومي (المصنع) ══
+function factRenderReport(body){
+  body.innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:15px;color:var(--tx);margin-bottom:16px">📊 تقرير المصنع اليومي</div>'+
+    '<button onclick="_drState.tab=\'factory\';go(\'dailyreports\')" style="padding:13px 28px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:12px;font-weight:800;cursor:pointer;font-size:15px">فتح تقرير المصنع اليومي ←</button>'+
+    '<div style="font-size:12px;color:var(--mt);margin-top:12px">يفتح قسم التقارير اليومية على تبويب المصنع مباشرة</div></div>';
+}
+
 
 function renderFactory(){
   const today_str=today();
