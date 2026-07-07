@@ -11345,14 +11345,18 @@ function factStat(ico,label,val,color){
 // ── بطاقة تصنيع جديدة ──
 function factNewCard(){
   var activeClients=clients.filter(c=>c.status!=='منتهي');
-  var opts=activeClients.map(c=>'<option value="'+c.id+'">'+pEsc(c.name)+'</option>').join('');
+  window._ncClients=activeClients;
   var ov=document.createElement('div');
   ov.className='ov open'; ov.id='ov-newcard';
   ov.onclick=function(e){if(e.target===ov)ov.remove();};
   ov.innerHTML='<div class="modal" style="max-width:520px"><div class="m-hdr"><div class="m-title">➕ بطاقة تصنيع جديدة</div><button class="m-close" onclick="document.getElementById(\'ov-newcard\').remove()">✕</button></div>'+
     '<div class="m-body">'+
       '<label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">العميل</label>'+
-      '<select id="nc_client" class="fi" style="width:100%;margin-bottom:12px" onchange="factNcClientChange()"><option value="">— اختر العميل —</option>'+opts+'</select>'+
+      '<div style="position:relative;margin-bottom:12px">'+
+        '<input id="nc_search" class="fi" style="width:100%" placeholder="🔍 اكتب اسم العميل للبحث..." autocomplete="off" oninput="factFilterClients(this.value)" onfocus="factFilterClients(this.value)">'+
+        '<input type="hidden" id="nc_client" value="">'+
+        '<div id="nc_dropdown" style="display:none;position:absolute;top:100%;right:0;left:0;background:var(--bg);border:1px solid var(--bd);border-radius:10px;max-height:260px;overflow-y:auto;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px"></div>'+
+      '</div>'+
       '<label style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">وصف المطبخ</label>'+
       '<input id="nc_desc" class="fi" style="width:100%;margin-bottom:12px" placeholder="مثال: رئيسي + ديرتي">'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">'+
@@ -11362,6 +11366,27 @@ function factNewCard(){
       '<button onclick="factCreateCard()" style="width:100%;padding:13px;background:linear-gradient(135deg,#8e44ad,#7d3c98);color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer">إنشاء البطاقة</button>'+
     '</div></div>';
   document.body.appendChild(ov);
+}
+function factFilterClients(q){
+  var dd=document.getElementById('nc_dropdown');
+  if(!dd)return;
+  var list=window._ncClients||[];
+  q=(q||'').trim();
+  var filtered = q ? list.filter(c=>c.name.indexOf(q)>-1 || (c.phone||'').indexOf(q)>-1) : list;
+  filtered=filtered.slice(0,50);
+  if(!filtered.length){ dd.style.display='none'; return; }
+  dd.innerHTML=filtered.map(c=>'<div onclick="factPickClient('+c.id+')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--bd);font-size:13px" onmouseover="this.style.background=\'var(--card)\'" onmouseout="this.style.background=\'transparent\'">'+pEsc(c.name)+(c.phone?'<span style="color:var(--mt);font-size:11px"> · '+pEsc(c.phone)+'</span>':'')+'</div>').join('');
+  dd.style.display='block';
+}
+function factPickClient(id){
+  var c=(window._ncClients||[]).find(x=>x.id===id);
+  if(!c)return;
+  document.getElementById('nc_client').value=id;
+  document.getElementById('nc_search').value=c.name;
+  document.getElementById('nc_dropdown').style.display='none';
+  if(c.kitTypes && c.kitTypes.length){
+    document.getElementById('nc_desc').value=c.kitTypes.join(' + ');
+  }
 }
 function factNcClientChange(){
   var cid=+document.getElementById('nc_client').value;
