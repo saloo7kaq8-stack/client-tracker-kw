@@ -1168,6 +1168,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
     <div class="ni" onclick="openSketchUp()" style="color:#00aaff"><span class="ni-ico">🎨</span> SketchUp <span style="font-size:9px;background:rgba(0,170,255,0.12);border:1px solid rgba(0,170,255,0.3);border-radius:4px;padding:1px 6px;margin-right:2px">FREE</span></div>
     <div class="ni" id="nav-factory" onclick="go(&#39;factory&#39;)"><span class="ni-ico">⚙️</span> إنتاج المصنع</div>
     <div class="ni" id="nav-factoryreports" onclick="go(&#39;factoryreports&#39;)"><span class="ni-ico">📊</span> تقارير المصنع</div>
+    <div class="ni" id="nav-dailyreports" onclick="go(&#39;dailyreports&#39;)" style="color:#e67e22;font-weight:700"><span class="ni-ico">📋</span> التقارير اليومية</div>
     <div class="ni" id="nav-materials" onclick="go(&#39;materials&#39;)"><span class="ni-ico">📦</span> ستور المواد</div>
     <div class="ni" id="nav-appliances" onclick="go(&#39;appliances&#39;)"><span class="ni-ico">🏪</span> ستور الأجهزة</div>
     <div class="ni" id="nav-reports" onclick="go(&#39;reports&#39;)"><span class="ni-ico">📈</span> التقارير</div>
@@ -1328,6 +1329,7 @@ document.addEventListener('DOMContentLoaded',function(){var inp=document.getElem
   <div id="pg-cutting" style="display:none"></div>
   <div id="pg-factory" style="display:none"></div>
   <div id="pg-factoryreports" style="display:none"></div>
+  <div id="pg-dailyreports" style="display:none"></div>
 </main>
 </div>
 
@@ -2392,15 +2394,15 @@ const PHASE_MAX_DAYS={1:3,2:7,3:3,4:30,5:14,6:7,7:3,8:28,9:5,10:5,11:5,12:3};
 const USERS={
   'صالح الجاسم':{id:'002',pin:'5678',role:'super_admin',title:'نائب المدير العام',avatar:'ص',
     permissions:{clients:{view:true,add:true,edit:true,delete:true},payments:{view:true,add:true,edit:true,delete:true},contracts:{view:true,print:true,amend:true},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:true},passwords:{view:true,change:true},reports:{view:true,export:true},settings:{view:true,edit:true}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'عيسى العيسى':{id:'001',pin:'1234',role:'manager',title:'المدير العام',avatar:'ع',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:true,add:false,edit:false,delete:false},contracts:{view:true,print:true,amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:true,create:false,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:false},passwords:{view:false,change:false},reports:{view:true,export:true},settings:{view:true,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
   'بشار دياب عيسى':{id:'K100',pin:'1100',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
     permissions:{clients:{view:true,add:false,edit:false,delete:false,requestEdit:true},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,upload:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryreports:true,dailyreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
   },
   'حاتم':{id:'K103',pin:'0000',role:'data_entry',title:'إدخال بيانات',avatar:'ح',
     permissions:{clients:{view:true,add:true,edit:true,delete:false},payments:{view:true,add:true,edit:false,delete:false},contracts:{view:true,print:false,amend:false},materials:{view:true,add:true,edit:false},manufacturing:{view:true,create:false,approve:false},invoices:{view:true,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
@@ -2408,23 +2410,23 @@ const USERS={
   },
   'محمود':{id:'K102',pin:'1020',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
   'محمد':{id:'K101',pin:'1010',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 1':{id:'M201',pin:'2001',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 2':{id:'M202',pin:'2002',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
   'عامل قياس 3':{id:'M203',pin:'2003',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
-    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
+    access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   }
 };
 var currentUser=null;
@@ -3613,7 +3615,7 @@ function go(name){
     return;
   }
   curPg=name;
-  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports','pricing','profitreport','measurements'].forEach(p=>{
+  ['dashboard','clients','daily','reports','accounting','team','alerts','calendar','ai','kitchens','approvals','mfgorder','materials','appliances','import','slkr','profile','endofday','files','cutting','factory','factoryreports','dailyreports','pricing','profitreport','measurements'].forEach(p=>{
     const el=document.getElementById('pg-'+p);
     if(el) el.style.display=p===name?'block':'none';
     const nav=document.getElementById('nav-'+p);
@@ -3644,6 +3646,7 @@ function go(name){
     else if(name==='cutting')renderCutting();
     else if(name==='factory')renderFactory();
     else if(name==='factoryreports')renderFactoryReports();
+    else if(name==='dailyreports')renderDailyReports();
     else if(name==='measurements')renderMeasurements();
     else if(name==='profile'){}// rendered by viewClient
   }catch(e){
@@ -11336,6 +11339,369 @@ async function loadMeasurers(){
     return _measurersCache;
   }catch(e){_measurersCache=[];return [];}
 }
+
+
+// ══════════════════════════════════════════════════════════
+// 📋 التقارير اليومية (تركيبات / مصنع / مبيعات)
+// ══════════════════════════════════════════════════════════
+var _drState = { tab:'install', date:new Date().toISOString().slice(0,10), current:null };
+
+var DR_MANAGERS = {
+  install: ['م/ وليد'],
+  factory: ['م/ بشار دياب عيسى'],
+  sales:   ['محمود أبو مسلم','محمد عدنان الدياب']
+};
+var DR_TABS = [
+  {id:'install', name:'التركيبات', ico:'🔧', color:'#2980b9'},
+  {id:'factory', name:'المصنع',    ico:'🏭', color:'#8e44ad'},
+  {id:'sales',   name:'المبيعات',  ico:'💼', color:'#27ae60'}
+];
+
+async function renderDailyReports(){
+  var el = document.getElementById('pg-dailyreports');
+  if(!el) return;
+  var tab = DR_TABS.find(t=>t.id===_drState.tab);
+
+  var tabsHtml = DR_TABS.map(t=>
+    '<button onclick="drSwitchTab(\''+t.id+'\')" style="flex:1;padding:14px;border:none;border-radius:12px 12px 0 0;background:'+(t.id===_drState.tab?t.color:'var(--card)')+';color:'+(t.id===_drState.tab?'#fff':'var(--mt)')+';font-size:15px;font-weight:800;cursor:pointer;transition:.2s">'+t.ico+' '+t.name+'</button>'
+  ).join('');
+
+  el.innerHTML =
+    '<div class="ph"><div><div class="ph-t">📋 التقارير اليومية</div><div class="ph-s">تركيبات · مصنع · مبيعات — إدخال وطباعة واسترجاع</div></div></div>'+
+    '<div style="display:flex;gap:4px;margin-bottom:0">'+tabsHtml+'</div>'+
+    '<div style="background:var(--bg);border:2px solid '+tab.color+';border-radius:0 0 16px 16px;padding:20px" id="dr-body">'+
+      '<div style="text-align:center;padding:40px;color:var(--mt)">جارِ التحميل...</div>'+
+    '</div>';
+
+  drLoadTab();
+}
+
+function drSwitchTab(id){ _drState.tab=id; _drState.current=null; renderDailyReports(); }
+
+async function drLoadTab(){
+  var body = document.getElementById('dr-body');
+  if(!body) return;
+  var tab = DR_TABS.find(t=>t.id===_drState.tab);
+
+  // شريط التاريخ + أزرار
+  var bar =
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--bd)">'+
+      '<label style="font-weight:700;color:var(--tx)">📅 التاريخ:</label>'+
+      '<input type="date" id="dr-date" value="'+_drState.date+'" onchange="drDateChange(this.value)" style="padding:9px 12px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px">'+
+      '<button onclick="drLoadExisting()" style="padding:9px 16px;background:'+tab.color+';color:#fff;border:none;border-radius:10px;font-weight:700;cursor:pointer">🔍 استرجاع</button>'+
+      '<button onclick="drNewReport()" style="padding:9px 16px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;font-weight:700;cursor:pointer">➕ تقرير جديد</button>'+
+      '<button onclick="drBrowseAll()" style="padding:9px 16px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:10px;font-weight:700;cursor:pointer;margin-right:auto">📂 كل التقارير</button>'+
+    '</div>';
+
+  body.innerHTML = bar + '<div id="dr-form-area"></div>';
+  drRenderForm();
+}
+
+function drDateChange(v){ _drState.date=v; }
+
+async function drLoadExisting(){
+  var tab=_drState.tab, date=document.getElementById('dr-date').value;
+  _drState.date=date;
+  try{
+    var {data:res,error} = await sb.from('daily_reports').select('*').eq('report_type',tab).eq('report_date',date);
+    if(error) throw error;
+    if(res && res.length){
+      _drState.current = res[0].data;
+      _drState.currentId = res[0].id;
+      _drState.currentManager = res[0].manager;
+      toast('✅ تم استرجاع تقرير '+date,'ok');
+    }else{
+      _drState.current = null;
+      _drState.currentId = null;
+      toast('لا يوجد تقرير محفوظ لهذا التاريخ — يمكنك إنشاء واحد','info');
+    }
+  }catch(e){
+    _drState.current=null;
+    toast('⚠️ خطأ في الاسترجاع','err');
+  }
+  drRenderForm();
+}
+
+function drNewReport(){ _drState.current={}; _drState.currentId=null; drRenderForm(); }
+
+function drRenderForm(){
+  var area=document.getElementById('dr-form-area');
+  if(!area) return;
+  if(_drState.tab==='install') area.innerHTML = drInstallForm();
+  else if(_drState.tab==='factory') area.innerHTML = drFactoryForm();
+  else if(_drState.tab==='sales') area.innerHTML = drSalesForm();
+}
+
+function drVal(key, def){
+  var d=_drState.current||{};
+  return d[key]!=null ? String(d[key]).replace(/"/g,'&quot;') : (def||'');
+}
+function drManagerOptions(){
+  var mgrs = DR_MANAGERS[_drState.tab]||[];
+  var sel = _drState.currentManager||mgrs[0];
+  return mgrs.map(m=>'<option value="'+m+'"'+(m===sel?' selected':'')+'>'+m+'</option>').join('');
+}
+
+// ── نموذج التركيبات ──
+function drInstallForm(){
+  var lbl='display:block;font-size:12px;font-weight:700;color:var(--mt);margin-bottom:5px';
+  var inp='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px';
+  var ta ='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px;min-height:70px;resize:vertical';
+  var box='background:var(--card);border-radius:12px;padding:16px;margin-bottom:14px';
+  return ''+
+  '<div style="'+box+'"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'+
+    '<div><label style="'+lbl+'">👤 اسم مسؤول التركيبات</label><select id="dr_manager" style="'+inp+'">'+drManagerOptions()+'</select></div>'+
+    '<div><label style="'+lbl+'">📅 التاريخ</label><input type="date" id="dr_date2" value="'+drVal('date',_drState.date)+'" style="'+inp+'"></div>'+
+    '<div><label style="'+lbl+'">🕐 بدء العمل من الساعة</label><input type="time" id="dr_start" value="'+drVal('start','07:00')+'" style="'+inp+'"></div>'+
+  '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">👷 فرق التركيب</label>'+
+    '<textarea id="dr_teams" style="'+ta+'" placeholder="فريق 1: ...&#10;فريق 2: ...">'+drVal('teams')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📊 حالة المشروع</label>'+
+    '<textarea id="dr_status" style="'+ta+'" placeholder="لم يبدأ / جاري العمل / تم الانتهاء + التفاصيل">'+drVal('status')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">🔄 المرحلة الحالية</label>'+
+    '<select id="dr_stage" style="'+inp+'">'+
+      ['قبل التركيب','تركيب الخزائن','تركيب الرخام','تشطيب نهائي'].map(s=>'<option'+(drVal('stage')===s?' selected':'')+'>'+s+'</option>').join('')+
+    '</select></div>'+
+
+  '<div style="'+box+'"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+    '<div><label style="'+lbl+'">📈 نسبة الإنجاز (%)</label><input type="number" id="dr_progress" min="0" max="100" value="'+drVal('progress')+'" style="'+inp+'"></div>'+
+    '<div></div>'+
+  '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">✅ الأعمال المنجزة اليوم</label>'+
+    '<textarea id="dr_done" style="'+ta+'">'+drVal('done')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">⚠️ المشاكل إن وجدت</label>'+
+    '<textarea id="dr_problems" style="'+ta+'" placeholder="لا يوجد">'+drVal('problems')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📋 خطة الغد</label>'+
+    '<textarea id="dr_tomorrow" style="'+ta+'">'+drVal('tomorrow')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">🎥 فيديو التوثيق (إلزامي)</label>'+
+    '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:6px">'+
+      ['before','during','after'].map(function(k,i){var names=['قبل العمل','أثناء العمل','بعد العمل'];return '<label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="dr_vid_'+k+'" '+(drVal('vid_'+k)==='true'?'checked':'')+' style="width:16px;height:16px;accent-color:#2980b9"> فيديو '+names[i]+'</label>';}).join('')+
+    '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📝 ملاحظات يومية</label>'+
+    '<textarea id="dr_notes" style="'+ta+'" placeholder="لا يوجد">'+drVal('notes')+'</textarea></div>'+
+
+  drActionButtons();
+}
+
+// ── نموذج المصنع ──
+function drFactoryForm(){
+  var lbl='display:block;font-size:12px;font-weight:700;color:var(--mt);margin-bottom:5px';
+  var inp='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px';
+  var ta ='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px;min-height:70px;resize:vertical';
+  var box='background:var(--card);border-radius:12px;padding:16px;margin-bottom:14px';
+  return ''+
+  '<div style="'+box+'"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'+
+    '<div><label style="'+lbl+'">👤 مدير المصنع</label><select id="dr_manager" style="'+inp+'">'+drManagerOptions()+'</select></div>'+
+    '<div><label style="'+lbl+'">📅 التاريخ</label><input type="date" id="dr_date2" value="'+drVal('date',_drState.date)+'" style="'+inp+'"></div>'+
+    '<div><label style="'+lbl+'">🕐 بدء العمل من الساعة</label><input type="time" id="dr_start" value="'+drVal('start','08:00')+'" style="'+inp+'"></div>'+
+  '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">👷 حالة العمال</label>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
+      '<div><label style="'+lbl+'">الحاضرون</label><input type="number" id="dr_present" value="'+drVal('present')+'" style="'+inp+'"></div>'+
+      '<div><label style="'+lbl+'">الغائبون</label><input type="number" id="dr_absent" value="'+drVal('absent')+'" style="'+inp+'"></div>'+
+    '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">🍳 المشاريع الحالية (المطابخ قيد التصنيع)</label>'+
+    '<textarea id="dr_projects" style="'+ta+';min-height:120px" placeholder="اسم العميل — عدد المطابخ — مرحلة التصنيع — نسبة الإنجاز">'+drVal('projects')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📊 ملخص الإنتاج اليومي</label>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'+
+      '<div><label style="'+lbl+'">مطابخ تم العمل عليها</label><input type="number" id="dr_worked" value="'+drVal('worked')+'" style="'+inp+'"></div>'+
+      '<div><label style="'+lbl+'">مطابخ تم إنجازها</label><input type="number" id="dr_finished" value="'+drVal('finished')+'" style="'+inp+'"></div>'+
+      '<div><label style="'+lbl+'">مطابخ مُسلّمة للتركيبات</label><input type="number" id="dr_delivered" value="'+drVal('delivered')+'" style="'+inp+'"></div>'+
+    '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">👥 فريق المصنع — مهام اليوم</label>'+
+    '<textarea id="dr_team" style="'+ta+';min-height:100px" placeholder="اسم العامل — المهمة">'+drVal('team')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">⭐ مستوى الأداء العام</label>'+
+    '<select id="dr_performance" style="'+inp+'">'+
+      ['ممتاز','جيد جداً','جيد','ضعيف'].map(s=>'<option'+(drVal('performance')===s?' selected':'')+'>'+s+'</option>').join('')+
+    '</select></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">⚠️ المشاكل والتحديات</label>'+
+    '<textarea id="dr_problems" style="'+ta+'" placeholder="نقص مواد / تأخير / أعطال / أخرى">'+drVal('problems')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📦 المواد والمخزون</label>'+
+    '<textarea id="dr_materials" style="'+ta+'" placeholder="المواد المستخدمة / الناقصة / المطلوبة">'+drVal('materials')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📋 خطة الغد</label>'+
+    '<textarea id="dr_tomorrow" style="'+ta+'">'+drVal('tomorrow')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📝 ملاحظات اليوم</label>'+
+    '<textarea id="dr_notes" style="'+ta+'">'+drVal('notes')+'</textarea></div>'+
+
+  drActionButtons();
+}
+
+// ── نموذج المبيعات ──
+function drSalesForm(){
+  var lbl='display:block;font-size:12px;font-weight:700;color:var(--mt);margin-bottom:5px';
+  var inp='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px';
+  var ta ='width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--card);font-size:14px;min-height:70px;resize:vertical';
+  var box='background:var(--card);border-radius:12px;padding:16px;margin-bottom:14px';
+  var num='width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--card);font-size:14px;text-align:center';
+  var stats=[
+    ['s_contacted','عدد العملاء الذين تم التواصل معهم'],
+    ['s_new','عدد العملاء الجدد'],
+    ['s_replied','عدد العملاء الذين تم الرد عليهم'],
+    ['s_contracts','عدد العقود الموقعة'],
+    ['s_value','قيمة العقود الموقعة (د.ك)'],
+    ['s_approvals','عدد الاعتمادات المكتملة'],
+    ['s_measures','عدد المشاريع المحولة للقياسات'],
+    ['s_notready','عدد العملاء غير الجاهزين للقياس'],
+    ['s_pending','عدد العملاء المعلقين']
+  ];
+  var statsHtml = stats.map(function(s){
+    return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)">'+
+      '<span style="flex:1;font-size:13px;color:var(--tx)">'+s[1]+'</span>'+
+      '<input type="number" id="dr_'+s[0]+'" value="'+drVal(s[0])+'" style="'+num+';width:90px">'+
+    '</div>';
+  }).join('');
+
+  return ''+
+  '<div style="'+box+'"><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">'+
+    '<div><label style="'+lbl+'">👤 مسؤول المبيعات</label><select id="dr_manager" style="'+inp+'">'+drManagerOptions()+'</select></div>'+
+    '<div><label style="'+lbl+'">📅 التاريخ</label><input type="date" id="dr_date2" value="'+drVal('date',_drState.date)+'" style="'+inp+'"></div>'+
+    '<div><label style="'+lbl+'">🕐 بدء العمل من الساعة</label><input type="time" id="dr_start" value="'+drVal('start','09:00')+'" style="'+inp+'"></div>'+
+  '</div></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📊 أولاً: ملخص الإنجاز اليومي</label>'+statsHtml+'</div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">👥 ثانياً: متابعة العملاء الذين تم التواصل معهم</label>'+
+    '<textarea id="dr_followup" style="'+ta+';min-height:110px" placeholder="اسم العميل — حالته — آخر إجراء — الخطوة القادمة — ملاحظات">'+drVal('followup')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">⏳ ثالثاً: المطابخ المتأخرة</label>'+
+    '<textarea id="dr_delayed" style="'+ta+'" placeholder="اسم العميل — سبب التعثر — الجهة المسؤولة — الإجراءات المطلوبة">'+drVal('delayed')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📌 رابعاً: ملاحظات وأوامر تشغيلية</label>'+
+    '<textarea id="dr_ops" style="'+ta+'">'+drVal('ops')+'</textarea></div>'+
+
+  '<div style="'+box+'"><label style="'+lbl+'">📋 خامساً: خطة عمل اليوم التالي</label>'+
+    '<textarea id="dr_tomorrow" style="'+ta+'">'+drVal('tomorrow')+'</textarea></div>'+
+
+  drActionButtons();
+}
+
+function drActionButtons(){
+  var tab=DR_TABS.find(t=>t.id===_drState.tab);
+  return '<div style="display:flex;gap:12px;margin-top:8px">'+
+    '<button onclick="drSave()" style="flex:1;padding:15px;background:linear-gradient(135deg,'+tab.color+','+tab.color+'dd);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">💾 حفظ التقرير</button>'+
+    '<button onclick="drSaveAndPrint()" style="flex:1;padding:15px;background:var(--card);color:var(--tx);border:2px solid '+tab.color+';border-radius:12px;font-size:15px;font-weight:800;cursor:pointer">🖨️ حفظ وطباعة</button>'+
+  '</div>';
+}
+
+// ── جمع بيانات النموذج ──
+function drCollect(){
+  var g=function(id){var e=document.getElementById(id);return e?(e.type==='checkbox'?e.checked:e.value):'';};
+  var d={ date:g('dr_date2'), start:g('dr_start') };
+  if(_drState.tab==='install'){
+    Object.assign(d,{teams:g('dr_teams'),status:g('dr_status'),stage:g('dr_stage'),progress:g('dr_progress'),done:g('dr_done'),problems:g('dr_problems'),tomorrow:g('dr_tomorrow'),vid_before:g('dr_vid_before'),vid_during:g('dr_vid_during'),vid_after:g('dr_vid_after'),notes:g('dr_notes')});
+  }else if(_drState.tab==='factory'){
+    Object.assign(d,{present:g('dr_present'),absent:g('dr_absent'),projects:g('dr_projects'),worked:g('dr_worked'),finished:g('dr_finished'),delivered:g('dr_delivered'),team:g('dr_team'),performance:g('dr_performance'),problems:g('dr_problems'),materials:g('dr_materials'),tomorrow:g('dr_tomorrow'),notes:g('dr_notes')});
+  }else if(_drState.tab==='sales'){
+    ['s_contacted','s_new','s_replied','s_contracts','s_value','s_approvals','s_measures','s_notready','s_pending'].forEach(k=>d[k]=g('dr_'+k));
+    Object.assign(d,{followup:g('dr_followup'),delayed:g('dr_delayed'),ops:g('dr_ops'),tomorrow:g('dr_tomorrow')});
+  }
+  return d;
+}
+
+async function drSave(silent){
+  var data=drCollect();
+  var manager=document.getElementById('dr_manager').value;
+  var date=data.date||_drState.date;
+  var payload={report_type:_drState.tab, report_date:date, manager:manager, data:data, updated_at:new Date().toISOString()};
+  try{
+    var {error} = await sb.from('daily_reports').upsert(payload,{onConflict:'report_type,report_date,manager'});
+    if(error) throw error;
+    _drState.current=data; _drState.date=date; _drState.currentManager=manager;
+    if(!silent) toast('💾 تم حفظ التقرير','ok');
+    return true;
+  }catch(e){
+    if(!silent) toast('⚠️ خطأ في الحفظ: '+e.message,'err');
+    return false;
+  }
+}
+
+async function drSaveAndPrint(){
+  var ok=await drSave(true);
+  if(ok){ toast('💾 حُفظ — جارِ الطباعة','ok'); drPrint(); }
+}
+
+// ── الطباعة ──
+function drPrint(){
+  var data=drCollect();
+  var manager=document.getElementById('dr_manager').value;
+  var tab=DR_TABS.find(t=>t.id===_drState.tab);
+  var esc=function(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
+  var nl=function(s){return esc(s).replace(/\n/g,'<br>');};
+
+  var rows='';
+  if(_drState.tab==='install'){
+    rows=drRow('فرق التركيب',nl(data.teams))+drRow('حالة المشروع',nl(data.status))+drRow('المرحلة الحالية',esc(data.stage))+drRow('نسبة الإنجاز',esc(data.progress)+'%')+drRow('الأعمال المنجزة اليوم',nl(data.done))+drRow('المشاكل',nl(data.problems))+drRow('خطة الغد',nl(data.tomorrow))+drRow('فيديو التوثيق',(data.vid_before?'✅ قبل ':'⬜ قبل ')+(data.vid_during?'✅ أثناء ':'⬜ أثناء ')+(data.vid_after?'✅ بعد':'⬜ بعد'))+drRow('ملاحظات',nl(data.notes));
+  }else if(_drState.tab==='factory'){
+    rows=drRow('حالة العمال','الحاضرون: '+esc(data.present)+' — الغائبون: '+esc(data.absent))+drRow('المشاريع الحالية',nl(data.projects))+drRow('ملخص الإنتاج','عُمل على: '+esc(data.worked)+' — أُنجز: '+esc(data.finished)+' — سُلّم: '+esc(data.delivered))+drRow('فريق المصنع',nl(data.team))+drRow('مستوى الأداء',esc(data.performance))+drRow('المشاكل والتحديات',nl(data.problems))+drRow('المواد والمخزون',nl(data.materials))+drRow('خطة الغد',nl(data.tomorrow))+drRow('ملاحظات اليوم',nl(data.notes));
+  }else if(_drState.tab==='sales'){
+    var stats=[['العملاء الذين تم التواصل معهم',data.s_contacted],['العملاء الجدد',data.s_new],['تم الرد عليهم',data.s_replied],['العقود الموقعة',data.s_contracts],['قيمة العقود (د.ك)',data.s_value],['الاعتمادات المكتملة',data.s_approvals],['محوّلة للقياسات',data.s_measures],['غير جاهزين للقياس',data.s_notready],['المعلقون',data.s_pending]];
+    var statsRows=stats.map(s=>'<tr><td style="padding:8px 12px;border:1px solid #ddd">'+s[0]+'</td><td style="padding:8px 12px;border:1px solid #ddd;text-align:center;font-weight:700">'+esc(s[1]||'0')+'</td></tr>').join('');
+    rows='<tr><td colspan="2" style="padding:0"><table style="width:100%;border-collapse:collapse"><tr><th style="background:#f0f7f2;padding:8px 12px;border:1px solid #ddd">البند</th><th style="background:#f0f7f2;padding:8px 12px;border:1px solid #ddd">العدد</th></tr>'+statsRows+'</table></td></tr>'+drRow('متابعة العملاء',nl(data.followup))+drRow('المطابخ المتأخرة',nl(data.delayed))+drRow('ملاحظات وأوامر',nl(data.ops))+drRow('خطة الغد',nl(data.tomorrow));
+  }
+
+  var w=window.open('','_blank');
+  w.document.write('<!DOCTYPE html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>تقرير '+tab.name+' — '+esc(data.date)+'</title>'+
+  '<style>@import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800;900&display=swap");'+
+  '*{margin:0;padding:0;box-sizing:border-box;font-family:Tajawal,sans-serif}'+
+  'body{padding:36px;color:#1a1a1a;line-height:1.7}'+
+  '.hd{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid '+tab.color+';padding-bottom:16px;margin-bottom:20px}'+
+  '.logo{display:flex;align-items:center;gap:12px}.logo-box{width:60px;height:60px;background:linear-gradient(135deg,'+tab.color+','+tab.color+'aa);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:30px}'+
+  '.logo h1{color:'+tab.color+';font-size:22px;font-weight:900}.logo .sub{color:#888;font-size:11px;letter-spacing:2px}'+
+  '.badge{background:'+tab.color+';color:#fff;padding:10px 18px;border-radius:10px;font-weight:800;font-size:14px}'+
+  '.meta{display:flex;gap:20px;background:#f7f7f7;border-radius:10px;padding:12px 18px;margin-bottom:18px;font-size:14px}'+
+  '.meta b{color:'+tab.color+'}'+
+  'table.main{width:100%;border-collapse:collapse}'+
+  'table.main td{border:1px solid #ddd;padding:12px 14px;vertical-align:top;font-size:14px}'+
+  'table.main td.k{background:#f7f7f7;font-weight:700;width:180px;color:#333}'+
+  '.sign{margin-top:30px;display:flex;justify-content:space-between;font-size:13px;color:#555;padding-top:16px;border-top:1px solid #eee}'+
+  '@media print{body{padding:20px}.no-print{display:none}}'+
+  '</style></head><body>'+
+  '<div class="hd"><div class="logo"><div class="logo-box">'+tab.ico+'</div><div><h1>مطابخ العيسى</h1><div class="sub">SLKR — الكويت</div></div></div>'+
+    '<div style="text-align:left"><div class="badge">تقرير '+tab.name+' اليومي</div></div></div>'+
+  '<div class="meta"><div><b>المسؤول:</b> '+esc(manager)+'</div><div><b>التاريخ:</b> '+esc(data.date)+'</div><div><b>بدء العمل:</b> '+esc(data.start)+'</div></div>'+
+  '<table class="main">'+rows+'</table>'+
+  '<div class="sign"><div>توقيع المسؤول: '+esc(manager)+'</div><div>اعتماد الإدارة: ________</div></div>'+
+  '<div class="no-print" style="text-align:center;margin-top:24px"><button onclick="window.print()" style="padding:14px 36px;background:'+tab.color+';color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer">🖨️ طباعة</button></div>'+
+  '</body></html>');
+  w.document.close();
+}
+function drRow(k,v){return '<tr><td class="k">'+k+'</td><td>'+(v||'—')+'</td></tr>';}
+
+// ── تصفّح كل التقارير ──
+async function drBrowseAll(){
+  var tab=DR_TABS.find(t=>t.id===_drState.tab);
+  try{
+    var {data:res,error}=await sb.from('daily_reports').select('id,report_date,manager').eq('report_type',_drState.tab).order('report_date',{ascending:false});
+    if(error) throw error;
+    var body=document.getElementById('dr-form-area');
+    if(!res||!res.length){ body.innerHTML='<div style="text-align:center;padding:40px;color:var(--mt)">لا توجد تقارير محفوظة بعد</div>'; return; }
+    var list=res.map(r=>'<div onclick="drOpenById('+r.id+',\''+r.report_date+'\')" style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-radius:10px;margin-bottom:8px;cursor:pointer;border:1px solid var(--bd)"><span style="font-weight:700">📅 '+r.report_date+'</span><span style="color:var(--mt);font-size:13px">'+(r.manager||'')+'</span></div>').join('');
+    body.innerHTML='<div style="font-weight:800;color:'+tab.color+';margin-bottom:14px">📂 كل تقارير '+tab.name+' ('+res.length+')</div>'+list;
+  }catch(e){ toast('⚠️ خطأ في التصفح','err'); }
+}
+async function drOpenById(id,date){
+  _drState.date=date;
+  var di=document.getElementById('dr-date'); if(di)di.value=date;
+  await drLoadExisting();
+}
+
 
 // هل المستخدم الحالي إداري (يقدر يدير موظفي القياس)؟
 function isMeasAdmin(){
