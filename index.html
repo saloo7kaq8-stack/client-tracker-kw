@@ -2456,7 +2456,7 @@ function userHasAccess(page){
 function applyRoleVisibility(){
   if(!currentUser)return;
   const u=USERS[currentUser.name];if(!u)return;
-  const map={'nav-ai':'ai','nav-team':'team','nav-import':'import','nav-materials':'materials','nav-appliances':'appliances','nav-kitchens':'kitchens','nav-approvals':'approvals','nav-mfgorder':'mfgorder','nav-reports':'reports','nav-accounting':'accounting','nav-manager':'manager','nav-slkr':'slkr','nav-cutting':'cutting','nav-factory':'factory','nav-factoryreports':'factoryreports','nav-pricing':'pricing','nav-profitreport':'profitreport'};
+  const map={'nav-ai':'ai','nav-team':'team','nav-import':'import','nav-materials':'materials','nav-appliances':'appliances','nav-kitchens':'kitchens','nav-approvals':'approvals','nav-mfgorder':'mfgorder','nav-reports':'reports','nav-accounting':'accounting','nav-manager':'manager','nav-slkr':'slkr','nav-cutting':'cutting','nav-factory':'factory','nav-factoryhub':'factoryhub','nav-factoryreports':'factoryreports','nav-dailyreports':'dailyreports','nav-pricing':'pricing','nav-profitreport':'profitreport'};
   Object.entries(map).forEach(([navId,page])=>{const el=document.getElementById(navId);if(el)el.style.display=u.access[page]?'':'none';});
   const pinNav=document.querySelector('[onclick="openPinChange()"]');
   if(pinNav)pinNav.style.display=u.access.pinchange?'':'none';
