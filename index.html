@@ -11426,9 +11426,9 @@ async function factOpenCard(id){
     var stepsHtml=st.steps.map(function(step,si){
       var sid=mfgStepId(st.id,si);
       var checked=(card.steps||{})[sid];
-      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;cursor:pointer;'+(checked?'background:rgba(39,174,96,.08)':'')+'">'+
-        '<input type="checkbox" '+(checked?'checked':'')+' onchange="factToggleStep('+id+',\''+sid+'\',this.checked)" style="width:16px;height:16px;accent-color:'+st.color+'">'+
-        '<span style="font-size:12px;'+(checked?'color:var(--mt);text-decoration:line-through':'color:var(--tx)')+'">'+(si+1)+'. '+step+'</span>'+
+      return '<label id="lbl_'+sid+'" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:8px;cursor:pointer;'+(checked?'background:rgba(39,174,96,.08)':'')+'">'+
+        '<input type="checkbox" '+(checked?'checked':'')+' onchange="factToggleStep('+id+',\''+sid+'\',this.checked);var l=document.getElementById(\'lbl_'+sid+'\'),s=document.getElementById(\'txt_'+sid+'\');l.style.background=this.checked?\'rgba(39,174,96,.08)\':\'\';s.style.color=this.checked?\'var(--mt)\':\'var(--tx)\';s.style.textDecoration=this.checked?\'line-through\':\'none\';" style="width:16px;height:16px;accent-color:'+st.color+'">'+
+        '<span id="txt_'+sid+'" style="font-size:12px;'+(checked?'color:var(--mt);text-decoration:line-through':'color:var(--tx)')+'">'+(si+1)+'. '+step+'</span>'+
       '</label>';
     }).join('');
     // gate check لهالمرحلة
@@ -11438,7 +11438,7 @@ async function factOpenCard(id){
     return '<details '+(isCurrent?'open':'')+' style="margin-bottom:10px;background:var(--card);border-radius:12px;overflow:hidden;border:'+(isCurrent?'2px solid '+st.color:'1px solid var(--bd)')+'">'+
       '<summary style="padding:12px 14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:'+(isCurrent?st.color+'15':'transparent')+'">'+
         '<span style="font-weight:800;color:'+st.color+'">'+st.ico+' المرحلة '+st.id+': '+st.name+'</span>'+
-        '<span style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:var(--mt)">'+sp+'%</span>'+(isCurrent?'<span style="background:'+st.color+';color:#fff;font-size:10px;padding:2px 8px;border-radius:8px">الحالية</span>':'')+'</span>'+
+        '<span style="display:flex;align-items:center;gap:10px"><span id="fc-stage-'+st.id+'" style="font-size:11px;color:var(--mt)">'+sp+'%</span>'+(isCurrent?'<span style="background:'+st.color+';color:#fff;font-size:10px;padding:2px 8px;border-radius:8px">الحالية</span>':'')+'</span>'+
       '</summary>'+
       '<div style="padding:10px 14px 14px">'+stepsHtml+gateHtml+
         '<div style="margin-top:10px;display:flex;gap:8px">'+
@@ -11456,9 +11456,9 @@ async function factOpenCard(id){
     '<div class="m-body">'+
       '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--card);border-radius:12px;padding:14px;margin-bottom:16px">'+
         '<div><div style="font-size:12px;color:var(--mt)">'+pEsc(card.kitchen_desc||'')+'</div><div style="font-size:11px;color:var(--mt);margin-top:4px">التسليم: '+(card.due_date||'—')+' · '+card.priority+'</div></div>'+
-        '<div style="text-align:center"><div style="font-size:28px;font-weight:900;color:#8e44ad">'+p.pct+'%</div><div style="font-size:10px;color:var(--mt)">'+p.done+'/'+p.total+' خطوة</div></div>'+
+        '<div style="text-align:center"><div id="fc-pct" style="font-size:28px;font-weight:900;color:#8e44ad">'+p.pct+'%</div><div id="fc-done" style="font-size:10px;color:var(--mt)">'+p.done+'/'+p.total+' خطوة</div></div>'+
       '</div>'+
-      '<div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;margin-bottom:18px"><div style="height:100%;width:'+p.pct+'%;background:linear-gradient(90deg,#8e44ad,#e67e22)"></div></div>'+
+      '<div style="height:8px;background:var(--card);border-radius:4px;overflow:hidden;margin-bottom:18px"><div id="fc-progbar" style="height:100%;width:'+p.pct+'%;background:linear-gradient(90deg,#8e44ad,#e67e22);transition:width .3s"></div></div>'+
       stagesHtml+
       '<div style="display:flex;gap:10px;margin-top:16px">'+
         '<button onclick="factCompleteCard('+id+')" style="flex:1;padding:12px;background:#27ae60;color:#fff;border:none;border-radius:10px;font-weight:800;cursor:pointer">✅ إنجاز البطاقة</button>'+
@@ -11472,9 +11472,23 @@ async function factToggleStep(id,sid,checked){
   var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
   if(!card.steps)card.steps={};
   if(checked)card.steps[sid]=true; else delete card.steps[sid];
-  // auto-advance: لو خلص كل خطوات المرحلة الحالية، ينتقل للتالية
   await factSaveCard(card,true);
-  factOpenCardRefresh(id);
+  factUpdateCardProgress(id);
+}
+function factUpdateCardProgress(id){
+  var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
+  var p=mfgCardProgress(card);
+  var bar=document.getElementById('fc-progbar');
+  var pctEl=document.getElementById('fc-pct');
+  var doneEl=document.getElementById('fc-done');
+  if(bar) bar.style.width=p.pct+'%';
+  if(pctEl) pctEl.textContent=p.pct+'%';
+  if(doneEl) doneEl.textContent=p.done+'/'+p.total+' خطوة';
+  MFG_CYCLE.forEach(function(st){
+    var sp=mfgStageProgress(card,st.id);
+    var spEl=document.getElementById('fc-stage-'+st.id);
+    if(spEl) spEl.textContent=sp+'%';
+  });
 }
 async function factToggleGate(id,gid,checked){
   var card=_factoryState.cards.find(c=>c.id===id); if(!card)return;
