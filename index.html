@@ -2394,35 +2394,35 @@ const PHASE_MAX_DAYS={1:3,2:7,3:3,4:30,5:14,6:7,7:3,8:28,9:5,10:5,11:5,12:3};
 // AUTH SYSTEM — نظام الصلاحيات المتقدم RBAC
 // ══════════════════════════════════════
 const USERS={
-  'صالح الجاسم':{id:'002',pin:'5678',role:'super_admin',title:'نائب المدير العام',avatar:'ص',
+  'صالح الجاسم':{id:'002',pin:'3891',role:'super_admin',title:'نائب المدير العام',avatar:'ص',
     permissions:{clients:{view:true,add:true,edit:true,delete:true},payments:{view:true,add:true,edit:true,delete:true},contracts:{view:true,print:true,amend:true},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:true},passwords:{view:true,change:true},reports:{view:true,export:true},settings:{view:true,edit:true}},
     access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:true,manager:true,slkr:true,pinchange:true,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
-  'عيسى العيسى':{id:'001',pin:'1234',role:'manager',title:'المدير العام',avatar:'ع',
+  'عيسى العيسى':{id:'001',pin:'4817',role:'manager',title:'المدير العام',avatar:'ع',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:true,add:false,edit:false,delete:false},contracts:{view:true,print:true,amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:true,create:false,approve:true},invoices:{view:true,print:true,approve:true},users:{view:true,manage:false},passwords:{view:false,change:false},reports:{view:true,export:true},settings:{view:true,edit:false}},
     access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:true,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:true,slkr:true,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:true,profitreport:true,materialcost:true,measurements:true}
   },
-  'بشار دياب عيسى':{id:'K100',pin:'1100',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
+  'بشار دياب عيسى':{id:'K100',pin:'5133',role:'factory_manager',title:'مدير مصنع',avatar:'ب',
     permissions:{clients:{view:true,add:false,edit:false,delete:false,requestEdit:true},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:true,add:true,edit:true},manufacturing:{view:true,create:true,approve:false},invoices:{view:true,print:true,upload:true,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:true,clients:true,daily:true,reports:false,team:false,alerts:true,calendar:true,ai:false,kitchens:true,approvals:false,mfgorder:true,materials:true,appliances:false,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:true,factory:true,factoryhub:true,factoryreports:true,dailyreports:true,pricing:false,profitreport:false,materialcost:true,measurements:true}
   },
-  'محمود':{id:'K102',pin:'1020',role:'sales',title:'مبيعات',avatar:'م',
+  'محمود':{id:'K102',pin:'2964',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
-  'محمد':{id:'K101',pin:'1010',role:'sales',title:'مبيعات',avatar:'م',
+  'محمد':{id:'K101',pin:'6764',role:'sales',title:'مبيعات',avatar:'م',
     permissions:{clients:{view:true,add:true,edit:'own',delete:false},payments:{view:'own',add:true,edit:false,delete:false},contracts:{view:'own',print:'own',amend:false},materials:{view:true,add:false,edit:false},manufacturing:{view:'own',create:false,approve:false},invoices:{view:'own',print:'own',approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:true,clients:true,daily:true,reports:true,team:true,alerts:true,calendar:true,ai:false,kitchens:true,approvals:true,mfgorder:true,materials:true,appliances:true,import:false,manager:false,slkr:false,pinchange:false,endofday:true,files:true,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:true,profitreport:false,materialcost:false,measurements:true}
   },
-  'عامل قياس 1':{id:'M201',pin:'2001',role:'measurer',title:'فني قياسات',avatar:'📐',
+  'عامل قياس 1':{id:'M201',pin:'6097',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
-  'عامل قياس 2':{id:'M202',pin:'2002',role:'measurer',title:'فني قياسات',avatar:'📐',
+  'عامل قياس 2':{id:'M202',pin:'4645',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   },
-  'عامل قياس 3':{id:'M203',pin:'2003',role:'measurer',title:'فني قياسات',avatar:'📐',
+  'عامل قياس 3':{id:'M203',pin:'3756',role:'measurer',title:'فني قياسات',avatar:'📐',
     permissions:{clients:{view:true,add:false,edit:false,delete:false},payments:{view:false,add:false,edit:false,delete:false},contracts:{view:false,print:false,amend:false},materials:{view:false,add:false,edit:false},manufacturing:{view:false,create:false,approve:false},invoices:{view:false,print:false,approve:false},users:{view:false,manage:false},passwords:{view:false,change:false},reports:{view:false,export:false},settings:{view:false,edit:false}},
     access:{dashboard:false,clients:false,daily:false,reports:false,team:false,alerts:false,calendar:false,ai:false,kitchens:false,approvals:false,mfgorder:false,materials:false,appliances:false,import:false,manager:false,slkr:false,pinchange:true,endofday:false,files:false,cutting:false,factory:false,factoryhub:false,factoryreports:false,dailyreports:false,pricing:false,profitreport:false,materialcost:false,measurements:true}
   }
