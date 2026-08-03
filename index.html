@@ -8782,6 +8782,16 @@ td{color:#1a1a1a;font-weight:500}
     <div class="section-body" style="padding:0"><div class="notes-box">${c.notes}</div></div>
   </div>`:''}
 
+  <div class="section">
+    <div class="section-title">➕ بنود إضافية غير مدرجة بالعقد</div>
+    <div class="section-body" style="padding:14px 18px;font-size:13px;line-height:2.3">
+      ${c.extraItems?c.extraItems:''}<br>
+      ........................................................................................<br>
+      ........................................................................................<br>
+      ........................................................................................
+    </div>
+  </div>
+
   <div class="signatures">
     <div class="sig-box">
       <div class="sig-line"></div>
@@ -9351,6 +9361,11 @@ function printAppr(id){
 '<div class="stitle">بيانات العميل</div>'+
 '<table><tr><th>اسم العميل</th><th>رقم الهاتف</th><th>العنوان</th><th>رقم المشروع</th></tr>'+
 '<tr><td>'+c.name+'</td><td dir="ltr">'+c.phone+'</td><td>'+(c.address||c.city||'')+'</td><td>'+(sp.projNo||'SLKR-'+String(c.id).padStart(4,'0'))+'</td></tr></table>'+
+'<div class="stitle">تفاصيل العقد — بالدينار الكويتي</div>'+
+'<table><tr><th>قيمة العقد</th><th>المبلغ المحصّل</th><th>المبلغ المتبقي</th><th>تاريخ العقد</th></tr>'+
+'<tr><td style="font-weight:800">'+(+c.contract||0).toFixed(3)+' د.ك</td><td style="font-weight:800;color:#1a7a3a">'+(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0).toFixed(3)+' د.ك</td><td style="font-weight:800;color:#c0392b">'+((+c.contract||0)-(c.payments||[]).reduce((s,p)=>s+(+p.amount||0),0)).toFixed(3)+' د.ك</td><td>'+(c.signed||'—')+'</td></tr></table>'+
+'<div class="stitle">بنود إضافية / ملاحظات مكتوبة يدوياً</div>'+
+'<div class="notes" style="min-height:70px">'+(a.extraItems||'')+'<br><br>........................................................<br>........................................................</div>'+
 '<div class="stitle">المواصفات الفنية التفصيلية :</div>'+
 '<table><tr><th style="width:35%">العنصر</th><th>التفاصيل</th></tr>'+specRows.map(function(r){return '<tr><td class="wlabel">'+r[0]+'</td><td>'+(r[1]||'')+'</td></tr>';}).join('')+'</table>'+
 (mats.length?'<div class="stitle">المواد المعتمدة</div><table><tr><th>المادة</th><th>الكمية</th><th>الوحدة</th><th>السعر</th><th>الإجمالي</th></tr>'+mats.map(function(m){return '<tr><td>'+m.name+'</td><td style="text-align:center">'+m.qty+'</td><td style="text-align:center">'+m.unit+'</td><td style="text-align:center">'+(m.price||0).toFixed(3)+'</td><td style="text-align:center;font-weight:700">'+(m.total||0).toFixed(3)+'</td></tr>';}).join('')+'<tr style="background:#d6f0dd"><td colspan="4" style="font-weight:700">الإجمالي</td><td style="text-align:center;font-weight:700">'+mats.reduce(function(s,m){return s+(m.total||0);},0).toFixed(3)+' د.ك</td></tr></table>':'')+
@@ -9368,6 +9383,15 @@ function printAppr(id){
 '<tr><td class="dept">الإدارة</td><td>'+(sg.admin||'')+'</td><td></td><td></td></tr></table>'+
 '<div class="stitle">الملاحظات</div>'+
 '<div class="notes">'+(a.notes||'')+'</div>'+
+'<div class="stitle">الشروط والأحكام</div>'+
+'<div class="notes" style="font-size:9.5px;line-height:1.9">'+
+'1. هذا الاعتماد نهائي بعد توقيع العميل، وأي تعديل لاحق يعتبر تغييراً جديداً قد يخضع لرسوم إضافية.<br>'+
+'2. يلتزم العميل بجاهزية الموقع (لياسة، أرضيات، كهرباء، سباكة) قبل موعد القياس النهائي.<br>'+
+'3. مدة التصنيع تبدأ من تاريخ اعتماد القياس النهائي وتوقيع هذا النموذج.<br>'+
+'4. أي تأخير بجاهزية الموقع من طرف العميل يؤجل موعد التسليم المتفق عليه بنفس المدة.<br>'+
+'5. الألوان والمواد المعتمدة أعلاه نهائية ولا يمكن تغييرها بعد بدء التصنيع.<br>'+
+'6. توقيع العميل على هذا النموذج يعتبر موافقة تامة على جميع المواصفات والمواد المذكورة أعلاه.'+
+'</div>'+
 '<div class="ft"><div>مسؤول المبيعات: <b>'+(sg.sales||'..............................')+'</b></div><div>توقيع العميل: <b>'+(sg.client||'..............................')+'</b></div></div>'+
 '<div style="text-align:center;margin-top:12px"><button onclick="window.print()" style="padding:7px 28px;background:#1a7a3a;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:12px">🖨️ طباعة</button></div>'+
 '</div></body></html>');w.document.close();
