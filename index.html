@@ -4757,6 +4757,7 @@ function renderProfile(id){
         <button class="doc-tab active" onclick="switchDocTab(${c.id},'pricing',this)">💲 التسعيرة</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'contract',this)">📋 العقد</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'approval',this)">✅ الاعتماد</button>
+        <button class="doc-tab" onclick="switchDocTab(${c.id},'kitchens',this)">🍳 المطابخ (الاعتمادات)</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'design',this)">📐 الرسومات</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'mfg',this)">🏭 أمر التصنيع</button>
         <button class="doc-tab" onclick="switchDocTab(${c.id},'followup',this)">📞 المتابعة</button>
@@ -4849,6 +4850,15 @@ function renderProfile(id){
       <div class="doc-tab-content active" id="doctab-${c.id}-pricing">
         <div class="doc-tab-inner">
           ${renderClientPricingTab(c)}
+        </div>
+      </div>
+
+      <!-- المطابخ (الاعتمادات المتعددة) -->
+      <div class="doc-tab-content" id="doctab-${c.id}-kitchens">
+        <div class="doc-tab-inner">
+          <div id="kitchens-list-${c.id}">
+            <div style="color:var(--mt);font-size:12px;text-align:center;padding:16px">جاري تحميل الاعتمادات...</div>
+          </div>
         </div>
       </div>
 
@@ -5280,7 +5290,7 @@ function switchDocTab(clientId, tab, btn){
   if(!tabsEl)return;
   tabsEl.querySelectorAll('.doc-tab').forEach(b=>b.classList.remove('active'));
   // إخفاء كل المحتويات
-  ['contract','approval','mfg','design','followup','calendar','files'].forEach(t=>{
+  ['contract','approval','mfg','design','followup','calendar','files','kitchens'].forEach(t=>{
     const el=document.getElementById('doctab-'+clientId+'-'+t);
     if(el)el.classList.remove('active');
   });
@@ -5290,6 +5300,7 @@ function switchDocTab(clientId, tab, btn){
   if(target)target.classList.add('active');
   // لو تبويب الملفات — حمّل الملفات
   if(tab==='files')loadClientFiles(clientId);
+  if(tab==='kitchens')loadClientKitchens(clientId);
 }
 
 async function loadClientFiles(clientId){
@@ -5360,6 +5371,102 @@ async function deleteClientFile(fileId,clientId){
   const okDel=await dbDeleteFile(fileId);
   if(okDel){toast('🗑️ حُذف الملف','ok');loadClientFiles(clientId);}
   else toast('⚠️ فشل الحذف','err');
+}
+
+// ═══ المطابخ (الاعتمادات المتعددة لكل عميل) ═══
+async function dbFetchKitchens(clientId){
+  const {data,error}=await sb.from('kitchens').select('*').eq('client_id',clientId).order('kitchen_no');
+  if(error){console.error('DB kitchens:',JSON.stringify(error));return[];}
+  return data||[];
+}
+
+const KIT_PHASES=[
+  {n:1,l:'تواصل أولي'},{n:5,l:'تصميم'},{n:6,l:'اعتماد العميل'},{n:7,l:'عقد وسلفة'},{n:8,l:'قياس نهائي'},{n:12,l:'منتهي'}
+];
+
+async function loadClientKitchens(clientId){
+  const el=document.getElementById('kitchens-list-'+clientId);
+  if(!el)return;
+  const rows=await dbFetchKitchens(clientId);
+  if(!rows.length){
+    el.innerHTML='<div style="color:var(--mt);font-size:12px;text-align:center;padding:20px">لا توجد اعتمادات مسجّلة لهذا العميل بعد</div>';
+    return;
+  }
+  const totalContract=rows.reduce((s,r)=>s+(+r.contract||0),0);
+  const totalCollected=rows.reduce((s,r)=>s+(+r.collected||0),0);
+  el.innerHTML=`
+    <div class="gc" style="padding:14px;margin-bottom:14px;background:rgba(10,143,92,.06);border:1px solid var(--gbd)">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px">
+        <div><div style="font-size:11px;color:var(--mt)">عدد الاعتمادات</div><div style="font-size:18px;font-weight:800;color:var(--g)">${rows.length}</div></div>
+        <div><div style="font-size:11px;color:var(--mt)">إجمالي العقود</div><div style="font-size:18px;font-weight:800;color:var(--accent)">${totalContract.toFixed(3)} د.ك</div></div>
+        <div><div style="font-size:11px;color:var(--mt)">إجمالي المحصّل</div><div style="font-size:18px;font-weight:800;color:var(--g)">${totalCollected.toFixed(3)} د.ك</div></div>
+        <div><div style="font-size:11px;color:var(--mt)">المتبقي</div><div style="font-size:18px;font-weight:800;color:var(--re)">${(totalContract-totalCollected).toFixed(3)} د.ك</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+      ${rows.map(r=>`<button class="doc-tab kit-sub-tab ${r.kitchen_no===1?'active':''}" onclick="showKitTab(${clientId},${r.id},this)">اعتماد ${r.kitchen_no}</button>`).join('')}
+    </div>
+    ${rows.map((r,i)=>renderKitCard(r,clientId,i===0)).join('')}
+  `;
+}
+
+function showKitTab(clientId,kitId,btn){
+  document.querySelectorAll('#kitchens-list-'+clientId+' .kit-sub-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#kitchens-list-'+clientId+' .kit-card').forEach(c=>c.style.display='none');
+  const card=document.getElementById('kit-card-'+kitId);
+  if(card)card.style.display='';
+}
+
+function renderKitCard(r,clientId,visible){
+  const paid=(+r.pay1||0)+(+r.pay2||0)+(+r.pay3||0);
+  const remaining=(+r.contract||0)-paid;
+  return `<div class="gc kit-card" id="kit-card-${r.id}" style="padding:16px;margin-bottom:14px;${visible?'':'display:none'}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:14px;font-weight:800;color:var(--accent)">🍳 اعتماد رقم ${r.kitchen_no}</div>
+      <span class="badge bg-b">${r.stage||'—'}</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div style="font-size:11px;color:var(--mt)">قيمة العقد</div><input class="fi" id="kit-contract-${r.id}" type="number" step="0.001" value="${r.contract||0}"></div>
+      <div><div style="font-size:11px;color:var(--mt)">الأجهزة</div><input class="fi" id="kit-appl-${r.id}" type="number" step="0.001" value="${r.appliances||0}"></div>
+      <div><div style="font-size:11px;color:var(--mt)">عدد المطابخ (units)</div><input class="fi" id="kit-units-${r.id}" type="number" min="1" value="${r.units||1}"></div>
+      <div><div style="font-size:11px;color:var(--mt)">الدفعة 1</div><input class="fi" id="kit-pay1-${r.id}" type="number" step="0.001" value="${r.pay1||0}"></div>
+      <div><div style="font-size:11px;color:var(--mt)">الدفعة 2</div><input class="fi" id="kit-pay2-${r.id}" type="number" step="0.001" value="${r.pay2||0}"></div>
+      <div><div style="font-size:11px;color:var(--mt)">الدفعة 3</div><input class="fi" id="kit-pay3-${r.id}" type="number" step="0.001" value="${r.pay3||0}"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div><div style="font-size:11px;color:var(--mt)">المرحلة</div><select class="fsl" id="kit-phase-${r.id}">${KIT_PHASES.map(p=>`<option value="${p.n}" ${(+r.phase===p.n)?'selected':''}>${p.l}</option>`).join('')}</select></div>
+      <div><div style="font-size:11px;color:var(--mt)">جاهزية الموقع</div><select class="fsl" id="kit-site-${r.id}"><option value="جاهز" ${r.site==='جاهز'?'selected':''}>جاهز</option><option value="غير جاهز" ${r.site!=='جاهز'?'selected':''}>غير جاهز</option></select></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:10px 14px;background:var(--sf2);border-radius:8px;margin-bottom:10px;font-size:13px">
+      <span>محصّل: <b style="color:var(--g)">${paid.toFixed(3)} د.ك</b></span>
+      <span>متبقي: <b style="color:var(--re)">${remaining.toFixed(3)} د.ك</b></span>
+    </div>
+    <div><div style="font-size:11px;color:var(--mt);margin-bottom:4px">ملاحظات</div><textarea class="fta" id="kit-notes-${r.id}" rows="2">${r.notes||''}</textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button class="btn-p btn-sm" onclick="saveKitCard(${r.id},${clientId})">💾 حفظ هذا الاعتماد</button>
+    </div>
+  </div>`;
+}
+
+async function saveKitCard(kitId,clientId){
+  const g=id=>document.getElementById(id);
+  const phaseVal=+g('kit-phase-'+kitId).value;
+  const stageLabel=(KIT_PHASES.find(p=>p.n===phaseVal)||{}).l||'';
+  const pay1=+g('kit-pay1-'+kitId).value||0, pay2=+g('kit-pay2-'+kitId).value||0, pay3=+g('kit-pay3-'+kitId).value||0;
+  const contract=+g('kit-contract-'+kitId).value||0;
+  const collected=pay1+pay2+pay3;
+  const payStatus=collected<=0?'غير مدفوع':(collected>=contract&&contract>0?'مدفوع':'مدفوع جزئياً');
+  const upd={
+    contract, appliances:+g('kit-appl-'+kitId).value||0, units:+g('kit-units-'+kitId).value||1,
+    pay1, pay2, pay3, collected, phase:phaseVal, stage:stageLabel,
+    site:g('kit-site-'+kitId).value, pay_status:payStatus, notes:g('kit-notes-'+kitId).value
+  };
+  const {error}=await sb.from('kitchens').update(upd).eq('id',kitId);
+  if(error){toast('⚠️ فشل الحفظ','err');console.error(error);return;}
+  addAuditLog('kitchen_update','🍳 تحديث اعتماد #'+kitId,clientId);
+  toast('✅ تم حفظ الاعتماد');
+  loadClientKitchens(clientId);
 }
 
 
