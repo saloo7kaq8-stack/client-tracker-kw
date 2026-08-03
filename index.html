@@ -5294,28 +5294,70 @@ async function loadClientFiles(clientId){
   const el=document.getElementById('files-list-'+clientId);
   if(!el)return;
   try{
-    const {data,error}=await window._supa.from('fu_files').select('*').eq('client_id',clientId).order('created_at',{ascending:false});
-    if(error||!data||data.length===0){
+    const {data,error}=await sb.from('fu_files').select('*').eq('client_id',clientId).order('created_at',{ascending:false});
+    if(error){
+      el.innerHTML='<div style="color:var(--re);font-size:12px;text-align:center;padding:16px">خطأ في تحميل الملفات</div>';
+      return;
+    }
+    if(!data||data.length===0){
       el.innerHTML='<div style="color:var(--mt);font-size:12px;text-align:center;padding:16px">لا توجد ملفات مرفوعة</div>';
       return;
     }
-    el.innerHTML=data.map(f=>`
+    el.innerHTML=data.map(f=>{
+      const viewHref=f.file_url||f.file_data||'';
+      return `
       <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg2);border-radius:8px;margin-bottom:6px;font-size:12px">
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:18px">${f.file_type?.includes('pdf')?'📄':f.file_type?.includes('image')?'🖼️':'📎'}</span>
+          <span style="font-size:18px">${(f.file_type||'').includes('pdf')?'📄':(f.file_type||'').includes('image')?'🖼️':'📎'}</span>
           <div>
             <div style="font-weight:600;color:var(--tx)">${f.file_name}</div>
-            <div style="color:var(--mt)">${f.file_size?Math.round(f.file_size/1024)+' KB':''} · ${f.created_at?.split('T')[0]||''}</div>
+            <div style="color:var(--mt)">${f.file_size?Math.round(f.file_size/1024)+' KB':''} · ${(f.created_at||'').split('T')[0]||''} · ${f.uploaded_by||''}</div>
           </div>
         </div>
         <div style="display:flex;gap:6px">
-          ${f.file_url?`<a href="${f.file_url}" target="_blank" class="btn-ghost btn-sm">👁 عرض</a>`:''}
+          ${viewHref?`<a href="${viewHref}" target="_blank" download="${f.file_name}" class="btn-ghost btn-sm">👁 عرض</a>`:''}
+          <button class="btn-ghost btn-sm" style="color:var(--re);border-color:var(--re)" onclick="deleteClientFile(${f.id},${clientId})">🗑️</button>
         </div>
       </div>
-    `).join('');
+    `;}).join('');
   }catch(e){
     el.innerHTML='<div style="color:var(--re);font-size:12px;text-align:center;padding:16px">خطأ في تحميل الملفات</div>';
   }
+}
+
+// ═══ رفع ملف عام لملف العميل (تبويب المستندات) ═══
+function uploadClientFile(clientId,input){
+  if(!input.files||!input.files.length)return;
+  const files=Array.from(input.files);
+  const uploadedBy=currentUser?currentUser.name:'—';
+  const cName=(clients.find(x=>x.id===clientId)||{}).name||'';
+  let done=0,ok=0;
+  toast('⏳ جاري رفع '+files.length+' ملف...','ok');
+  files.forEach(file=>{
+    const reader=new FileReader();
+    reader.onload=async function(e){
+      const base64=e.target.result;
+      try{
+        const r=await dbInsertFile(clientId,file.name,file.type,base64,file.size,uploadedBy);
+        if(r){ok++;addAuditLog('upload','📎 رفع ملف: '+file.name+' — '+cName,clientId);}
+      }catch(err){console.error('upload error',err);}
+      done++;
+      if(done===files.length){
+        loadClientFiles(clientId);
+        toast(ok===files.length?'✅ تم رفع '+ok+' ملف':'⚠️ رُفع '+ok+' من '+files.length,ok===files.length?'ok':'err');
+      }
+    };
+    reader.onerror=function(){done++;if(done===files.length)loadClientFiles(clientId);};
+    reader.readAsDataURL(file);
+  });
+  input.value='';
+}
+
+async function deleteClientFile(fileId,clientId){
+  if(!confirm('حذف هذا الملف نهائياً؟'))return;
+  const okDel=await dbDeleteFile(fileId);
+  if(okDel){toast('🗑️ حُذف الملف','ok');loadClientFiles(clientId);}
+  else toast('⚠️ فشل الحذف','err');
 }
 
 
